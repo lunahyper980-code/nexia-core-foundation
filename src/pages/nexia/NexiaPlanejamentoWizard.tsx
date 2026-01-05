@@ -25,6 +25,7 @@ import { Alert, AlertDescription } from "@/components/ui/alert";
 import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetDescription } from "@/components/ui/sheet";
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/components/ui/collapsible";
 import { useDemoModeForForms } from "@/hooks/useDemoModeForForms";
+import { useModuleState } from "@/hooks/useModuleState";
 
 interface Client {
   id: string;
@@ -196,6 +197,7 @@ export default function NexiaPlanejamentoWizard() {
   const { workspace } = useWorkspace();
   const { user } = useAuth();
   const { isDemoMode, getDemoModeFlag } = useDemoModeForForms();
+  const { getSavedState, saveStep, saveFormData, saveExtras, clearState } = useModuleState('planejamento');
   
   const [preparationConfirmed, setPreparationConfirmed] = useState(false);
   const [planningMode, setPlanningMode] = useState<'simple' | 'advanced' | null>(null);
@@ -218,6 +220,29 @@ export default function NexiaPlanejamentoWizard() {
   const [expandedObjectives, setExpandedObjectives] = useState<string[]>([]);
   const [selectedTask, setSelectedTask] = useState<StrategicTask | null>(null);
   const [generatedStrategy, setGeneratedStrategy] = useState<GeneratedStrategy | null>(null);
+
+  // Restore state on mount (only for new plannings)
+  useEffect(() => {
+    if (!id) {
+      const saved = getSavedState();
+      if (saved) {
+        if (saved.currentStep) setCurrentStep(saved.currentStep);
+        if (saved.extras?.planningMode) setPlanningMode(saved.extras.planningMode);
+        if (saved.extras?.preparationConfirmed) setPreparationConfirmed(saved.extras.preparationConfirmed);
+        if (saved.formData) setPlanningData(prev => ({ ...prev, ...saved.formData }));
+      }
+    }
+  }, [id, getSavedState]);
+
+  const handleStepChange = (newStep: number) => {
+    setCurrentStep(newStep);
+    if (!id) saveStep(newStep);
+  };
+
+  const handleModeChange = (mode: 'simple' | 'advanced') => {
+    setPlanningMode(mode);
+    if (!id) saveExtras({ planningMode: mode, preparationConfirmed });
+  };
   
   const [planningData, setPlanningData] = useState<PlanningData>({
     client_id: "",
@@ -285,6 +310,13 @@ export default function NexiaPlanejamentoWizard() {
       console.error('Error logging activity:', error);
     }
   };
+
+  // Save form data when it changes (only for new plannings)
+  useEffect(() => {
+    if (!id && planningData.name) {
+      saveFormData(planningData as Record<string, any>);
+    }
+  }, [planningData, id, saveFormData]);
 
   useEffect(() => {
     if (workspace?.id) {
@@ -533,12 +565,19 @@ export default function NexiaPlanejamentoWizard() {
     }
 
     const saved = await savePlanning();
-    if (saved) setCurrentStep(Math.min(currentStep + 1, totalSteps));
+    if (saved) handleStepChange(Math.min(currentStep + 1, totalSteps));
   };
 
-  const handlePrevious = () => { if (currentStep > 1) setCurrentStep(currentStep - 1); };
+  const handlePrevious = () => { if (currentStep > 1) handleStepChange(currentStep - 1); };
   const handleSaveDraft = async () => { const saved = await savePlanning("draft"); if (saved) toast.success("Rascunho salvo!"); };
-  const handleFinish = async () => { const saved = await savePlanning("active"); if (saved) { toast.success("Planejamento salvo!"); navigate(`/nexia-ai/planejamento/${saved.id}`); } };
+  const handleFinish = async () => { 
+    const saved = await savePlanning("active"); 
+    if (saved) { 
+      clearState(); // Clear navigation state on finish
+      toast.success("Planejamento salvo!"); 
+      navigate(`/nexia-ai/planejamento/${saved.id}`); 
+    } 
+  };
   const addObjective = () => { if (newObjective.trim()) { setPlanningData({ ...planningData, objectives_list: [...planningData.objectives_list, newObjective.trim()] }); setNewObjective(""); } };
   const removeObjective = (index: number) => { setPlanningData({ ...planningData, objectives_list: planningData.objectives_list.filter((_, i) => i !== index) }); };
 

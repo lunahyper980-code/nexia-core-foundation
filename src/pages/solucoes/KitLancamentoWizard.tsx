@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Rocket, ArrowLeft, ArrowRight, Loader2, Building2, Sparkles, Palette, ListChecks, CheckCircle2, FileText, ExternalLink, Download, Copy, Check, MessageSquare, Lightbulb, Image } from 'lucide-react';
 import { toast } from 'sonner';
@@ -15,6 +15,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { Badge } from '@/components/ui/badge';
 import { validateShortInput, validateBusinessInput, sanitizeInput } from '@/lib/inputValidation';
 import { useDemoModeForForms } from '@/hooks/useDemoModeForForms';
+import { useModuleState } from '@/hooks/useModuleState';
 
 interface FormData {
   projectName: string;
@@ -90,6 +91,8 @@ export default function KitLancamentoWizard() {
   const { workspace } = useWorkspace();
   const { user } = useAuth();
   const { isDemoMode, getDemoModeFlag } = useDemoModeForForms();
+  const { getSavedState, saveStep, saveFormData, clearState } = useModuleState('kit-lancamento');
+  
   const [step, setStep] = useState(1);
   const [isGenerating, setIsGenerating] = useState(false);
   const [isGeneratingIdentity, setIsGeneratingIdentity] = useState(false);
@@ -111,22 +114,43 @@ export default function KitLancamentoWizard() {
     secondaryText: '',
   });
 
+  // Restore state on mount
+  useEffect(() => {
+    const saved = getSavedState();
+    if (saved) {
+      if (saved.currentStep) setStep(saved.currentStep);
+      if (saved.formData) setFormData(prev => ({ ...prev, ...saved.formData }));
+    }
+  }, [getSavedState]);
+
+  const handleStepChange = (newStep: number) => {
+    setStep(newStep);
+    saveStep(newStep);
+  };
+
   const updateField = (field: keyof FormData, value: string | string[]) => {
-    setFormData(prev => ({ ...prev, [field]: value }));
+    setFormData(prev => {
+      const updated = { ...prev, [field]: value };
+      saveFormData(updated);
+      return updated;
+    });
     setErrors(prev => ({ ...prev, [field]: '' }));
   };
 
   const toggleColor = (colorName: string) => {
     setFormData(prev => {
       const colors = prev.preferredColors;
+      let updated;
       if (colors.includes(colorName)) {
-        return { ...prev, preferredColors: colors.filter(c => c !== colorName) };
-      }
-      if (colors.length >= 3) {
+        updated = { ...prev, preferredColors: colors.filter(c => c !== colorName) };
+      } else if (colors.length >= 3) {
         toast.error('Selecione no máximo 3 cores');
         return prev;
+      } else {
+        updated = { ...prev, preferredColors: [...colors, colorName] };
       }
-      return { ...prev, preferredColors: [...colors, colorName] };
+      saveFormData(updated);
+      return updated;
     });
   };
 
@@ -276,7 +300,7 @@ export default function KitLancamentoWizard() {
         .eq('id', launchKit.id);
 
       toast.success('Estrutura de lançamento gerada!');
-      setStep(2);
+      handleStepChange(2);
 
     } catch (error: any) {
       console.error('Error generating launch structure:', error);
@@ -335,7 +359,7 @@ export default function KitLancamentoWizard() {
       toast.success(identityResult.data.logo_url 
         ? 'Identidade e logo gerados com sucesso!' 
         : 'Identidade gerada! Logo não disponível no momento.');
-      setStep(4);
+      handleStepChange(4);
 
     } catch (error: any) {
       console.error('Error generating identity:', error);
@@ -346,7 +370,7 @@ export default function KitLancamentoWizard() {
   };
 
   const handleSkipIdentity = () => {
-    setStep(4);
+    handleStepChange(4);
   };
 
   const handleFinish = async () => {
@@ -660,11 +684,11 @@ export default function KitLancamentoWizard() {
             </Card>
 
             <div className="flex justify-between">
-              <Button variant="outline" onClick={() => setStep(1)}>
+              <Button variant="outline" onClick={() => handleStepChange(1)}>
                 <ArrowLeft className="h-4 w-4 mr-2" />
                 Voltar ao Contexto
               </Button>
-              <Button onClick={() => setStep(3)} className="gap-2 bg-violet-500 hover:bg-violet-600">
+              <Button onClick={() => handleStepChange(3)} className="gap-2 bg-violet-500 hover:bg-violet-600">
                 Avançar para Identidade
                 <ArrowRight className="h-4 w-4" />
               </Button>
@@ -876,7 +900,7 @@ export default function KitLancamentoWizard() {
                 )}
 
                 <div className="flex justify-between pt-4">
-                  <Button variant="outline" onClick={() => setStep(2)}>
+                  <Button variant="outline" onClick={() => handleStepChange(2)}>
                     <ArrowLeft className="h-4 w-4 mr-2" />
                     Voltar
                   </Button>
@@ -885,7 +909,7 @@ export default function KitLancamentoWizard() {
                       Pular esta etapa
                     </Button>
                     <Button 
-                      onClick={identityContent ? () => setStep(4) : handleGenerateIdentityAndLogo} 
+                      onClick={identityContent ? () => handleStepChange(4) : handleGenerateIdentityAndLogo} 
                       disabled={isGeneratingIdentity}
                       className="gap-2 bg-violet-500 hover:bg-violet-600"
                     >
@@ -1164,7 +1188,7 @@ export default function KitLancamentoWizard() {
                           <p className="text-sm text-muted-foreground">Não configurada</p>
                         </div>
                       </div>
-                      <Button variant="outline" size="sm" onClick={() => setStep(3)}>
+                      <Button variant="outline" size="sm" onClick={() => handleStepChange(3)}>
                         Configurar
                       </Button>
                     </div>
@@ -1210,7 +1234,7 @@ export default function KitLancamentoWizard() {
 
             {/* CTAs Finais */}
             <div className="flex flex-col sm:flex-row gap-3 justify-between">
-              <Button variant="outline" onClick={() => setStep(3)}>
+              <Button variant="outline" onClick={() => handleStepChange(3)}>
                 <ArrowLeft className="h-4 w-4 mr-2" />
                 Voltar para Identidade
               </Button>

@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Target, ArrowLeft, ArrowRight, Loader2, Building2, MapPin, Users, Package, Sparkles, CheckCircle2 } from 'lucide-react';
 import { toast } from 'sonner';
@@ -14,6 +14,7 @@ import { Textarea } from '@/components/ui/textarea';
 import { Checkbox } from '@/components/ui/checkbox';
 import { Badge } from '@/components/ui/badge';
 import { useDemoModeForForms } from '@/hooks/useDemoModeForForms';
+import { useModuleState } from '@/hooks/useModuleState';
 
 interface FormData {
   companyName: string;
@@ -38,6 +39,8 @@ export default function PosicionamentoWizard() {
   const { workspace } = useWorkspace();
   const { user } = useAuth();
   const { isDemoMode, getDemoModeFlag } = useDemoModeForForms();
+  const { getSavedState, saveStep, saveFormData, clearState } = useModuleState('posicionamento');
+  
   const [step, setStep] = useState(1);
   const [isGenerating, setIsGenerating] = useState(false);
   const [formData, setFormData] = useState<FormData>({
@@ -51,17 +54,39 @@ export default function PosicionamentoWizard() {
     observations: '',
   });
 
+  // Restore state on mount
+  useEffect(() => {
+    const saved = getSavedState();
+    if (saved) {
+      if (saved.currentStep) setStep(saved.currentStep);
+      if (saved.formData) setFormData(prev => ({ ...prev, ...saved.formData }));
+    }
+  }, [getSavedState]);
+
+  const handleStepChange = (newStep: number) => {
+    setStep(newStep);
+    saveStep(newStep);
+  };
+
   const updateField = (field: keyof FormData, value: string) => {
-    setFormData(prev => ({ ...prev, [field]: value }));
+    setFormData(prev => {
+      const updated = { ...prev, [field]: value };
+      saveFormData(updated);
+      return updated;
+    });
   };
 
   const toggleObjective = (objectiveId: string) => {
-    setFormData(prev => ({
-      ...prev,
-      objectives: prev.objectives.includes(objectiveId)
-        ? prev.objectives.filter(id => id !== objectiveId)
-        : [...prev.objectives, objectiveId]
-    }));
+    setFormData(prev => {
+      const updated = {
+        ...prev,
+        objectives: prev.objectives.includes(objectiveId)
+          ? prev.objectives.filter(id => id !== objectiveId)
+          : [...prev.objectives, objectiveId]
+      };
+      saveFormData(updated);
+      return updated;
+    });
   };
 
   const canAdvanceStep1 = isDemoMode || formData.companyName.trim().length > 0;
@@ -260,7 +285,7 @@ export default function PosicionamentoWizard() {
 
               <div className="flex justify-end pt-4">
                 <Button 
-                  onClick={() => setStep(2)} 
+                  onClick={() => handleStepChange(2)} 
                   disabled={!canAdvanceStep1}
                   className="gap-2"
                 >
@@ -323,7 +348,7 @@ export default function PosicionamentoWizard() {
               </div>
 
               <div className="flex justify-between pt-4">
-                <Button variant="outline" onClick={() => setStep(1)}>
+                <Button variant="outline" onClick={() => handleStepChange(1)}>
                   <ArrowLeft className="h-4 w-4 mr-2" />
                   Voltar
                 </Button>
