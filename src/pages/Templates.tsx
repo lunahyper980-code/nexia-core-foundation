@@ -43,6 +43,7 @@ import templateEscritorioProfissional from '@/assets/template-escritorio-profiss
 import templateEvento from '@/assets/template-evento.png';
 
 type SolutionType = 'app' | 'site' | null;
+type CategoryType = 'all' | string;
 
 interface Template {
   id: string;
@@ -50,16 +51,39 @@ interface Template {
   description: string;
   image: string;
   type: 'app' | 'site' | 'both';
+  category: string;
 }
 
+// Categorias para Apps
+const appCategories = [
+  { id: 'all', label: 'Todos' },
+  { id: 'alimentacao', label: 'Alimentação' },
+  { id: 'beleza', label: 'Beleza & Estética' },
+  { id: 'saude', label: 'Saúde' },
+  { id: 'comercio', label: 'Comércio' },
+  { id: 'servicos', label: 'Serviços' },
+  { id: 'educacao', label: 'Educação' },
+];
+
+// Categorias para Sites
+const siteCategories = [
+  { id: 'all', label: 'Todos' },
+  { id: 'marketing', label: 'Marketing & Vendas' },
+  { id: 'institucional', label: 'Institucional' },
+  { id: 'comercio', label: 'Comércio' },
+  { id: 'servicos', label: 'Serviços' },
+  { id: 'profissional', label: 'Profissional' },
+];
+
 const templates: Template[] = [
-  // App/SaaS Templates
+  // App/SaaS Templates - Alimentação
   {
     id: 'pizzaria',
     name: 'Pizzaria',
     description: 'Cardápio digital e pedidos online para pizzarias',
     image: templatePizzaria,
     type: 'app',
+    category: 'alimentacao',
   },
   {
     id: 'hamburgueria',
@@ -67,6 +91,7 @@ const templates: Template[] = [
     description: 'Menu interativo e delivery para hamburguerias',
     image: templateHamburgueria,
     type: 'app',
+    category: 'alimentacao',
   },
   {
     id: 'cafeteria',
@@ -74,48 +99,7 @@ const templates: Template[] = [
     description: 'Vitrine digital e fidelidade para cafeterias',
     image: templateCafeteria,
     type: 'app',
-  },
-  {
-    id: 'barbearia',
-    name: 'Barbearia',
-    description: 'Agendamento online e portfólio para barbearias',
-    image: templateBarbearia,
-    type: 'app',
-  },
-  {
-    id: 'nail-designer',
-    name: 'Nail Designer',
-    description: 'Catálogo de trabalhos e agendamento para nail designers',
-    image: templateNailDesigner,
-    type: 'app',
-  },
-  {
-    id: 'loja-roupas',
-    name: 'Loja de Roupas',
-    description: 'Vitrine virtual e catálogo para lojas de moda',
-    image: templateLojaRoupas,
-    type: 'both',
-  },
-  {
-    id: 'academia',
-    name: 'Academia',
-    description: 'Planos, treinos e agendamento para academias',
-    image: templateAcademia,
-    type: 'app',
-  },
-  {
-    id: 'mecanica',
-    name: 'Mecânica',
-    description: 'Orçamentos e agendamento para oficinas mecânicas',
-    image: templateMecanica,
-    type: 'app',
-  },
-  {
-    id: 'pet-shop',
-    name: 'Pet Shop',
-    description: 'Serviços, produtos e agendamento para pet shops',
-    image: templatePetShop,
-    type: 'app',
+    category: 'alimentacao',
   },
   {
     id: 'delivery',
@@ -123,21 +107,24 @@ const templates: Template[] = [
     description: 'Sistema completo de entregas e rastreamento de pedidos',
     image: templateDelivery,
     type: 'app',
+    category: 'alimentacao',
+  },
+  // App/SaaS Templates - Beleza
+  {
+    id: 'barbearia',
+    name: 'Barbearia',
+    description: 'Agendamento online e portfólio para barbearias',
+    image: templateBarbearia,
+    type: 'app',
+    category: 'beleza',
   },
   {
-    id: 'agendamento',
-    name: 'Agendamento',
-    description: 'Sistema de reservas e gestão de horários',
-    image: templateAgendamento,
+    id: 'nail-designer',
+    name: 'Nail Designer',
+    description: 'Catálogo de trabalhos e agendamento para nail designers',
+    image: templateNailDesigner,
     type: 'app',
-  },
-  // New App Templates
-  {
-    id: 'clinica-consultorio',
-    name: 'Clínica & Consultório',
-    description: 'Agendamento e gestão profissional para clínicas e consultórios',
-    image: templateClinicaConsultorio,
-    type: 'app',
+    category: 'beleza',
   },
   {
     id: 'studio-estetica',
@@ -145,13 +132,33 @@ const templates: Template[] = [
     description: 'Agenda, catálogo e fidelidade para studios de estética',
     image: templateStudioEstetica,
     type: 'app',
+    category: 'beleza',
+  },
+  // App/SaaS Templates - Saúde
+  {
+    id: 'clinica-consultorio',
+    name: 'Clínica & Consultório',
+    description: 'Agendamento e gestão profissional para clínicas e consultórios',
+    image: templateClinicaConsultorio,
+    type: 'app',
+    category: 'saude',
   },
   {
-    id: 'corretor-imobiliaria',
-    name: 'Imobiliária & Corretor',
-    description: 'Portfólio de imóveis e agendamento de visitas',
-    image: templateCorretorImobiliaria,
+    id: 'academia',
+    name: 'Academia',
+    description: 'Planos, treinos e agendamento para academias',
+    image: templateAcademia,
     type: 'app',
+    category: 'saude',
+  },
+  // App/SaaS Templates - Comércio
+  {
+    id: 'loja-roupas',
+    name: 'Loja de Roupas',
+    description: 'Vitrine virtual e catálogo para lojas de moda',
+    image: templateLojaRoupas,
+    type: 'both',
+    category: 'comercio',
   },
   {
     id: 'loja-cosmeticos',
@@ -159,21 +166,58 @@ const templates: Template[] = [
     description: 'Vitrine digital para lojas de cosméticos e perfumaria',
     image: templateLojaCosmeticos,
     type: 'app',
+    category: 'comercio',
   },
+  {
+    id: 'pet-shop',
+    name: 'Pet Shop',
+    description: 'Serviços, produtos e agendamento para pet shops',
+    image: templatePetShop,
+    type: 'app',
+    category: 'comercio',
+  },
+  // App/SaaS Templates - Serviços
+  {
+    id: 'mecanica',
+    name: 'Mecânica',
+    description: 'Orçamentos e agendamento para oficinas mecânicas',
+    image: templateMecanica,
+    type: 'app',
+    category: 'servicos',
+  },
+  {
+    id: 'agendamento',
+    name: 'Agendamento',
+    description: 'Sistema de reservas e gestão de horários',
+    image: templateAgendamento,
+    type: 'app',
+    category: 'servicos',
+  },
+  {
+    id: 'corretor-imobiliaria',
+    name: 'Imobiliária & Corretor',
+    description: 'Portfólio de imóveis e agendamento de visitas',
+    image: templateCorretorImobiliaria,
+    type: 'app',
+    category: 'servicos',
+  },
+  // App/SaaS Templates - Educação
   {
     id: 'escola-curso-local',
     name: 'Escola & Curso Local',
     description: 'Gestão de alunos, aulas e comunicação para escolas locais',
     image: templateEscolaCurso,
     type: 'app',
+    category: 'educacao',
   },
-  // Site Templates
+  // Site Templates - Marketing & Vendas
   {
     id: 'landing-page-vendas',
     name: 'Landing Page / Página de Vendas',
     description: 'Página persuasiva para converter visitantes em clientes',
     image: templateLandingPage,
     type: 'site',
+    category: 'marketing',
   },
   {
     id: 'site-institucional',
@@ -181,6 +225,7 @@ const templates: Template[] = [
     description: 'Apresentação profissional da sua empresa e serviços',
     image: templateSiteInstitucional,
     type: 'site',
+    category: 'institucional',
   },
   {
     id: 'pagina-mentoria',
@@ -188,6 +233,7 @@ const templates: Template[] = [
     description: 'Apresentação de programa de mentoria, coaching ou consultoria',
     image: templatePaginaMentoria,
     type: 'site',
+    category: 'marketing',
   },
   {
     id: 'pagina-lancamento',
@@ -195,6 +241,7 @@ const templates: Template[] = [
     description: 'Página para lançamento de produtos, cursos ou serviços',
     image: templatePaginaLancamento,
     type: 'site',
+    category: 'marketing',
   },
   {
     id: 'pagina-captura',
@@ -202,6 +249,7 @@ const templates: Template[] = [
     description: 'Captura de leads e contatos com formulário otimizado',
     image: templatePaginaCaptura,
     type: 'site',
+    category: 'marketing',
   },
   {
     id: 'ecommerce-simples',
@@ -209,6 +257,7 @@ const templates: Template[] = [
     description: 'Loja virtual com catálogo de produtos e carrinho de compras',
     image: templateEcommerceSimples,
     type: 'site',
+    category: 'comercio',
   },
   {
     id: 'negocio-local',
@@ -216,6 +265,7 @@ const templates: Template[] = [
     description: 'Presença online profissional para negócios da sua região',
     image: templateNegocioLocal,
     type: 'site',
+    category: 'institucional',
   },
   {
     id: 'portfolio',
@@ -223,6 +273,7 @@ const templates: Template[] = [
     description: 'Showcase de trabalhos e projetos para profissionais criativos',
     image: templatePortfolio,
     type: 'site',
+    category: 'profissional',
   },
   {
     id: 'loja-roupas-site',
@@ -230,6 +281,7 @@ const templates: Template[] = [
     description: 'Vitrine virtual elegante para lojas de moda e vestuário',
     image: templateLojaRoupas,
     type: 'site',
+    category: 'comercio',
   },
   // New Site Templates
   {
@@ -238,6 +290,7 @@ const templates: Template[] = [
     description: 'Presença profissional para clínicas, consultórios e profissionais da saúde',
     image: templateClinicaConsultorio,
     type: 'site',
+    category: 'servicos',
   },
   {
     id: 'site-salao-estetica',
@@ -245,6 +298,7 @@ const templates: Template[] = [
     description: 'Vitrine digital para salões, estúdios de beleza e estética',
     image: templateStudioEstetica,
     type: 'site',
+    category: 'servicos',
   },
   {
     id: 'site-restaurante-bar',
@@ -252,6 +306,7 @@ const templates: Template[] = [
     description: 'Cardápio, localização e reservas para restaurantes e bares',
     image: templateRestauranteBar,
     type: 'site',
+    category: 'servicos',
   },
   {
     id: 'site-imobiliaria-corretor',
@@ -259,6 +314,7 @@ const templates: Template[] = [
     description: 'Portfólio de imóveis e atendimento para corretores e imobiliárias',
     image: templateCorretorImobiliaria,
     type: 'site',
+    category: 'servicos',
   },
   {
     id: 'site-prestador-servicos',
@@ -266,6 +322,7 @@ const templates: Template[] = [
     description: 'Apresentação profissional para prestadores de serviços autônomos',
     image: templatePrestadorServicos,
     type: 'site',
+    category: 'servicos',
   },
   {
     id: 'site-escola-curso',
@@ -273,6 +330,7 @@ const templates: Template[] = [
     description: 'Presença digital para escolas, cursos e centros de treinamento',
     image: templateEscolaCurso,
     type: 'site',
+    category: 'servicos',
   },
   {
     id: 'site-escritorio-profissional',
@@ -280,6 +338,7 @@ const templates: Template[] = [
     description: 'Site institucional para escritórios de advocacia, contabilidade e afins',
     image: templateEscritorioProfissional,
     type: 'site',
+    category: 'profissional',
   },
   {
     id: 'site-evento',
@@ -287,6 +346,7 @@ const templates: Template[] = [
     description: 'Página para divulgação de eventos, conferências e workshops',
     image: templateEvento,
     type: 'site',
+    category: 'marketing',
   },
 ];
 
@@ -297,6 +357,7 @@ export default function Templates() {
   
   const [solutionType, setSolutionType] = useState<SolutionType>(typeFromUrl);
   const [selectedTemplate, setSelectedTemplate] = useState<string | null>(null);
+  const [selectedCategory, setSelectedCategory] = useState<CategoryType>('all');
 
   // Update solutionType if URL param changes
   useEffect(() => {
@@ -305,9 +366,15 @@ export default function Templates() {
     }
   }, [typeFromUrl]);
 
+  // Reset category when solution type changes
+  useEffect(() => {
+    setSelectedCategory('all');
+  }, [solutionType]);
+
   const handleSelectSolutionType = (type: SolutionType) => {
     setSolutionType(type);
     setSelectedTemplate(null);
+    setSelectedCategory('all');
     toast.success(`Tipo "${type === 'app' ? 'Aplicativo / SaaS' : 'Site / Página Web'}" selecionado!`);
   };
 
@@ -328,6 +395,7 @@ export default function Templates() {
       // Only go back to type selection if we didn't come from a typed URL
       setSolutionType(null);
       setSelectedTemplate(null);
+      setSelectedCategory('all');
     } else {
       // Go back to the appropriate hub
       if (solutionType === 'app') {
@@ -340,9 +408,15 @@ export default function Templates() {
     }
   };
 
-  const filteredTemplates = templates.filter(t => 
-    t.type === solutionType || t.type === 'both'
-  );
+  // Get current categories based on solution type
+  const currentCategories = solutionType === 'app' ? appCategories : siteCategories;
+
+  // Filter templates by type and category
+  const filteredTemplates = templates.filter(t => {
+    const matchesType = t.type === solutionType || t.type === 'both';
+    const matchesCategory = selectedCategory === 'all' || t.category === selectedCategory;
+    return matchesType && matchesCategory;
+  });
 
   // Step 1: Solution Type Selection
   if (!solutionType) {
@@ -479,6 +553,32 @@ export default function Templates() {
               </p>
             </div>
           </div>
+        </div>
+
+        {/* Category Filters */}
+        <div className="flex flex-wrap gap-2">
+          {currentCategories.map((category) => (
+            <button
+              key={category.id}
+              onClick={() => setSelectedCategory(category.id)}
+              className={`
+                px-4 py-2 rounded-full text-sm font-medium transition-all
+                ${selectedCategory === category.id
+                  ? solutionType === 'app'
+                    ? 'bg-primary text-primary-foreground shadow-sm'
+                    : 'bg-emerald-500 text-white shadow-sm'
+                  : 'bg-muted/50 text-muted-foreground hover:bg-muted hover:text-foreground'
+                }
+              `}
+            >
+              {category.label}
+              {selectedCategory === category.id && (
+                <span className="ml-2 text-xs opacity-80">
+                  ({filteredTemplates.length})
+                </span>
+              )}
+            </button>
+          ))}
         </div>
 
         {/* Templates Grid */}
