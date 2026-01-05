@@ -14,7 +14,7 @@ export default defineConfig(({ mode }) => ({
     react(),
     mode === "development" && componentTagger(),
     VitePWA({
-      registerType: "prompt",
+      registerType: "autoUpdate",
       includeAssets: ["favicon.ico", "pwa-icon-512.png", "pwa-icon-192.png", "pwa-icon-maskable-512.png", "pwa-icon-maskable-192.png"],
       manifest: {
         name: "Nexia Suite",
@@ -59,7 +59,7 @@ export default defineConfig(({ mode }) => ({
         globPatterns: ["**/*.{js,css,html,ico,png,svg,woff,woff2}"],
         navigateFallback: null,
         cleanupOutdatedCaches: true,
-        skipWaiting: false,
+        skipWaiting: true,
         clientsClaim: true,
         runtimeCaching: [
           {
@@ -102,7 +102,6 @@ export default defineConfig(({ mode }) => ({
             handler: "NetworkFirst",
             options: {
               cacheName: "pages-cache",
-              networkTimeoutSeconds: 5,
               expiration: {
                 maxEntries: 50,
                 maxAgeSeconds: 60 * 60
