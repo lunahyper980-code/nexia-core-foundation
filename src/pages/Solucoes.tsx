@@ -5,6 +5,7 @@ import { Badge } from '@/components/ui/badge';
 import { ArrowRight, Smartphone, Globe, Target, Network, Lightbulb, Rocket, Award } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 import { NextStepCard } from '@/components/academy/NextStepCard';
+import { CommercialButtons } from '@/components/solucoes/CommercialModals';
 import solutionTypeApp from '@/assets/solution-type-app.png';
 import solutionTypeSite from '@/assets/solution-type-site.png';
 import solutionPosicionamento from '@/assets/solution-posicionamento.png';
@@ -205,6 +206,9 @@ export default function Solucoes() {
                       </li>
                     ))}
                   </ul>
+
+                  {/* Commercial Buttons */}
+                  <CommercialButtons solutionId={sol.id} solutionTitle={sol.title} />
 
                   {/* Button */}
                   <Button 
