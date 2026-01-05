@@ -1,32 +1,42 @@
-import { useEffect } from 'react';
+import { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { AppLayout } from '@/components/AppLayout';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { useUserRole } from '@/contexts/UserRoleContext';
-import { Users, TrendingUp, DollarSign, Activity, Copy, Info } from 'lucide-react';
+import { Users, TrendingUp, DollarSign, Activity, Copy, ArrowRight, Sparkles, Check, Zap } from 'lucide-react';
 import { toast } from 'sonner';
+import { cn } from '@/lib/utils';
 
-// Mock data for team members - in production, this would come from the database
+// Mock data for team members
 const teamMembers = [
-  { id: 1, name: 'Ana Silva', status: 'active', volume: 4500, joinedAt: '2025-11-15' },
-  { id: 2, name: 'Carlos Oliveira', status: 'active', volume: 3200, joinedAt: '2025-12-01' },
-  { id: 3, name: 'Mariana Santos', status: 'active', volume: 2800, joinedAt: '2025-12-10' },
+  { id: 1, name: 'Lucas Santos', status: 'active', volume: 4800, joinedAt: '2025-10-20' },
+  { id: 2, name: 'Fernanda Rocha', status: 'active', volume: 3950, joinedAt: '2025-11-05' },
+  { id: 3, name: 'Rafael Duarte', status: 'active', volume: 3200, joinedAt: '2025-11-15' },
+  { id: 4, name: 'Camila Silva', status: 'active', volume: 2900, joinedAt: '2025-12-01' },
+  { id: 5, name: 'Bruno Martins', status: 'active', volume: 2050, joinedAt: '2025-12-10' },
+  { id: 6, name: 'Ana Carolina', status: 'active', volume: 2000, joinedAt: '2025-12-18' },
 ];
 
 const teamStats = {
-  activeMembers: 3,
-  totalVolume: 10500,
-  averageTicket: 3500,
-  status: 'Ativa',
+  activeMembers: 6,
+  totalVolume: 18900,
+  averageTicket: 3150,
+  status: 'Em crescimento',
 };
 
-const promoLink = 'https://nexia.app/promo/equipe-interna-2025';
+const maxVolume = Math.max(...teamMembers.map(m => m.volume));
+
+const promoLinks = {
+  mensal: 'https://go.perfectpay.com.br/PPU38CQ5GFF',
+  vitalicio: 'https://go.perfectpay.com.br/PPU38CQ5GFG',
+};
 
 export default function MinhaEquipe() {
   const { isAdminOrOwner, loading } = useUserRole();
   const navigate = useNavigate();
+  const [showPromoArea, setShowPromoArea] = useState(false);
 
   useEffect(() => {
     if (!loading && !isAdminOrOwner) {
@@ -34,9 +44,9 @@ export default function MinhaEquipe() {
     }
   }, [isAdminOrOwner, loading, navigate]);
 
-  const copyPromoLink = () => {
-    navigator.clipboard.writeText(promoLink);
-    toast.success('Link copiado para a área de transferência');
+  const copyLink = (type: 'mensal' | 'vitalicio') => {
+    navigator.clipboard.writeText(promoLinks[type]);
+    toast.success(`Link do plano ${type === 'mensal' ? 'mensal' : 'vitalício'} copiado!`);
   };
 
   const formatCurrency = (value: number) => {
@@ -54,6 +64,10 @@ export default function MinhaEquipe() {
     });
   };
 
+  const getProgressPercentage = (volume: number) => {
+    return (volume / maxVolume) * 100;
+  };
+
   if (loading) {
     return (
       <AppLayout title="Minha Equipe">
@@ -68,15 +82,134 @@ export default function MinhaEquipe() {
     return null;
   }
 
+  if (showPromoArea) {
+    return (
+      <AppLayout title="Acesso Promocional">
+        <div className="max-w-4xl mx-auto space-y-8">
+          {/* Back Button */}
+          <Button 
+            variant="ghost" 
+            onClick={() => setShowPromoArea(false)}
+            className="text-muted-foreground hover:text-foreground -ml-2"
+          >
+            ← Voltar para Minha Equipe
+          </Button>
+
+          {/* Header */}
+          <div className="text-center space-y-3">
+            <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-primary/10 text-primary text-xs font-medium">
+              <Sparkles className="h-3.5 w-3.5" />
+              Benefício Exclusivo
+            </div>
+            <h1 className="text-3xl font-bold text-foreground">Acesso Promocional da Equipe</h1>
+            <p className="text-muted-foreground max-w-xl mx-auto">
+              Benefício exclusivo para membros vinculados à equipe. Incentivo estratégico para acelerar resultados.
+            </p>
+          </div>
+
+          {/* Pricing Cards */}
+          <div className="grid md:grid-cols-2 gap-6 mt-8">
+            {/* Monthly Plan */}
+            <Card className="relative overflow-hidden border-border/60">
+              <CardHeader className="pb-4">
+                <CardTitle className="text-lg font-semibold">Plano Mensal</CardTitle>
+                <div className="flex items-baseline gap-1 mt-2">
+                  <span className="text-4xl font-bold text-foreground">R$ 197</span>
+                  <span className="text-muted-foreground text-sm">/ mês</span>
+                </div>
+              </CardHeader>
+              <CardContent className="space-y-6">
+                <ul className="space-y-3">
+                  {[
+                    'Acesso completo ao Nexia Suite',
+                    'Todas as soluções digitais',
+                    'Diagnóstico e planejamento com IA',
+                    'Ideal para operação contínua',
+                  ].map((benefit, i) => (
+                    <li key={i} className="flex items-start gap-3 text-sm text-muted-foreground">
+                      <Check className="h-4 w-4 text-primary shrink-0 mt-0.5" />
+                      {benefit}
+                    </li>
+                  ))}
+                </ul>
+                <Button 
+                  onClick={() => copyLink('mensal')} 
+                  variant="outline" 
+                  className="w-full"
+                >
+                  <Copy className="h-4 w-4 mr-2" />
+                  Copiar link do plano mensal
+                </Button>
+              </CardContent>
+            </Card>
+
+            {/* Lifetime Plan - Highlighted */}
+            <Card className="relative overflow-hidden border-primary/40 bg-gradient-to-b from-primary/5 to-transparent">
+              <div className="absolute top-4 right-4">
+                <Badge className="bg-primary text-primary-foreground text-xs">
+                  Melhor custo-benefício
+                </Badge>
+              </div>
+              <CardHeader className="pb-4">
+                <CardTitle className="text-lg font-semibold">Plano Vitalício</CardTitle>
+                <div className="flex items-baseline gap-1 mt-2">
+                  <span className="text-4xl font-bold text-foreground">R$ 297</span>
+                  <span className="text-muted-foreground text-sm">único</span>
+                </div>
+              </CardHeader>
+              <CardContent className="space-y-6">
+                <ul className="space-y-3">
+                  {[
+                    'Tudo do plano mensal',
+                    'Acesso vitalício garantido',
+                    'Melhor custo-benefício',
+                    'Ideal para quem quer escalar',
+                  ].map((benefit, i) => (
+                    <li key={i} className="flex items-start gap-3 text-sm text-muted-foreground">
+                      <Check className="h-4 w-4 text-primary shrink-0 mt-0.5" />
+                      {benefit}
+                    </li>
+                  ))}
+                </ul>
+                <Button 
+                  onClick={() => copyLink('vitalicio')} 
+                  className="w-full"
+                >
+                  <Copy className="h-4 w-4 mr-2" />
+                  Copiar link do plano vitalício
+                </Button>
+              </CardContent>
+            </Card>
+          </div>
+
+          {/* Footer Notice */}
+          <p className="text-center text-xs text-muted-foreground pt-4">
+            Esta área é administrativa e representa uma visão interna de performance da equipe.
+          </p>
+        </div>
+      </AppLayout>
+    );
+  }
+
   return (
     <AppLayout title="Minha Equipe">
       <div className="max-w-5xl mx-auto space-y-8">
         {/* Header */}
-        <div>
-          <h1 className="text-2xl font-semibold text-foreground">Minha Equipe</h1>
-          <p className="text-sm text-muted-foreground mt-1">
-            Visão geral da equipe vinculada a este acesso
-          </p>
+        <div className="flex flex-col sm:flex-row sm:items-start sm:justify-between gap-4">
+          <div>
+            <h1 className="text-2xl font-semibold text-foreground">Minha Equipe</h1>
+            <p className="text-sm text-muted-foreground mt-1">
+              Visão de performance da equipe vinculada a este acesso administrativo.
+            </p>
+          </div>
+          <Button 
+            variant="outline" 
+            onClick={() => setShowPromoArea(true)}
+            className="shrink-0"
+          >
+            Acesso Promocional da Equipe
+            <ArrowRight className="h-4 w-4 ml-2" />
+          </Button>
         </div>
 
         {/* Stats Cards */}
@@ -87,20 +220,25 @@ export default function MinhaEquipe() {
                 <div>
                   <p className="text-xs text-muted-foreground">Membros ativos</p>
                   <p className="text-2xl font-bold text-foreground">{teamStats.activeMembers}</p>
+                  <p className="text-[10px] text-muted-foreground mt-0.5">Colaboradores ativos na equipe</p>
                 </div>
                 <Users className="h-8 w-8 text-primary/60" />
               </div>
             </CardContent>
           </Card>
 
-          <Card>
+          {/* Volume Total - Highlighted */}
+          <Card className="border-primary/30 bg-gradient-to-br from-primary/5 to-transparent relative overflow-hidden">
+            <div className="absolute top-2 right-2">
+              <div className="h-2 w-2 rounded-full bg-primary animate-pulse" />
+            </div>
             <CardContent className="pt-6">
               <div className="flex items-center justify-between">
                 <div>
-                  <p className="text-xs text-muted-foreground">Volume total</p>
-                  <p className="text-2xl font-bold text-foreground">{formatCurrency(teamStats.totalVolume)}</p>
+                  <p className="text-xs text-muted-foreground">Volume total gerado</p>
+                  <p className="text-2xl font-bold text-primary">{formatCurrency(teamStats.totalVolume)}</p>
                 </div>
-                <DollarSign className="h-8 w-8 text-success/60" />
+                <DollarSign className="h-8 w-8 text-primary/60" />
               </div>
             </CardContent>
           </Card>
@@ -112,7 +250,7 @@ export default function MinhaEquipe() {
                   <p className="text-xs text-muted-foreground">Ticket médio</p>
                   <p className="text-2xl font-bold text-foreground">{formatCurrency(teamStats.averageTicket)}</p>
                 </div>
-                <TrendingUp className="h-8 w-8 text-warning/60" />
+                <TrendingUp className="h-7 w-7 text-muted-foreground/50" />
               </div>
             </CardContent>
           </Card>
@@ -122,9 +260,14 @@ export default function MinhaEquipe() {
               <div className="flex items-center justify-between">
                 <div>
                   <p className="text-xs text-muted-foreground">Status da equipe</p>
-                  <p className="text-2xl font-bold text-success">{teamStats.status}</p>
+                  <p className="text-xl font-bold text-emerald-500">{teamStats.status}</p>
                 </div>
-                <Activity className="h-8 w-8 text-success/60" />
+                <div className="relative">
+                  <Activity className="h-8 w-8 text-emerald-500/60" />
+                  <div className="absolute inset-0 animate-ping">
+                    <Activity className="h-8 w-8 text-emerald-500/20" />
+                  </div>
+                </div>
               </div>
             </CardContent>
           </Card>
@@ -135,10 +278,10 @@ export default function MinhaEquipe() {
           <CardHeader>
             <CardTitle className="text-lg flex items-center gap-2">
               <Users className="h-5 w-5 text-primary" />
-              Lista da Equipe
+              Performance da Equipe
             </CardTitle>
             <CardDescription>
-              Membros vinculados a este acesso
+              Membros vinculados e volume individual gerado
             </CardDescription>
           </CardHeader>
           <CardContent>
@@ -146,29 +289,38 @@ export default function MinhaEquipe() {
               {teamMembers.map((member) => (
                 <div
                   key={member.id}
-                  className="flex items-center justify-between p-4 rounded-lg bg-muted/30 border border-border/50"
+                  className="p-4 rounded-xl bg-muted/30 border border-border/50 hover:border-border transition-colors"
                 >
-                  <div className="flex items-center gap-4">
-                    <div className="h-10 w-10 rounded-full bg-primary/10 flex items-center justify-center">
-                      <span className="text-sm font-medium text-primary">
-                        {member.name.split(' ').map(n => n[0]).join('')}
-                      </span>
+                  <div className="flex items-center justify-between mb-3">
+                    <div className="flex items-center gap-3">
+                      <div className="h-10 w-10 rounded-full bg-gradient-to-br from-primary/20 to-primary/5 flex items-center justify-center border border-primary/10">
+                        <span className="text-sm font-semibold text-primary">
+                          {member.name.split(' ').map(n => n[0]).join('')}
+                        </span>
+                      </div>
+                      <div>
+                        <p className="font-medium text-foreground">{member.name}</p>
+                        <p className="text-xs text-muted-foreground">
+                          Entrada em {formatDate(member.joinedAt)}
+                        </p>
+                      </div>
                     </div>
-                    <div>
-                      <p className="font-medium text-foreground">{member.name}</p>
-                      <p className="text-xs text-muted-foreground">
-                        Entrada em {formatDate(member.joinedAt)}
-                      </p>
+                    <div className="flex items-center gap-3">
+                      <div className="text-right">
+                        <p className="text-sm font-semibold text-foreground">{formatCurrency(member.volume)}</p>
+                        <p className="text-[10px] text-muted-foreground">volume gerado</p>
+                      </div>
+                      <Badge variant="outline" className="bg-emerald-500/10 text-emerald-600 border-emerald-500/20 text-xs">
+                        Ativo
+                      </Badge>
                     </div>
                   </div>
-                  <div className="flex items-center gap-4">
-                    <div className="text-right">
-                      <p className="text-sm font-medium text-foreground">{formatCurrency(member.volume)}</p>
-                      <p className="text-xs text-muted-foreground">volume gerado</p>
-                    </div>
-                    <Badge variant="outline" className="bg-success/10 text-success border-success/20">
-                      Ativo
-                    </Badge>
+                  {/* Progress Bar */}
+                  <div className="h-2 rounded-full bg-muted overflow-hidden">
+                    <div 
+                      className="h-full rounded-full bg-gradient-to-r from-emerald-500 to-emerald-400 transition-all duration-500"
+                      style={{ width: `${getProgressPercentage(member.volume)}%` }}
+                    />
                   </div>
                 </div>
               ))}
@@ -176,46 +328,36 @@ export default function MinhaEquipe() {
           </CardContent>
         </Card>
 
-        {/* Promotional Link Section */}
-        <Card className="border-primary/20 bg-primary/[0.02]">
-          <CardHeader>
-            <CardTitle className="text-lg">Acesso Promocional da Equipe</CardTitle>
-            <CardDescription>
-              Este acesso é destinado a pessoas vinculadas à equipe. O valor promocional existe como benefício de entrada e acompanhamento inicial.
-            </CardDescription>
-          </CardHeader>
-          <CardContent className="space-y-6">
-            <div className="grid sm:grid-cols-2 gap-4">
-              <div className="p-4 rounded-lg bg-muted/50 border border-border/50">
-                <p className="text-sm text-muted-foreground">Plano Mensal</p>
-                <p className="text-2xl font-bold text-foreground mt-1">R$ 197</p>
+        {/* CTA Growth Block */}
+        <Card className="border-primary/20 bg-gradient-to-br from-primary/5 via-transparent to-transparent">
+          <CardContent className="py-8">
+            <div className="flex flex-col md:flex-row items-center gap-6 text-center md:text-left">
+              <div className="h-14 w-14 rounded-2xl bg-primary/10 flex items-center justify-center shrink-0">
+                <Zap className="h-7 w-7 text-primary" />
               </div>
-              <div className="p-4 rounded-lg bg-muted/50 border border-border/50">
-                <p className="text-sm text-muted-foreground">Plano Vitalício</p>
-                <p className="text-2xl font-bold text-foreground mt-1">R$ 297</p>
+              <div className="flex-1">
+                <h3 className="text-lg font-semibold text-foreground mb-1">
+                  Expanda sua equipe e aumente o volume gerado
+                </h3>
+                <p className="text-sm text-muted-foreground">
+                  Membros com acesso promocional tendem a operar mais, vender mais e gerar maior volume dentro do Nexia Suite.
+                </p>
               </div>
-            </div>
-
-            <div className="flex flex-col sm:flex-row items-start sm:items-center gap-3 p-4 rounded-lg bg-muted/30 border border-border/50">
-              <div className="flex-1 min-w-0">
-                <p className="text-xs text-muted-foreground mb-1">Link de acesso</p>
-                <p className="text-sm font-mono text-foreground truncate">{promoLink}</p>
-              </div>
-              <Button onClick={copyPromoLink} className="shrink-0">
-                <Copy className="h-4 w-4 mr-2" />
-                Copiar link de acesso
+              <Button 
+                onClick={() => setShowPromoArea(true)}
+                className="shrink-0"
+              >
+                Gerar link promocional da equipe
+                <ArrowRight className="h-4 w-4 ml-2" />
               </Button>
             </div>
           </CardContent>
         </Card>
 
         {/* Context Notice */}
-        <div className="flex items-start gap-3 p-4 rounded-lg bg-muted/30 border border-border/50">
-          <Info className="h-5 w-5 text-muted-foreground shrink-0 mt-0.5" />
-          <p className="text-sm text-muted-foreground">
-            Esta área é administrativa e não representa funcionalidades públicas da plataforma.
-          </p>
-        </div>
+        <p className="text-center text-xs text-muted-foreground py-2">
+          Esta área é administrativa e representa uma visão interna de performance da equipe.
+        </p>
       </div>
     </AppLayout>
   );
