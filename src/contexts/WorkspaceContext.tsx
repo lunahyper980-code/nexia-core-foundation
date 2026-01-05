@@ -34,16 +34,38 @@ export function WorkspaceProvider({ children }: { children: ReactNode }) {
       return;
     }
 
+    // Try to fetch existing workspace
     const { data, error } = await supabase
       .from('workspaces')
       .select('*')
       .eq('user_id', user.id)
-      .single();
+      .maybeSingle();
 
     if (error) {
       console.error('Error fetching workspace:', error);
-    } else {
+      setLoading(false);
+      return;
+    }
+
+    if (data) {
       setWorkspace(data as Workspace);
+      setLoading(false);
+      return;
+    }
+
+    // No workspace found - create one automatically
+    console.log('No workspace found, creating one...');
+    const { data: newWorkspace, error: createError } = await supabase
+      .from('workspaces')
+      .insert({ user_id: user.id })
+      .select()
+      .single();
+
+    if (createError) {
+      console.error('Error creating workspace:', createError);
+    } else {
+      setWorkspace(newWorkspace as Workspace);
+      console.log('Workspace created successfully');
     }
     setLoading(false);
   };
