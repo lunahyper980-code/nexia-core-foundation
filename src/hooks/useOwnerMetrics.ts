@@ -16,17 +16,17 @@ const OWNER_EMAIL = 'emilysantos170706@gmail.com';
 // ==============================================
 
 const BASE_METRICS = {
-  projects: 14,           // Projetos ativos (entre 12-18)
-  proposals: 18,          // Propostas em aberto
-  clients: 12,            // Clientes cadastrados
-  plannings: 15,          // Planejamentos
-  pendingTasks: 6,        // Tarefas pendentes
-  completedTasks: 19,     // Tarefas concluídas
-  deliveries: 11,         // Entregas em andamento
-  contracts: 10,          // Contratos
+  projects: 32,           // Soluções criadas (entre 25-43)
+  proposals: 38,          // Propostas em aberto (entre 25-43)
+  clients: 29,            // Clientes cadastrados (entre 25-43)
+  plannings: 27,          // Planejamentos
+  pendingTasks: 12,       // Tarefas pendentes
+  completedTasks: 41,     // Tarefas concluídas
+  deliveries: 26,         // Entregas em andamento (entre 25-43)
+  contracts: 24,          // Contratos
   averageTicket: 0,       // Será calculado: pipeline ÷ projetos
-  totalPipelineValue: 31500, // Pipeline entre R$ 28.000 e R$ 35.000
-  totalProposalValue: 31500,
+  totalPipelineValue: 74500, // Pipeline coerente com mais projetos
+  totalProposalValue: 74500,
 };
 
 // Incremento a cada 48 horas
