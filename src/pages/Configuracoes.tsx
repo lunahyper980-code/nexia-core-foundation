@@ -1,4 +1,5 @@
 import { useState, useEffect } from 'react';
+import { useNavigate } from 'react-router-dom';
 import { AppLayout } from '@/components/AppLayout';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
@@ -7,9 +8,10 @@ import { Label } from '@/components/ui/label';
 import { Separator } from '@/components/ui/separator';
 import { Badge } from '@/components/ui/badge';
 import { useAuth } from '@/contexts/AuthContext';
+import { useIsAdmin } from '@/hooks/useIsAdmin';
 import { supabase } from '@/integrations/supabase/client';
 import { toast } from 'sonner';
-import { User, Shield, CreditCard, Save, Loader2 } from 'lucide-react';
+import { User, Shield, CreditCard, Save, Loader2, Settings2 } from 'lucide-react';
 
 interface Profile {
   id: string;
@@ -25,6 +27,8 @@ interface Subscription {
 
 export default function Configuracoes() {
   const { user } = useAuth();
+  const { isAdmin } = useIsAdmin();
+  const navigate = useNavigate();
   const [profile, setProfile] = useState<Profile | null>(null);
   const [subscription, setSubscription] = useState<Subscription | null>(null);
   const [loading, setLoading] = useState(true);
@@ -212,6 +216,29 @@ export default function Configuracoes() {
             </div>
           </CardContent>
         </Card>
+
+        {/* Admin Section - Only visible to admins */}
+        {isAdmin && (
+          <Card className="border-primary/20">
+            <CardHeader>
+              <div className="flex items-center gap-3">
+                <div className="p-2 rounded-lg bg-primary/10">
+                  <Settings2 className="h-5 w-5 text-primary" />
+                </div>
+                <div>
+                  <CardTitle className="text-lg">Painel Admin</CardTitle>
+                  <CardDescription>Área restrita para administradores</CardDescription>
+                </div>
+              </div>
+            </CardHeader>
+            <CardContent>
+              <Button onClick={() => navigate('/admin/creditos')} className="gap-2">
+                <Settings2 className="h-4 w-4" />
+                Acessar Painel Admin
+              </Button>
+            </CardContent>
+          </Card>
+        )}
       </div>
     </AppLayout>
   );

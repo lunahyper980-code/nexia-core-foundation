@@ -743,6 +743,59 @@ export type Database = {
         }
         Relationships: []
       }
+      lovable_credit_requests: {
+        Row: {
+          admin_message: string | null
+          admin_note: string | null
+          created_at: string
+          id: string
+          invite_link: string
+          resolved_at: string | null
+          status: string
+          updated_at: string
+          user_email: string
+          user_id: string
+          user_note: string | null
+          workspace_id: string
+        }
+        Insert: {
+          admin_message?: string | null
+          admin_note?: string | null
+          created_at?: string
+          id?: string
+          invite_link: string
+          resolved_at?: string | null
+          status?: string
+          updated_at?: string
+          user_email: string
+          user_id: string
+          user_note?: string | null
+          workspace_id: string
+        }
+        Update: {
+          admin_message?: string | null
+          admin_note?: string | null
+          created_at?: string
+          id?: string
+          invite_link?: string
+          resolved_at?: string | null
+          status?: string
+          updated_at?: string
+          user_email?: string
+          user_id?: string
+          user_note?: string | null
+          workspace_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "lovable_credit_requests_workspace_id_fkey"
+            columns: ["workspace_id"]
+            isOneToOne: false
+            referencedRelation: "workspaces"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       metrics_history: {
         Row: {
           clients_count: number
@@ -1671,7 +1724,7 @@ export type Database = {
       [_ in never]: never
     }
     Functions: {
-      [_ in never]: never
+      is_admin_or_owner: { Args: { uid: string }; Returns: boolean }
     }
     Enums: {
       [_ in never]: never
