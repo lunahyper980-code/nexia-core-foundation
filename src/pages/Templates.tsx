@@ -276,12 +276,12 @@ const templates: Template[] = [
     category: 'profissional',
   },
   {
-    id: 'loja-roupas-site',
-    name: 'Loja de Roupas',
-    description: 'Vitrine virtual elegante para lojas de moda e vestuário',
-    image: templateLojaRoupas,
+    id: 'site-barbearia',
+    name: 'Site para Barbearia',
+    description: 'Presença digital profissional para barbearias e barbeiros autônomos',
+    image: templateBarbearia,
     type: 'site',
-    category: 'comercio',
+    category: 'servicos',
   },
   // New Site Templates
   {
