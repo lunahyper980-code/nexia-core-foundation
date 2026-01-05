@@ -1,6 +1,6 @@
 import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { Rocket, ArrowLeft, ArrowRight, Loader2, Building2, Sparkles, Palette, ListChecks, CheckCircle2, FileText, ExternalLink, Download, Copy, Check, MessageSquare, Lightbulb } from 'lucide-react';
+import { Rocket, ArrowLeft, ArrowRight, Loader2, Building2, Sparkles, Palette, ListChecks, CheckCircle2, FileText, ExternalLink, Download, Copy, Check, MessageSquare, Lightbulb, Image } from 'lucide-react';
 import { toast } from 'sonner';
 import { supabase } from '@/integrations/supabase/client';
 import { useWorkspace } from '@/contexts/WorkspaceContext';
@@ -16,12 +16,10 @@ import { Badge } from '@/components/ui/badge';
 import { validateShortInput, validateBusinessInput, sanitizeInput } from '@/lib/inputValidation';
 
 interface FormData {
-  // Step 1 - Context
   projectName: string;
   projectType: string;
   targetAudience: string;
   mainObjective: string;
-  // Step 3 - Visual Identity
   brandStyle: string;
   brandFeeling: string;
   preferredColors: string[];
@@ -34,11 +32,11 @@ interface IdentityContent {
   prompt_logo: string;
   tipografia_sugerida: string;
   paleta_cores: string;
+  logo_url?: string;
 }
 
 const TOTAL_STEPS = 4;
 
-// Predefined color palette options
 const COLOR_PALETTE = [
   { name: 'Azul Navy', color: '#1E3A5F', textColor: 'white' },
   { name: 'Verde Esmeralda', color: '#047857', textColor: 'white' },
@@ -103,6 +101,25 @@ export default function KitLancamentoWizard() {
     setCopiedField(field);
     toast.success('Copiado para a área de transferência!');
     setTimeout(() => setCopiedField(null), 2000);
+  };
+
+  const handleDownloadLogo = async (logoUrl: string) => {
+    try {
+      const response = await fetch(logoUrl);
+      const blob = await response.blob();
+      const url = window.URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = `logo-${formData.projectName.toLowerCase().replace(/\s+/g, '-')}.png`;
+      document.body.appendChild(a);
+      a.click();
+      document.body.removeChild(a);
+      window.URL.revokeObjectURL(url);
+      toast.success('Logo baixado com sucesso!');
+    } catch (error) {
+      console.error('Error downloading logo:', error);
+      toast.error('Erro ao baixar logo');
+    }
   };
 
   const CopyButton = ({ text, field, label }: { text: string; field: string; label?: string }) => (
@@ -175,7 +192,6 @@ export default function KitLancamentoWizard() {
         urgency: 'medio',
       };
 
-      // Save record first
       const { data: launchKit, error: insertError } = await supabase
         .from('launch_kits')
         .insert({
@@ -195,7 +211,6 @@ export default function KitLancamentoWizard() {
       if (insertError) throw insertError;
       setLaunchKitId(launchKit.id);
 
-      // Generate with AI
       const { data: aiData, error: aiError } = await supabase.functions.invoke('generate-launch-kit', {
         body: sanitizedData
       });
@@ -208,7 +223,6 @@ export default function KitLancamentoWizard() {
 
       setGeneratedContent(aiData.data);
 
-      // Update with generated content
       await supabase
         .from('launch_kits')
         .update({
@@ -219,7 +233,7 @@ export default function KitLancamentoWizard() {
         .eq('id', launchKit.id);
 
       toast.success('Estrutura de lançamento gerada!');
-      setStep(2); // Go to Step 2 to SHOW the structure
+      setStep(2);
 
     } catch (error: any) {
       console.error('Error generating launch structure:', error);
@@ -229,7 +243,7 @@ export default function KitLancamentoWizard() {
     }
   };
 
-  const handleGenerateIdentity = async () => {
+  const handleGenerateIdentityAndLogo = async () => {
     if (!validateStep3()) return;
     if (!launchKitId) {
       toast.error('Kit não encontrado');
@@ -249,6 +263,7 @@ export default function KitLancamentoWizard() {
           preferredColors: colorsText,
           visualNotes: formData.visualNotes,
           secondaryText: formData.secondaryText,
+          generateImage: true,
         }
       });
 
@@ -260,7 +275,7 @@ export default function KitLancamentoWizard() {
 
       setIdentityContent(identityResult.data);
 
-      // Update kit with identity data
+      // Update kit with identity and logo data
       await supabase
         .from('launch_kits')
         .update({
@@ -270,10 +285,13 @@ export default function KitLancamentoWizard() {
           visual_notes: formData.visualNotes,
           logo_concept: identityResult.data.descricao_identidade,
           logo_usage_guidelines: identityResult.data.prompt_logo,
+          logo_url: identityResult.data.logo_url || null,
         })
         .eq('id', launchKitId);
 
-      toast.success('Identidade de lançamento gerada!');
+      toast.success(identityResult.data.logo_url 
+        ? 'Identidade e logo gerados com sucesso!' 
+        : 'Identidade gerada! Logo não disponível no momento.');
       setStep(4);
 
     } catch (error: any) {
@@ -297,7 +315,6 @@ export default function KitLancamentoWizard() {
         .update({ status: 'completed' })
         .eq('id', launchKitId);
 
-      // Log activity
       await supabase.from('activity_logs').insert({
         workspace_id: workspace!.id,
         user_id: user!.id,
@@ -468,7 +485,6 @@ export default function KitLancamentoWizard() {
                 </CardDescription>
               </CardHeader>
               <CardContent className="space-y-6">
-                {/* Tipo de Lançamento e Objetivo */}
                 <div className="grid gap-4 md:grid-cols-2">
                   <div className="p-4 bg-violet-500/5 rounded-lg border border-violet-500/20">
                     <h3 className="font-medium text-violet-600 mb-2 flex items-center gap-2">
@@ -490,7 +506,6 @@ export default function KitLancamentoWizard() {
                   </div>
                 </div>
 
-                {/* Estrutura Geral */}
                 {generatedContent.estrutura_lancamento && (
                   <div className="p-4 bg-muted/50 rounded-lg border">
                     <h3 className="font-medium mb-2">Visão Geral do Lançamento</h3>
@@ -498,12 +513,10 @@ export default function KitLancamentoWizard() {
                   </div>
                 )}
 
-                {/* Fases do Lançamento */}
                 {generatedContent.sequencia_acoes && (
                   <div className="space-y-4">
                     <h3 className="font-medium">Fases do Lançamento</h3>
                     <div className="grid gap-4 md:grid-cols-3">
-                      {/* Pré-Lançamento */}
                       {generatedContent.sequencia_acoes.pre_lancamento && (
                         <div className="p-4 bg-amber-500/5 rounded-lg border border-amber-500/20">
                           <h4 className="font-medium text-amber-600 mb-3 text-sm">🎯 Pré-Lançamento</h4>
@@ -518,7 +531,6 @@ export default function KitLancamentoWizard() {
                         </div>
                       )}
 
-                      {/* Durante */}
                       {generatedContent.sequencia_acoes.durante && (
                         <div className="p-4 bg-green-500/5 rounded-lg border border-green-500/20">
                           <h4 className="font-medium text-green-600 mb-3 text-sm">🚀 Durante o Lançamento</h4>
@@ -533,7 +545,6 @@ export default function KitLancamentoWizard() {
                         </div>
                       )}
 
-                      {/* Pós-Lançamento */}
                       {generatedContent.sequencia_acoes.pos_lancamento && (
                         <div className="p-4 bg-blue-500/5 rounded-lg border border-blue-500/20">
                           <h4 className="font-medium text-blue-600 mb-3 text-sm">💡 Pós-Lançamento</h4>
@@ -551,7 +562,6 @@ export default function KitLancamentoWizard() {
                   </div>
                 )}
 
-                {/* Ideia de Oferta */}
                 {generatedContent.ideia_oferta && (
                   <div className="p-4 bg-pink-500/5 rounded-lg border border-pink-500/20">
                     <h3 className="font-medium text-pink-600 mb-2">💎 Oferta Principal Sugerida</h3>
@@ -559,7 +569,6 @@ export default function KitLancamentoWizard() {
                   </div>
                 )}
 
-                {/* Mensagens de Divulgação */}
                 {generatedContent.mensagens_divulgacao && (
                   <div className="space-y-3">
                     <h3 className="font-medium">Gatilhos e Mensagens</h3>
@@ -586,7 +595,6 @@ export default function KitLancamentoWizard() {
                   </div>
                 )}
 
-                {/* Checklist Resumido */}
                 {generatedContent.checklist_execucao && (
                   <div className="p-4 bg-muted/30 rounded-lg border">
                     <h3 className="font-medium mb-3 flex items-center gap-2">
@@ -631,17 +639,16 @@ export default function KitLancamentoWizard() {
                   Identidade do Lançamento
                 </CardTitle>
                 <CardDescription>
-                  Configure o estilo visual para gerar a identidade de marca
+                  Configure o estilo visual para gerar a identidade e o logo
                 </CardDescription>
               </CardHeader>
               <CardContent className="space-y-4">
-                <div className="p-3 bg-blue-500/10 border border-blue-500/20 rounded-lg">
-                  <p className="text-sm text-blue-700">
-                    💡 A IA irá gerar uma descrição textual da identidade visual e um prompt profissional para você gerar a logo em ferramentas de IA de imagem.
+                <div className="p-3 bg-violet-500/10 border border-violet-500/20 rounded-lg">
+                  <p className="text-sm text-violet-700">
+                    ✨ A IA vai gerar automaticamente um logotipo profissional baseado nas suas escolhas!
                   </p>
                 </div>
 
-                {/* Nome principal da marca */}
                 <div className="space-y-2">
                   <Label htmlFor="brandName">Nome principal da marca</Label>
                   <Input
@@ -650,10 +657,8 @@ export default function KitLancamentoWizard() {
                     disabled
                     className="bg-muted"
                   />
-                  <p className="text-xs text-muted-foreground">Definido na etapa anterior</p>
                 </div>
 
-                {/* Texto secundário */}
                 <div className="space-y-2">
                   <Label htmlFor="secondaryText">Texto secundário / Slogan (opcional)</Label>
                   <Input
@@ -701,7 +706,6 @@ export default function KitLancamentoWizard() {
                   {errors.brandFeeling && <p className="text-sm text-destructive">{errors.brandFeeling}</p>}
                 </div>
 
-                {/* Cores como Cards */}
                 <div className="space-y-2">
                   <Label>Cores principais * (selecione até 3)</Label>
                   <div className="grid grid-cols-4 sm:grid-cols-6 gap-2">
@@ -754,13 +758,41 @@ export default function KitLancamentoWizard() {
                   />
                 </div>
 
-                {/* Generated Identity Content */}
+                {/* Generated Identity with Logo */}
                 {identityContent && (
                   <div className="mt-6 space-y-4 pt-4 border-t">
                     <h3 className="font-medium flex items-center gap-2">
                       <Sparkles className="h-4 w-4 text-violet-500" />
                       Identidade Gerada
                     </h3>
+
+                    {/* Logo Generated */}
+                    {identityContent.logo_url && (
+                      <div className="p-4 bg-gradient-to-br from-violet-500/10 to-pink-500/10 rounded-lg border border-violet-500/20">
+                        <div className="flex items-center justify-between mb-3">
+                          <h4 className="font-medium text-violet-600 flex items-center gap-2">
+                            <Image className="h-4 w-4" />
+                            Logo Gerado
+                          </h4>
+                          <Button 
+                            variant="outline" 
+                            size="sm" 
+                            onClick={() => handleDownloadLogo(identityContent.logo_url!)}
+                            className="gap-2"
+                          >
+                            <Download className="h-3 w-3" />
+                            Baixar PNG
+                          </Button>
+                        </div>
+                        <div className="flex justify-center bg-white rounded-lg p-6 border">
+                          <img 
+                            src={identityContent.logo_url} 
+                            alt="Logo gerado" 
+                            className="max-w-[200px] max-h-[200px] object-contain"
+                          />
+                        </div>
+                      </div>
+                    )}
                     
                     <div className="p-4 bg-violet-500/5 rounded-lg border border-violet-500/20">
                       <div className="flex items-center justify-between mb-2">
@@ -792,13 +824,10 @@ export default function KitLancamentoWizard() {
 
                     <div className="p-4 bg-amber-500/5 rounded-lg border border-amber-500/20">
                       <div className="flex items-center justify-between mb-2">
-                        <h4 className="font-medium text-amber-600">🎨 Prompt para Gerar Logo em IA de Imagem</h4>
+                        <h4 className="font-medium text-amber-600">🎨 Prompt para Gerar Logo (alternativo)</h4>
                         <CopyButton text={identityContent.prompt_logo} field="identity_prompt" label="Copiar Prompt" />
                       </div>
                       <p className="text-sm text-muted-foreground font-mono bg-muted/50 p-3 rounded">{identityContent.prompt_logo}</p>
-                      <p className="text-xs text-muted-foreground mt-2">
-                        Use este prompt em ferramentas como DALL-E, Midjourney, ou Canva AI para gerar sua logo.
-                      </p>
                     </div>
                   </div>
                 )}
@@ -813,24 +842,24 @@ export default function KitLancamentoWizard() {
                       Pular esta etapa
                     </Button>
                     <Button 
-                      onClick={identityContent ? () => setStep(4) : handleGenerateIdentity} 
+                      onClick={identityContent ? () => setStep(4) : handleGenerateIdentityAndLogo} 
                       disabled={isGeneratingIdentity}
                       className="gap-2 bg-violet-500 hover:bg-violet-600"
                     >
                       {isGeneratingIdentity ? (
                         <>
                           <Loader2 className="h-4 w-4 animate-spin" />
-                          Gerando identidade...
+                          Gerando identidade e logo...
                         </>
                       ) : identityContent ? (
                         <>
-                          Continuar
+                          Continuar para Conclusão
                           <ArrowRight className="h-4 w-4" />
                         </>
                       ) : (
                         <>
                           <Sparkles className="h-4 w-4" />
-                          Gerar Identidade de Lançamento
+                          Avançar e Gerar Logo
                         </>
                       )}
                     </Button>
@@ -841,7 +870,7 @@ export default function KitLancamentoWizard() {
           </div>
         )}
 
-        {/* Step 4: Conclusion - COMPLETE */}
+        {/* Step 4: Conclusion */}
         {step === 4 && (
           <div className="space-y-4">
             <Card className="border-green-500/30 bg-green-500/5">
@@ -885,10 +914,8 @@ export default function KitLancamentoWizard() {
                       Estrutura de Lançamento Gerada
                     </h3>
 
-                    {/* Fases com ações reais */}
                     {generatedContent.sequencia_acoes && (
                       <div className="grid gap-4 md:grid-cols-3">
-                        {/* Pré-Lançamento */}
                         {generatedContent.sequencia_acoes.pre_lancamento && (
                           <div className="p-4 bg-amber-500/5 rounded-lg border border-amber-500/20">
                             <h4 className="font-medium text-amber-600 mb-3 text-sm flex items-center gap-2">
@@ -908,7 +935,6 @@ export default function KitLancamentoWizard() {
                           </div>
                         )}
 
-                        {/* Durante */}
                         {generatedContent.sequencia_acoes.durante && (
                           <div className="p-4 bg-green-500/5 rounded-lg border border-green-500/20">
                             <h4 className="font-medium text-green-600 mb-3 text-sm flex items-center gap-2">
@@ -928,7 +954,6 @@ export default function KitLancamentoWizard() {
                           </div>
                         )}
 
-                        {/* Pós-Lançamento */}
                         {generatedContent.sequencia_acoes.pos_lancamento && (
                           <div className="p-4 bg-blue-500/5 rounded-lg border border-blue-500/20">
                             <h4 className="font-medium text-blue-600 mb-3 text-sm flex items-center gap-2">
@@ -950,7 +975,6 @@ export default function KitLancamentoWizard() {
                       </div>
                     )}
 
-                    {/* Gatilhos e Mensagens de Divulgação */}
                     {generatedContent.mensagens_divulgacao && (
                       <div className="p-4 bg-pink-500/5 rounded-lg border border-pink-500/20">
                         <h4 className="font-medium text-pink-600 mb-4 flex items-center gap-2">
@@ -989,7 +1013,6 @@ export default function KitLancamentoWizard() {
                       </div>
                     )}
 
-                    {/* Ideia de Oferta */}
                     {generatedContent.ideia_oferta && (
                       <div className="p-4 bg-violet-500/5 rounded-lg border border-violet-500/20">
                         <div className="flex items-center justify-between mb-2">
@@ -1005,7 +1028,7 @@ export default function KitLancamentoWizard() {
                   </div>
                 )}
 
-                {/* Identidade Visual na Conclusão */}
+                {/* Identidade Visual na Conclusão com Logo */}
                 {identityContent ? (
                   <div className="p-4 bg-gradient-to-br from-violet-500/5 to-pink-500/5 rounded-lg border border-violet-500/20">
                     <h3 className="font-medium mb-4 flex items-center gap-2">
@@ -1013,61 +1036,79 @@ export default function KitLancamentoWizard() {
                       Identidade Visual
                     </h3>
                     
-                    <div className="grid gap-4 sm:grid-cols-2">
-                      <div>
-                        <span className="text-xs text-muted-foreground">Nome da Marca</span>
-                        <p className="font-medium">{formData.projectName}</p>
-                        {formData.secondaryText && (
-                          <p className="text-sm text-muted-foreground">{formData.secondaryText}</p>
-                        )}
-                      </div>
-                      <div>
-                        <span className="text-xs text-muted-foreground">Estilo Visual</span>
-                        <p className="font-medium capitalize">{formData.brandStyle}</p>
-                        <p className="text-sm text-muted-foreground capitalize">{formData.brandFeeling}</p>
-                      </div>
-                    </div>
+                    <div className="flex flex-col md:flex-row gap-6">
+                      {/* Logo Preview */}
+                      {identityContent.logo_url && (
+                        <div className="flex flex-col items-center">
+                          <div className="bg-white rounded-lg p-4 border shadow-sm mb-2">
+                            <img 
+                              src={identityContent.logo_url} 
+                              alt="Logo gerado" 
+                              className="w-32 h-32 object-contain"
+                            />
+                          </div>
+                          <Button 
+                            variant="outline" 
+                            size="sm" 
+                            onClick={() => handleDownloadLogo(identityContent.logo_url!)}
+                            className="gap-2"
+                          >
+                            <Download className="h-3 w-3" />
+                            Baixar PNG
+                          </Button>
+                        </div>
+                      )}
 
-                    {/* Cores Selecionadas como Cards */}
-                    {formData.preferredColors.length > 0 && (
-                      <div className="mt-4">
-                        <span className="text-xs text-muted-foreground mb-2 block">Cores Principais</span>
-                        <div className="flex gap-2">
-                          {getSelectedColors().map(c => (
-                            <div key={c.name} className="flex items-center gap-2 p-2 bg-background rounded-lg border">
-                              <div 
-                                className="w-6 h-6 rounded-md border"
-                                style={{ backgroundColor: c.color }}
-                              />
-                              <span className="text-xs">{c.name}</span>
+                      {/* Identity Info */}
+                      <div className="flex-1 space-y-3">
+                        <div className="grid gap-3 sm:grid-cols-2">
+                          <div>
+                            <span className="text-xs text-muted-foreground">Nome da Marca</span>
+                            <p className="font-medium">{formData.projectName}</p>
+                            {formData.secondaryText && (
+                              <p className="text-sm text-muted-foreground">{formData.secondaryText}</p>
+                            )}
+                          </div>
+                          <div>
+                            <span className="text-xs text-muted-foreground">Estilo Visual</span>
+                            <p className="font-medium capitalize">{formData.brandStyle}</p>
+                            <p className="text-sm text-muted-foreground capitalize">{formData.brandFeeling}</p>
+                          </div>
+                        </div>
+
+                        {formData.preferredColors.length > 0 && (
+                          <div>
+                            <span className="text-xs text-muted-foreground mb-2 block">Cores Principais</span>
+                            <div className="flex gap-2 flex-wrap">
+                              {getSelectedColors().map(c => (
+                                <div key={c.name} className="flex items-center gap-2 p-2 bg-background rounded-lg border">
+                                  <div 
+                                    className="w-6 h-6 rounded-md border"
+                                    style={{ backgroundColor: c.color }}
+                                  />
+                                  <span className="text-xs">{c.name}</span>
+                                </div>
+                              ))}
                             </div>
-                          ))}
+                          </div>
+                        )}
+
+                        <div className="p-3 bg-muted/50 rounded-lg">
+                          <div className="flex items-center justify-between">
+                            <div>
+                              <span className="text-xs text-muted-foreground">Status da Logo</span>
+                              <p className="text-sm font-medium">
+                                {identityContent.logo_url ? 'Logo gerado ✓' : 'Prompt disponível'}
+                              </p>
+                            </div>
+                            <CopyButton 
+                              text={identityContent.prompt_logo} 
+                              field="conclusion_prompt" 
+                              label="Copiar Prompt"
+                            />
+                          </div>
                         </div>
                       </div>
-                    )}
-
-                    {/* Status da Logo */}
-                    <div className="mt-4 p-3 bg-muted/50 rounded-lg">
-                      <div className="flex items-center justify-between">
-                        <div>
-                          <span className="text-xs text-muted-foreground">Status da Logo</span>
-                          <p className="text-sm font-medium">
-                            Prompt de logo gerado ✓
-                          </p>
-                        </div>
-                        <CopyButton 
-                          text={identityContent.prompt_logo} 
-                          field="conclusion_prompt" 
-                          label="Copiar Prompt"
-                        />
-                      </div>
-                    </div>
-
-                    {/* Descrição resumida */}
-                    <div className="mt-3">
-                      <p className="text-sm text-muted-foreground line-clamp-2">
-                        {identityContent.descricao_identidade}
-                      </p>
                     </div>
                   </div>
                 ) : (
@@ -1160,11 +1201,11 @@ export default function KitLancamentoWizard() {
                   <Loader2 className="h-6 w-6 text-violet-500 animate-spin absolute -bottom-1 -right-1" />
                 </div>
                 <h3 className="text-lg font-semibold mt-4">
-                  {isGeneratingIdentity ? 'Gerando identidade...' : 'Gerando estrutura de lançamento...'}
+                  {isGeneratingIdentity ? 'Gerando identidade e logo...' : 'Gerando estrutura de lançamento...'}
                 </h3>
                 <p className="text-sm text-muted-foreground text-center mt-2">
                   {isGeneratingIdentity 
-                    ? `Criando identidade visual para ${formData.projectName}`
+                    ? `Criando identidade visual e logo para ${formData.projectName}`
                     : `A IA está criando um plano de lançamento para ${formData.projectName}`
                   }
                 </p>
