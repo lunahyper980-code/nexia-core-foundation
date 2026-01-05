@@ -1,4 +1,4 @@
-import { Link, Navigate } from 'react-router-dom';
+import { Link } from 'react-router-dom';
 import { AppLayout } from '@/components/AppLayout';
 import { PremiumFrame } from '@/components/ui/PremiumFrame';
 import { useClients } from '@/hooks/useClients';
@@ -32,7 +32,7 @@ const getActivityIcon = (type: string) => {
 export default function Dashboard() {
   const { clients } = useClients();
   const { logs } = useActivityLogs();
-  const { isOwner, metrics: ownerMetrics, getMetricValue } = useOwnerMetrics();
+  const { isOwner, metrics: ownerMetrics } = useOwnerMetrics();
   const { metrics: realMetrics, metricsHistory } = useRealMetrics();
   const { isAdminOrOwner, loading: roleLoading } = useUserRole();
 
@@ -47,18 +47,14 @@ export default function Dashboard() {
     );
   }
 
-  // Redireciona se não for admin/owner
-  if (!isAdminOrOwner) {
-    return <Navigate to="/solucoes" replace />;
-  }
-
-  // Para usuários normais, usar métricas reais; para owner, usar fictícias
-  const displayMetrics = isOwner ? ownerMetrics : realMetrics;
+  // Para admin/owner, usar métricas fictícias; para usuários normais, usar métricas reais
+  const displayMetrics = isAdminOrOwner ? ownerMetrics : realMetrics;
+  const isUsingRealMetrics = !isAdminOrOwner;
 
   const stats = [
     {
       title: 'Propostas Criadas',
-      value: (isOwner ? ownerMetrics.proposals : realMetrics.proposals).toString(),
+      value: displayMetrics.proposals.toString(),
       description: 'Total de propostas',
       icon: ShoppingCart,
       color: 'text-warning',
@@ -66,7 +62,7 @@ export default function Dashboard() {
     },
     {
       title: 'Contratos Gerados',
-      value: (isOwner ? ownerMetrics.contracts : realMetrics.contracts).toString(),
+      value: displayMetrics.contracts.toString(),
       description: 'Documentos criados',
       icon: Layers,
       color: 'text-primary',
@@ -74,7 +70,7 @@ export default function Dashboard() {
     },
     {
       title: 'Valor em Propostas',
-      value: `R$ ${(isOwner ? ownerMetrics.totalPipelineValue : realMetrics.totalPipelineValue).toLocaleString('pt-BR')}`,
+      value: `R$ ${displayMetrics.totalPipelineValue.toLocaleString('pt-BR')}`,
       description: 'Propostas ganhas',
       icon: Package,
       color: 'text-success',
@@ -82,7 +78,7 @@ export default function Dashboard() {
     },
     {
       title: 'Valor Médio',
-      value: `R$ ${(isOwner ? ownerMetrics.averageTicket : realMetrics.averageTicket).toLocaleString('pt-BR')}`,
+      value: `R$ ${displayMetrics.averageTicket.toLocaleString('pt-BR')}`,
       description: 'Por projeto',
       icon: Users,
       color: 'text-primary',
@@ -112,6 +108,11 @@ export default function Dashboard() {
               </div>
             ))}
           </div>
+          {isUsingRealMetrics && (
+            <p className="text-xs text-muted-foreground/60 mt-4 text-center">
+              Seus números sobem conforme você cria propostas e fecha projetos.
+            </p>
+          )}
         </PremiumFrame>
 
         {/* Status da Operação + Atividade Comunidade */}
@@ -121,14 +122,14 @@ export default function Dashboard() {
             initialProposalsCount={displayMetrics.proposals}
             initialPipelineValue={displayMetrics.totalPipelineValue}
             initialAverageTicket={displayMetrics.averageTicket}
-            isOwner={isOwner}
+            isOwner={isAdminOrOwner}
           />
           <AtividadeComunidade />
         </div>
 
         <div className="mt-6">
           <GraficoEvolucao
-            isOwner={isOwner}
+            isOwner={isAdminOrOwner}
             currentProjects={displayMetrics.projects}
             currentPipelineValue={displayMetrics.totalPipelineValue}
             userCreatedAt={realMetrics.userCreatedAt}

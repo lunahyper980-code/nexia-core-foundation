@@ -195,7 +195,100 @@ export function useRealMetrics() {
     };
 
     fetchMetrics();
+
+    // Setup realtime subscription for live updates
+    const channel = supabase
+      .channel('real-metrics-updates')
+      .on(
+        'postgres_changes',
+        { event: '*', schema: 'public', table: 'proposals' },
+        () => fetchMetrics()
+      )
+      .on(
+        'postgres_changes',
+        { event: '*', schema: 'public', table: 'projects' },
+        () => fetchMetrics()
+      )
+      .on(
+        'postgres_changes',
+        { event: '*', schema: 'public', table: 'contracts' },
+        () => fetchMetrics()
+      )
+      .subscribe();
+
+    return () => {
+      supabase.removeChannel(channel);
+    };
   }, [workspace, saveCurrentMetrics, fetchMetricsHistory]);
 
-  return { metrics, metricsHistory, loading };
+  const refetch = useCallback(async () => {
+    if (!workspace) return;
+    setLoading(true);
+    // This will trigger the useEffect to re-run
+    const [
+      projectsRes,
+      proposalsRes,
+      clientsRes,
+      deliveriesRes,
+      contractsRes,
+    ] = await Promise.all([
+      supabase
+        .from('projects')
+        .select('id', { count: 'exact', head: true })
+        .eq('workspace_id', workspace.id),
+      supabase
+        .from('proposals')
+        .select('id, total_value, status')
+        .eq('workspace_id', workspace.id),
+      supabase
+        .from('clients')
+        .select('id', { count: 'exact', head: true })
+        .eq('workspace_id', workspace.id),
+      supabase
+        .from('deliveries')
+        .select('id', { count: 'exact', head: true })
+        .eq('workspace_id', workspace.id),
+      supabase
+        .from('contracts')
+        .select('id', { count: 'exact', head: true })
+        .eq('workspace_id', workspace.id),
+    ]);
+
+    const projectsCount = projectsRes.count || 0;
+    const proposalsCount = proposalsRes.count || 0;
+    const clientsCount = clientsRes.count || 0;
+    const deliveriesCount = deliveriesRes.count || 0;
+    const contractsCount = contractsRes.count || 0;
+
+    const wonProposals = proposalsRes.data?.filter((p: any) => 
+      p.status === 'accepted' || p.status === 'won' || p.status === 'closed'
+    ) || [];
+    
+    const proposalsWon = wonProposals.length;
+    const totalPipelineValue = wonProposals.reduce(
+      (sum: number, p: any) => sum + ((p as any).total_value || 0),
+      0
+    );
+    const averageTicket = proposalsWon > 0 
+      ? Math.round(totalPipelineValue / proposalsWon)
+      : 0;
+
+    setMetrics({
+      projects: projectsCount,
+      proposals: proposalsCount,
+      proposalsWon,
+      clients: clientsCount,
+      deliveries: deliveriesCount,
+      contracts: contractsCount,
+      totalPipelineValue,
+      averageTicket,
+      userCreatedAt: workspace.created_at,
+    });
+
+    const history = await fetchMetricsHistory(workspace.id);
+    setMetricsHistory(history);
+    setLoading(false);
+  }, [workspace, fetchMetricsHistory]);
+
+  return { metrics, metricsHistory, loading, refetch };
 }
