@@ -1173,6 +1173,68 @@ export type Database = {
           },
         ]
       }
+      owner_metrics: {
+        Row: {
+          clients: number
+          completed_cycles: number
+          completed_tasks: number
+          contracts: number
+          created_at: string
+          deliveries: number
+          id: string
+          pending_tasks: number
+          plannings: number
+          projects: number
+          proposals: number
+          reference_date: string
+          total_pipeline_value: number
+          updated_at: string
+          workspace_id: string
+        }
+        Insert: {
+          clients?: number
+          completed_cycles?: number
+          completed_tasks?: number
+          contracts?: number
+          created_at?: string
+          deliveries?: number
+          id?: string
+          pending_tasks?: number
+          plannings?: number
+          projects?: number
+          proposals?: number
+          reference_date?: string
+          total_pipeline_value?: number
+          updated_at?: string
+          workspace_id: string
+        }
+        Update: {
+          clients?: number
+          completed_cycles?: number
+          completed_tasks?: number
+          contracts?: number
+          created_at?: string
+          deliveries?: number
+          id?: string
+          pending_tasks?: number
+          plannings?: number
+          projects?: number
+          proposals?: number
+          reference_date?: string
+          total_pipeline_value?: number
+          updated_at?: string
+          workspace_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "owner_metrics_workspace_id_fkey"
+            columns: ["workspace_id"]
+            isOneToOne: true
+            referencedRelation: "workspaces"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       process_organizations: {
         Row: {
           attention_points: string | null
@@ -1685,6 +1747,44 @@ export type Database = {
           user_id?: string
         }
         Relationships: []
+      }
+      team_metrics: {
+        Row: {
+          completed_cycles: number
+          created_at: string
+          id: string
+          reference_date: string
+          team_data: Json
+          updated_at: string
+          workspace_id: string
+        }
+        Insert: {
+          completed_cycles?: number
+          created_at?: string
+          id?: string
+          reference_date?: string
+          team_data?: Json
+          updated_at?: string
+          workspace_id: string
+        }
+        Update: {
+          completed_cycles?: number
+          created_at?: string
+          id?: string
+          reference_date?: string
+          team_data?: Json
+          updated_at?: string
+          workspace_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "team_metrics_workspace_id_fkey"
+            columns: ["workspace_id"]
+            isOneToOne: true
+            referencedRelation: "workspaces"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       user_roles: {
         Row: {
