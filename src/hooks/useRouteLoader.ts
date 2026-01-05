@@ -3,39 +3,44 @@ import { useLocation } from 'react-router-dom';
 import { useGlobalLoader } from '@/contexts/GlobalLoaderContext';
 
 /**
- * Hook that shows the global loader during route transitions.
- * Automatically shows loader when route changes and hides after a brief delay.
+ * Hook that manages the global loader during route transitions.
+ * 
+ * SMART BEHAVIOR:
+ * - Does NOT show loader on every route change
+ * - Only triggers loading state, letting GlobalLoaderContext handle visibility
+ * - Fast navigations (< 400ms) will never show the loader
  */
 export function useRouteLoader() {
   const location = useLocation();
-  const { showLoader, hideLoader } = useGlobalLoader();
+  const { startLoading, stopLoading } = useGlobalLoader();
   const previousPath = useRef(location.pathname);
-  const timeoutRef = useRef<NodeJS.Timeout>();
+  const isFirstMount = useRef(true);
 
   useEffect(() => {
-    // Only trigger on actual route changes (not on first mount)
+    // Skip first mount - no loader needed
+    if (isFirstMount.current) {
+      isFirstMount.current = false;
+      previousPath.current = location.pathname;
+      return;
+    }
+
+    // Only trigger on actual route changes
     if (previousPath.current !== location.pathname) {
       previousPath.current = location.pathname;
       
-      // Show loader
-      showLoader();
+      // Start loading (will only show after 400ms delay if still loading)
+      startLoading();
       
-      // Clear any existing timeout
-      if (timeoutRef.current) {
-        clearTimeout(timeoutRef.current);
-      }
+      // For route transitions, we use requestIdleCallback or a microtask
+      // to stop loading once the new route component has rendered
+      // This simulates "content ready" in most cases
       
-      // Hide loader after a short delay (simulates route transition)
-      // In production, this would be tied to actual data loading completion
-      timeoutRef.current = setTimeout(() => {
-        hideLoader();
-      }, 400);
+      // Use requestAnimationFrame to wait for render, then stop
+      requestAnimationFrame(() => {
+        requestAnimationFrame(() => {
+          stopLoading();
+        });
+      });
     }
-
-    return () => {
-      if (timeoutRef.current) {
-        clearTimeout(timeoutRef.current);
-      }
-    };
-  }, [location.pathname, showLoader, hideLoader]);
+  }, [location.pathname, startLoading, stopLoading]);
 }
