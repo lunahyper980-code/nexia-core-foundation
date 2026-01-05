@@ -6,20 +6,37 @@ const corsHeaders = {
   'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type',
 };
 
+function getDemoModePrompt(demoMode: boolean): string {
+  if (!demoMode) return '';
+  
+  return `
+IMPORTANTE - MODO DEMONSTRAÇÃO:
+Os dados podem estar incompletos ou genéricos. Gere uma resposta COMPLETA e PROFISSIONAL.
+- Mantenha 100% da estrutura
+- Use tom profissional
+- Inclua avisos sutis como "Com base nas informações disponíveis..."
+- NUNCA gere erros ou interrompa
+- Gere conteúdo plausível e profissional
+`;
+}
+
 serve(async (req) => {
   if (req.method === 'OPTIONS') {
     return new Response(null, { headers: corsHeaders });
   }
 
   try {
-    const briefingData = await req.json();
+    const { demoMode = false, ...briefingData } = await req.json();
 
     const LOVABLE_API_KEY = Deno.env.get('LOVABLE_API_KEY');
     if (!LOVABLE_API_KEY) {
       throw new Error('LOVABLE_API_KEY is not configured');
     }
 
+    const demoPrompt = getDemoModePrompt(demoMode);
+
     const systemPrompt = `Você é um consultor de negócios digitais. Analise o briefing fornecido e gere uma análise inteligente.
+${demoPrompt}
 
 Responda SEMPRE em JSON válido com a seguinte estrutura:
 {
@@ -34,7 +51,7 @@ Responda SEMPRE em JSON válido com a seguinte estrutura:
     const userPrompt = `Analise este briefing de negócio:
 
 **Dados do Negócio:**
-- Nome: ${briefingData.company_name}
+- Nome: ${briefingData.company_name || 'Empresa demonstração'}
 - Localização: ${briefingData.location || 'Não informada'}
 - Segmento: ${briefingData.segment || 'Não informado'}
 - Tempo de atuação: ${briefingData.time_in_business || 'Não informado'}
@@ -58,7 +75,7 @@ Responda SEMPRE em JSON válido com a seguinte estrutura:
 
 Gere uma análise profissional e objetiva.`;
 
-    console.log('Generating briefing analysis for:', briefingData.company_name);
+    console.log('Generating briefing analysis for:', briefingData.company_name, 'Demo mode:', demoMode);
 
     const response = await fetch('https://ai.gateway.lovable.dev/v1/chat/completions', {
       method: 'POST',

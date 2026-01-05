@@ -24,6 +24,7 @@ import { useWorkspace } from '@/contexts/WorkspaceContext';
 import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '@/hooks/use-toast';
 import { useQuery } from '@tanstack/react-query';
+import { useDemoModeForForms } from '@/hooks/useDemoModeForForms';
 
 interface DiagnosisFormData {
   companyName: string;
@@ -65,6 +66,7 @@ export default function DiagnosticoWizard() {
   const { id } = useParams();
   const { workspace } = useWorkspace();
   const { toast } = useToast();
+  const { isDemoMode, validateRequired, getDemoModeFlag } = useDemoModeForForms();
   
   const [briefingConfirmed, setBriefingConfirmed] = useState(false);
   const [step, setStep] = useState(1);
@@ -213,7 +215,10 @@ export default function DiagnosticoWizard() {
 
       // Generate with AI
       const { data: functionData, error: functionError } = await supabase.functions.invoke('generate-diagnosis', {
-        body: { diagnosisData: formData }
+        body: { 
+          diagnosisData: formData,
+          demoMode: getDemoModeFlag()
+        }
       });
 
       if (functionError) throw functionError;

@@ -12,6 +12,7 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { validateBusinessInput, validateShortInput, sanitizeInput } from '@/lib/inputValidation';
+import { useDemoModeForForms } from '@/hooks/useDemoModeForForms';
 
 interface FormData {
   businessName: string;
@@ -26,6 +27,7 @@ export default function AutoridadeWizard() {
   const navigate = useNavigate();
   const { workspace } = useWorkspace();
   const { user } = useAuth();
+  const { isDemoMode, validateRequired, getDemoModeFlag } = useDemoModeForForms();
   const [step, setStep] = useState(1);
   const [isGenerating, setIsGenerating] = useState(false);
   const [errors, setErrors] = useState<Record<string, string>>({});
@@ -44,6 +46,9 @@ export default function AutoridadeWizard() {
   };
 
   const validateStep1 = (): boolean => {
+    // In demo mode, skip all validations
+    if (isDemoMode) return true;
+
     const newErrors: Record<string, string> = {};
 
     const nameValidation = validateShortInput(formData.businessName, 'Nome do negócio', 3);
@@ -60,6 +65,9 @@ export default function AutoridadeWizard() {
   };
 
   const validateStep2 = (): boolean => {
+    // In demo mode, skip all validations
+    if (isDemoMode) return true;
+
     const newErrors: Record<string, string> = {};
 
     if (!formData.objective) newErrors.objective = 'Selecione o objetivo.';
@@ -114,7 +122,10 @@ export default function AutoridadeWizard() {
 
       // Generate with AI
       const { data: aiData, error: aiError } = await supabase.functions.invoke('generate-authority-strategy', {
-        body: sanitizedData
+        body: {
+          ...sanitizedData,
+          demoMode: getDemoModeFlag()
+        }
       });
 
       if (aiError) throw aiError;

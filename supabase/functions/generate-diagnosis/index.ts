@@ -27,45 +27,62 @@ const RATING_LABELS: Record<number, string> = {
   5: 'Excelente'
 };
 
+function getDemoModePrompt(demoMode: boolean): string {
+  if (!demoMode) return '';
+  
+  return `
+IMPORTANTE - MODO DEMONSTRAÇÃO:
+Os dados podem estar incompletos ou genéricos. Gere uma resposta COMPLETA e PROFISSIONAL.
+- Mantenha 100% da estrutura
+- Use tom profissional
+- Inclua avisos sutis como "Com base nas informações disponíveis..."
+- NUNCA gere erros ou interrompa
+- Gere conteúdo plausível e profissional
+`;
+}
+
 serve(async (req) => {
   if (req.method === 'OPTIONS') {
     return new Response(null, { headers: corsHeaders });
   }
 
   try {
-    const { diagnosisData } = await req.json() as { diagnosisData: DiagnosisData };
+    const { diagnosisData, demoMode = false } = await req.json() as { diagnosisData: DiagnosisData; demoMode?: boolean };
     
     const LOVABLE_API_KEY = Deno.env.get('LOVABLE_API_KEY');
     if (!LOVABLE_API_KEY) {
       throw new Error('LOVABLE_API_KEY is not configured');
     }
 
-    console.log('Generating diagnosis for:', diagnosisData.companyName);
+    console.log('Generating diagnosis for:', diagnosisData.companyName, 'Demo mode:', demoMode);
 
-    const socialNetworksText = diagnosisData.socialNetworks.length > 0 
+    const socialNetworksText = diagnosisData.socialNetworks?.length > 0 
       ? diagnosisData.socialNetworks.join(', ') 
       : 'Nenhuma';
+
+    const demoPrompt = getDemoModePrompt(demoMode);
 
     const contextPrompt = `
 Você é um consultor de marketing digital especializado em empresas locais brasileiras.
 Gere um diagnóstico digital profissional, objetivo e acionável para a empresa abaixo.
+${demoPrompt}
 
 DADOS DA EMPRESA:
-- Nome: ${diagnosisData.companyName}
-- Segmento: ${diagnosisData.segment}
-- Localização: ${diagnosisData.cityState}
+- Nome: ${diagnosisData.companyName || 'Empresa demonstração'}
+- Segmento: ${diagnosisData.segment || 'Segmento geral'}
+- Localização: ${diagnosisData.cityState || 'Brasil'}
 - Possui site: ${diagnosisData.hasWebsite ? 'Sim' : 'Não'}
 - Redes sociais: ${socialNetworksText}
-- Objetivo principal: ${diagnosisData.mainObjective}
+- Objetivo principal: ${diagnosisData.mainObjective || 'Crescer digitalmente'}
 
 AVALIAÇÃO (escala 1-5):
-- Presença online: ${diagnosisData.onlinePresenceRating}/5 (${RATING_LABELS[diagnosisData.onlinePresenceRating]})
-- Comunicação digital: ${diagnosisData.digitalCommunicationRating}/5 (${RATING_LABELS[diagnosisData.digitalCommunicationRating]})
-- Facilidade de contato: ${diagnosisData.contactEaseRating}/5 (${RATING_LABELS[diagnosisData.contactEaseRating]})
-- Profissionalismo percebido: ${diagnosisData.professionalismRating}/5 (${RATING_LABELS[diagnosisData.professionalismRating]})
+- Presença online: ${diagnosisData.onlinePresenceRating || 3}/5 (${RATING_LABELS[diagnosisData.onlinePresenceRating || 3]})
+- Comunicação digital: ${diagnosisData.digitalCommunicationRating || 3}/5 (${RATING_LABELS[diagnosisData.digitalCommunicationRating || 3]})
+- Facilidade de contato: ${diagnosisData.contactEaseRating || 3}/5 (${RATING_LABELS[diagnosisData.contactEaseRating || 3]})
+- Profissionalismo percebido: ${diagnosisData.professionalismRating || 3}/5 (${RATING_LABELS[diagnosisData.professionalismRating || 3]})
 
 PRINCIPAL PROBLEMA PERCEBIDO:
-${diagnosisData.mainProblemPerceived}
+${diagnosisData.mainProblemPerceived || 'Necessidade de melhorar presença digital'}
 
 RETORNE UM JSON com exatamente esta estrutura (sem markdown, apenas JSON puro):
 {

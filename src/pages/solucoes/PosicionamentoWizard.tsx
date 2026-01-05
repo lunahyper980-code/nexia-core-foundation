@@ -13,6 +13,7 @@ import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
 import { Checkbox } from '@/components/ui/checkbox';
 import { Badge } from '@/components/ui/badge';
+import { useDemoModeForForms } from '@/hooks/useDemoModeForForms';
 
 interface FormData {
   companyName: string;
@@ -36,6 +37,7 @@ export default function PosicionamentoWizard() {
   const navigate = useNavigate();
   const { workspace } = useWorkspace();
   const { user } = useAuth();
+  const { isDemoMode, getDemoModeFlag } = useDemoModeForForms();
   const [step, setStep] = useState(1);
   const [isGenerating, setIsGenerating] = useState(false);
   const [formData, setFormData] = useState<FormData>({
@@ -62,8 +64,8 @@ export default function PosicionamentoWizard() {
     }));
   };
 
-  const canAdvanceStep1 = formData.companyName.trim().length > 0;
-  const canAdvanceStep2 = formData.objectives.length > 0;
+  const canAdvanceStep1 = isDemoMode || formData.companyName.trim().length > 0;
+  const canAdvanceStep2 = isDemoMode || formData.objectives.length > 0;
 
   const handleGenerate = async () => {
     if (!workspace?.id || !user?.id) {
@@ -97,7 +99,10 @@ export default function PosicionamentoWizard() {
 
       // Generate positioning with AI
       const { data: aiData, error: aiError } = await supabase.functions.invoke('generate-positioning', {
-        body: { positioningData: formData }
+        body: { 
+          positioningData: formData,
+          demoMode: getDemoModeFlag()
+        }
       });
 
       if (aiError) throw aiError;

@@ -14,6 +14,7 @@ import { Textarea } from '@/components/ui/textarea';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Badge } from '@/components/ui/badge';
 import { validateShortInput, validateBusinessInput, sanitizeInput } from '@/lib/inputValidation';
+import { useDemoModeForForms } from '@/hooks/useDemoModeForForms';
 
 interface FormData {
   projectName: string;
@@ -56,6 +57,7 @@ export default function KitLancamentoWizard() {
   const navigate = useNavigate();
   const { workspace } = useWorkspace();
   const { user } = useAuth();
+  const { isDemoMode, getDemoModeFlag } = useDemoModeForForms();
   const [step, setStep] = useState(1);
   const [isGenerating, setIsGenerating] = useState(false);
   const [isGeneratingIdentity, setIsGeneratingIdentity] = useState(false);
@@ -144,6 +146,9 @@ export default function KitLancamentoWizard() {
   );
 
   const validateStep1 = (): boolean => {
+    // In demo mode, skip all validations
+    if (isDemoMode) return true;
+
     const newErrors: Record<string, string> = {};
 
     const nameValidation = validateShortInput(formData.projectName, 'Nome do projeto', 3);
@@ -162,6 +167,9 @@ export default function KitLancamentoWizard() {
   };
 
   const validateStep3 = (): boolean => {
+    // In demo mode, skip all validations
+    if (isDemoMode) return true;
+
     const newErrors: Record<string, string> = {};
 
     if (!formData.brandStyle) newErrors.brandStyle = 'Selecione o estilo desejado.';
@@ -212,7 +220,10 @@ export default function KitLancamentoWizard() {
       setLaunchKitId(launchKit.id);
 
       const { data: aiData, error: aiError } = await supabase.functions.invoke('generate-launch-kit', {
-        body: sanitizedData
+        body: {
+          ...sanitizedData,
+          demoMode: getDemoModeFlag()
+        }
       });
 
       if (aiError) throw aiError;

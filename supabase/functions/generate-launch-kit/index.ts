@@ -22,13 +22,27 @@ function getCacheKey(payload: any): string {
   return `generate-launch-kit_${hash}`;
 }
 
+function getDemoModePrompt(demoMode: boolean): string {
+  if (!demoMode) return '';
+  
+  return `
+IMPORTANTE - MODO DEMONSTRAÇÃO:
+Os dados podem estar incompletos ou genéricos. Gere uma resposta COMPLETA e PROFISSIONAL.
+- Mantenha 100% da estrutura
+- Use tom profissional
+- Inclua avisos sutis como "Com base nas informações disponíveis..."
+- NUNCA gere erros ou interrompa
+- Gere conteúdo plausível e profissional
+`;
+}
+
 serve(async (req) => {
   if (req.method === 'OPTIONS') {
     return new Response(null, { headers: corsHeaders });
   }
 
   try {
-    const { businessName, businessType, segment, location, mainChannel, objective, deadline, urgency, forceRegenerate } = await req.json();
+    const { businessName, businessType, segment, location, mainChannel, objective, deadline, urgency, forceRegenerate, demoMode = false } = await req.json();
 
     const GEMINI_API_KEY = Deno.env.get('GEMINI_API_KEY');
     if (!GEMINI_API_KEY) {
@@ -37,9 +51,9 @@ serve(async (req) => {
 
     const payload = { businessName, businessType, segment, location, mainChannel, objective, deadline, urgency };
 
-    // Check cache
+    // Check cache (skip in demo mode)
     const cacheKey = getCacheKey(payload);
-    if (!forceRegenerate) {
+    if (!forceRegenerate && !demoMode) {
       const cached = cache.get(cacheKey);
       if (cached && (Date.now() - cached.timestamp) < CACHE_TTL_MS) {
         console.log('Returning cached launch kit');
@@ -49,18 +63,21 @@ serve(async (req) => {
       }
     }
 
+    const demoPrompt = getDemoModePrompt(demoMode);
+
     const prompt = `Você é um estrategista de lançamentos digitais.
+${demoPrompt}
 
-NEGÓCIO: ${businessName}
-TIPO: ${businessType}
-SEGMENTO: ${segment}
-LOCAL: ${location || 'Não informada'}
-CANAL: ${mainChannel}
-OBJETIVO: ${objective}
-PRAZO: ${deadline}
-URGÊNCIA: ${urgency}
+NEGÓCIO: ${businessName || 'Empresa demonstração'}
+TIPO: ${businessType || 'Serviços'}
+SEGMENTO: ${segment || 'Geral'}
+LOCAL: ${location || 'Brasil'}
+CANAL: ${mainChannel || 'WhatsApp'}
+OBJETIVO: ${objective || 'Lançar produto/serviço'}
+PRAZO: ${deadline || '30 dias'}
+URGÊNCIA: ${urgency || 'Média'}
 
-Crie kit de lançamento prático e executável focado em ${objective.toLowerCase()}.
+Crie kit de lançamento prático e executável focado em ${(objective || 'lançar produto/serviço').toLowerCase()}.
 
 Retorne JSON válido:
 {
@@ -79,7 +96,7 @@ Retorne JSON válido:
   "checklist_execucao": ["item 1", "item 2", "item 3", "item 4", "item 5", "item 6", "item 7", "item 8"]
 }`;
 
-    console.log('Generating launch kit for:', businessName);
+    console.log('Generating launch kit for:', businessName, 'Demo mode:', demoMode);
 
     const response = await fetch(`${GEMINI_API_URL}?key=${GEMINI_API_KEY}`, {
       method: 'POST',

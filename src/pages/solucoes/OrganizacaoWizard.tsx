@@ -18,6 +18,7 @@ import { useNavigate } from 'react-router-dom';
 import { useWorkspace } from '@/contexts/WorkspaceContext';
 import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '@/hooks/use-toast';
+import { useDemoModeForForms } from '@/hooks/useDemoModeForForms';
 
 interface FormData {
   businessType: string;
@@ -49,6 +50,7 @@ export default function OrganizacaoWizard() {
   const navigate = useNavigate();
   const { workspace } = useWorkspace();
   const { toast } = useToast();
+  const { isDemoMode, getDemoModeFlag } = useDemoModeForForms();
   
   const [step, setStep] = useState(1);
   const [isGenerating, setIsGenerating] = useState(false);
@@ -102,7 +104,10 @@ export default function OrganizacaoWizard() {
 
       // Generate with AI
       const { data: functionData, error: functionError } = await supabase.functions.invoke('generate-process-organization', {
-        body: { organizationData: formData }
+        body: { 
+          organizationData: formData,
+          demoMode: getDemoModeFlag()
+        }
       });
 
       if (functionError) throw functionError;
