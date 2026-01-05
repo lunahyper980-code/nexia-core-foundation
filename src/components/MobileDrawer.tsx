@@ -14,11 +14,21 @@ import {
   Settings,
   Search,
   GraduationCap,
+  UsersRound,
 } from 'lucide-react';
 import { Badge } from '@/components/ui/badge';
+import { useUserRole } from '@/contexts/UserRoleContext';
 import logoNexia from '@/assets/logo-nexia.png';
 
-const navItems = [
+interface NavItem {
+  label: string;
+  path: string;
+  icon: React.ComponentType<{ className?: string }>;
+  badge?: string;
+  adminOnly?: boolean;
+}
+
+const navItems: NavItem[] = [
   { label: 'Dashboard', path: '/dashboard', icon: LayoutDashboard },
   { label: 'Encontrar Clientes', path: '/encontrar-clientes', icon: Search },
   { label: 'Diagnóstico', path: '/nexia-ai', icon: Brain, badge: 'avançado' },
@@ -28,6 +38,7 @@ const navItems = [
   { label: 'Entrega', path: '/entrega', icon: Package },
   { label: 'Identidade', path: '/identidade', icon: Fingerprint },
   { label: 'Histórico / Atividade', path: '/historico', icon: History },
+  { label: 'Minha Equipe', path: '/admin/minha-equipe', icon: UsersRound, adminOnly: true },
   { label: 'Academy / Ajuda', path: '/academy', icon: GraduationCap },
   { label: 'Configurações', path: '/configuracoes', icon: Settings },
 ];
@@ -39,6 +50,9 @@ interface MobileDrawerProps {
 
 export function MobileDrawer({ open, onOpenChange }: MobileDrawerProps) {
   const location = useLocation();
+  const { isAdminOrOwner } = useUserRole();
+
+  const filteredNavItems = navItems.filter(item => !item.adminOnly || isAdminOrOwner);
 
   return (
     <Sheet open={open} onOpenChange={onOpenChange}>
@@ -54,7 +68,7 @@ export function MobileDrawer({ open, onOpenChange }: MobileDrawerProps) {
         
         <ScrollArea className="flex-1 h-[calc(100vh-80px)]">
           <nav className="p-3 space-y-1">
-            {navItems.map((item) => {
+            {filteredNavItems.map((item) => {
               const isActive = location.pathname === item.path || location.pathname.startsWith(item.path + '/');
               const Icon = item.icon;
               const hasBadge = 'badge' in item && item.badge;
