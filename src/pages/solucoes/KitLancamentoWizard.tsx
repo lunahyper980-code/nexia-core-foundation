@@ -29,28 +29,43 @@ interface FormData {
 }
 
 interface IdentityContent {
-  descricao_identidade: string;
-  prompt_logo: string;
-  tipografia_sugerida: string;
+  descricao_identidade: string | any;
+  prompt_logo: string | any;
+  tipografia_sugerida: string | any;
   paleta_cores: string | Array<{ cor: string; significado: string }> | any;
   logo_url?: string;
 }
 
-// Helper to safely render paleta_cores regardless of format
-const renderPaletaCores = (paleta: any): string => {
-  if (typeof paleta === 'string') return paleta;
-  if (Array.isArray(paleta)) {
-    return paleta.map((item: any) => {
+// Helper to safely render any AI-generated field regardless of format
+const safeRenderField = (value: any): string => {
+  if (value === null || value === undefined) return '';
+  if (typeof value === 'string') return value;
+  if (typeof value === 'number' || typeof value === 'boolean') return String(value);
+  if (Array.isArray(value)) {
+    return value.map((item: any) => {
       if (typeof item === 'string') return item;
-      if (item.cor && item.significado) return `${item.cor} - ${item.significado}`;
-      if (item.cor) return item.cor;
-      return JSON.stringify(item);
+      if (typeof item === 'object' && item !== null) {
+        // Handle {cor, significado} format
+        if (item.cor && item.significado) return `${item.cor} - ${item.significado}`;
+        if (item.cor) return item.cor;
+        // Handle generic object
+        return Object.entries(item).map(([k, v]) => `${k}: ${v}`).join(', ');
+      }
+      return String(item);
     }).join('\n');
   }
-  if (typeof paleta === 'object' && paleta !== null) {
-    return Object.entries(paleta).map(([key, value]) => `${key}: ${value}`).join('\n');
+  if (typeof value === 'object') {
+    // Handle {titulos, corpo} format for typography
+    if (value.titulos && value.corpo) {
+      return `Títulos: ${value.titulos}\nCorpo: ${value.corpo}`;
+    }
+    // Handle generic object
+    return Object.entries(value).map(([k, v]) => {
+      if (typeof v === 'object') return `${k}: ${JSON.stringify(v)}`;
+      return `${k}: ${v}`;
+    }).join('\n');
   }
-  return String(paleta || '');
+  return String(value);
 };
 
 const TOTAL_STEPS = 4;
@@ -825,18 +840,18 @@ export default function KitLancamentoWizard() {
                     <div className="p-4 bg-violet-500/5 rounded-lg border border-violet-500/20">
                       <div className="flex items-center justify-between mb-2">
                         <h4 className="font-medium text-violet-600">Descrição da Identidade Visual</h4>
-                        <CopyButton text={identityContent.descricao_identidade} field="identity_desc" />
+                        <CopyButton text={safeRenderField(identityContent.descricao_identidade)} field="identity_desc" />
                       </div>
-                      <p className="text-sm text-muted-foreground whitespace-pre-line">{identityContent.descricao_identidade}</p>
+                      <p className="text-sm text-muted-foreground whitespace-pre-line">{safeRenderField(identityContent.descricao_identidade)}</p>
                     </div>
 
                     {identityContent.paleta_cores && (
                       <div className="p-4 bg-pink-500/5 rounded-lg border border-pink-500/20">
                         <div className="flex items-center justify-between mb-2">
                           <h4 className="font-medium text-pink-600">Paleta de Cores Sugerida</h4>
-                          <CopyButton text={renderPaletaCores(identityContent.paleta_cores)} field="identity_colors" />
+                          <CopyButton text={safeRenderField(identityContent.paleta_cores)} field="identity_colors" />
                         </div>
-                        <p className="text-sm text-muted-foreground whitespace-pre-line">{renderPaletaCores(identityContent.paleta_cores)}</p>
+                        <p className="text-sm text-muted-foreground whitespace-pre-line">{safeRenderField(identityContent.paleta_cores)}</p>
                       </div>
                     )}
 
@@ -844,18 +859,18 @@ export default function KitLancamentoWizard() {
                       <div className="p-4 bg-blue-500/5 rounded-lg border border-blue-500/20">
                         <div className="flex items-center justify-between mb-2">
                           <h4 className="font-medium text-blue-600">Tipografia Sugerida</h4>
-                          <CopyButton text={identityContent.tipografia_sugerida} field="identity_font" />
+                          <CopyButton text={safeRenderField(identityContent.tipografia_sugerida)} field="identity_font" />
                         </div>
-                        <p className="text-sm text-muted-foreground">{identityContent.tipografia_sugerida}</p>
+                        <p className="text-sm text-muted-foreground whitespace-pre-line">{safeRenderField(identityContent.tipografia_sugerida)}</p>
                       </div>
                     )}
 
                     <div className="p-4 bg-amber-500/5 rounded-lg border border-amber-500/20">
                       <div className="flex items-center justify-between mb-2">
                         <h4 className="font-medium text-amber-600">🎨 Prompt para Gerar Logo (alternativo)</h4>
-                        <CopyButton text={identityContent.prompt_logo} field="identity_prompt" label="Copiar Prompt" />
+                        <CopyButton text={safeRenderField(identityContent.prompt_logo)} field="identity_prompt" label="Copiar Prompt" />
                       </div>
-                      <p className="text-sm text-muted-foreground font-mono bg-muted/50 p-3 rounded">{identityContent.prompt_logo}</p>
+                      <p className="text-sm text-muted-foreground font-mono bg-muted/50 p-3 rounded whitespace-pre-line">{safeRenderField(identityContent.prompt_logo)}</p>
                     </div>
                   </div>
                 )}
@@ -1130,7 +1145,7 @@ export default function KitLancamentoWizard() {
                               </p>
                             </div>
                             <CopyButton 
-                              text={identityContent.prompt_logo} 
+                              text={safeRenderField(identityContent.prompt_logo)} 
                               field="conclusion_prompt" 
                               label="Copiar Prompt"
                             />
