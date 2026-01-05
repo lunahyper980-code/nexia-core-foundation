@@ -6,92 +6,114 @@ const corsHeaders = {
   'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type',
 };
 
+const GEMINI_API_URL = 'https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent';
+
+// Simple cache
+const cache = new Map<string, { data: any; timestamp: number }>();
+const CACHE_TTL_MS = 24 * 60 * 60 * 1000;
+
+function getCacheKey(payload: any): string {
+  const str = JSON.stringify(payload);
+  let hash = 0;
+  for (let i = 0; i < str.length; i++) {
+    hash = ((hash << 5) - hash) + str.charCodeAt(i);
+    hash = hash & hash;
+  }
+  return `generate-launch-kit_${hash}`;
+}
+
 serve(async (req) => {
   if (req.method === 'OPTIONS') {
     return new Response(null, { headers: corsHeaders });
   }
 
   try {
-    const { businessName, businessType, segment, location, mainChannel, objective, deadline, urgency } = await req.json();
+    const { businessName, businessType, segment, location, mainChannel, objective, deadline, urgency, forceRegenerate } = await req.json();
 
-    const LOVABLE_API_KEY = Deno.env.get('LOVABLE_API_KEY');
-    if (!LOVABLE_API_KEY) {
-      throw new Error('LOVABLE_API_KEY is not configured');
+    const GEMINI_API_KEY = Deno.env.get('GEMINI_API_KEY');
+    if (!GEMINI_API_KEY) {
+      throw new Error('GEMINI_API_KEY is not configured');
     }
 
-    const systemPrompt = `Você é um estrategista de lançamentos digitais. Sua função é criar um plano de lançamento simples, prático e executável para negócios em início ou novas ofertas.
+    const payload = { businessName, businessType, segment, location, mainChannel, objective, deadline, urgency };
 
-Você NÃO faz diagnósticos. Você EXECUTA com base nas informações fornecidas.
+    // Check cache
+    const cacheKey = getCacheKey(payload);
+    if (!forceRegenerate) {
+      const cached = cache.get(cacheKey);
+      if (cached && (Date.now() - cached.timestamp) < CACHE_TTL_MS) {
+        console.log('Returning cached launch kit');
+        return new Response(JSON.stringify({ success: true, data: cached.data }), {
+          headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+        });
+      }
+    }
 
-Responda SEMPRE em JSON válido com a seguinte estrutura:
+    const prompt = `Você é um estrategista de lançamentos digitais.
+
+NEGÓCIO: ${businessName}
+TIPO: ${businessType}
+SEGMENTO: ${segment}
+LOCAL: ${location || 'Não informada'}
+CANAL: ${mainChannel}
+OBJETIVO: ${objective}
+PRAZO: ${deadline}
+URGÊNCIA: ${urgency}
+
+Crie kit de lançamento prático e executável focado em ${objective.toLowerCase()}.
+
+Retorne JSON válido:
 {
-  "estrutura_lancamento": "Descrição da estrutura do lançamento em 2-3 parágrafos",
+  "estrutura_lancamento": "2-3 parágrafos sobre estrutura",
   "sequencia_acoes": {
     "pre_lancamento": ["ação 1", "ação 2", "ação 3"],
     "durante": ["ação 1", "ação 2", "ação 3"],
     "pos_lancamento": ["ação 1", "ação 2", "ação 3"]
   },
-  "ideia_oferta": "Descrição da oferta inicial sugerida",
+  "ideia_oferta": "Descrição da oferta sugerida",
   "mensagens_divulgacao": {
-    "teaser": "Mensagem de teaser para antes do lançamento",
-    "lancamento": "Mensagem principal do lançamento",
-    "urgencia": "Mensagem de urgência/escassez"
+    "teaser": "Mensagem teaser",
+    "lancamento": "Mensagem principal",
+    "urgencia": "Mensagem de urgência"
   },
   "checklist_execucao": ["item 1", "item 2", "item 3", "item 4", "item 5", "item 6", "item 7", "item 8"]
 }`;
 
-    const userPrompt = `Crie um kit de lançamento digital para:
-
-**Negócio:** ${businessName}
-**Tipo:** ${businessType}
-**Segmento:** ${segment}
-**Localização:** ${location || 'Não informada'}
-**Canal principal:** ${mainChannel}
-**Objetivo do lançamento:** ${objective}
-**Prazo desejado:** ${deadline}
-**Nível de urgência:** ${urgency}
-
-Gere um plano de lançamento simples, prático e executável focado em ${objective.toLowerCase()}.`;
-
     console.log('Generating launch kit for:', businessName);
 
-    const response = await fetch('https://ai.gateway.lovable.dev/v1/chat/completions', {
+    const response = await fetch(`${GEMINI_API_URL}?key=${GEMINI_API_KEY}`, {
       method: 'POST',
-      headers: {
-        'Authorization': `Bearer ${LOVABLE_API_KEY}`,
-        'Content-Type': 'application/json',
-      },
+      headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({
-        model: 'google/gemini-2.5-flash',
-        messages: [
-          { role: 'system', content: systemPrompt },
-          { role: 'user', content: userPrompt }
-        ],
+        contents: [{ role: 'user', parts: [{ text: prompt }] }],
+        generationConfig: { maxOutputTokens: 2000, temperature: 0.7 },
       }),
     });
 
     if (!response.ok) {
       const errorText = await response.text();
-      console.error('AI Gateway error:', response.status, errorText);
-      throw new Error(`AI Gateway error: ${response.status}`);
+      console.error('Gemini API error:', response.status, errorText);
+      throw new Error(`Gemini API error: ${response.status}`);
     }
 
     const data = await response.json();
-    const content = data.choices[0].message.content;
+    const content = data.candidates?.[0]?.content?.parts?.[0]?.text;
 
-    // Parse JSON from response
     let result;
     try {
       const jsonMatch = content.match(/\{[\s\S]*\}/);
       if (jsonMatch) {
         result = JSON.parse(jsonMatch[0]);
       } else {
-        throw new Error('No JSON found in response');
+        throw new Error('No JSON found');
       }
     } catch (parseError) {
       console.error('JSON parse error:', parseError);
       result = { raw_content: content };
     }
+
+    // Cache result
+    cache.set(cacheKey, { data: result, timestamp: Date.now() });
 
     console.log('Launch kit generated successfully');
 

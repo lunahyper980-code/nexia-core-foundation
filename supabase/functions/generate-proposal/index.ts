@@ -16,6 +16,61 @@ interface ProposalData {
   observations: string;
 }
 
+// Fixed template - NO AI CALL
+function generateProposalFromTemplate(data: ProposalData): string {
+  const formattedValue = new Intl.NumberFormat('pt-BR', {
+    style: 'currency',
+    currency: 'BRL'
+  }).format(data.serviceValue || 0);
+
+  const scopeText = data.scopeItems.length > 0 
+    ? data.scopeItems.map((item, i) => `${i + 1}. ${item}`).join('\n')
+    : 'A definir conforme alinhamento';
+
+  const today = new Date();
+  const formattedDate = today.toLocaleDateString('pt-BR', { 
+    day: '2-digit', 
+    month: 'long', 
+    year: 'numeric' 
+  });
+
+  return JSON.stringify({
+    apresentacao: `Prezado(a) ${data.contactName || 'Cliente'},
+
+É com satisfação que apresentamos esta proposta comercial para a ${data.companyName}. Após analisar suas necessidades, desenvolvemos uma solução personalizada que atenderá aos objetivos do seu negócio.
+
+Esta proposta foi elaborada com base no entendimento das demandas apresentadas e reflete nosso compromisso em entregar resultados de qualidade dentro do prazo acordado.`,
+
+    entendimento: `Compreendemos que a ${data.companyName} busca ${data.serviceOffered.toLowerCase()}. O objetivo principal é fortalecer a presença digital e otimizar processos para gerar mais resultados.
+
+${data.observations ? `Observações específicas: ${data.observations}` : 'Estamos preparados para adaptar nossa abordagem conforme necessidades adicionais identificadas durante a execução.'}`,
+
+    solucao: `Propomos a execução de ${data.serviceOffered}, contemplando todas as etapas necessárias para garantir a entrega com qualidade e dentro do prazo estabelecido.
+
+Nossa metodologia inclui reuniões de alinhamento, desenvolvimento iterativo e validações em cada etapa do projeto, garantindo transparência e adequação às expectativas.`,
+
+    escopo: `O escopo deste projeto inclui:
+
+${scopeText}
+
+Itens não mencionados explicitamente nesta proposta poderão ser incluídos mediante acordo adicional entre as partes.`,
+
+    prazo: `O prazo estimado para conclusão do projeto é de ${data.deadline || 'a definir em comum acordo'}. Este prazo considera todas as etapas de desenvolvimento, revisões e ajustes necessários.
+
+O cronograma detalhado será apresentado após a aprovação desta proposta.`,
+
+    investimento: `O investimento total para este projeto é de ${formattedValue}.
+
+Condições de pagamento: ${data.paymentMethod || 'A combinar conforme negociação'}.
+
+Esta proposta tem validade de 15 dias a partir da data de emissão (${formattedDate}).`,
+
+    proximos_passos: `Para dar início ao projeto, solicitamos a aprovação desta proposta por e-mail ou mensagem. Após a confirmação, enviaremos o contrato de prestação de serviços e o cronograma detalhado.
+
+Permanecemos à disposição para esclarecer quaisquer dúvidas e realizar ajustes que se façam necessários.`
+  });
+}
+
 serve(async (req) => {
   if (req.method === 'OPTIONS') {
     return new Response(null, { headers: corsHeaders });
@@ -24,110 +79,11 @@ serve(async (req) => {
   try {
     const { proposalData } = await req.json() as { proposalData: ProposalData };
     
-    const LOVABLE_API_KEY = Deno.env.get('LOVABLE_API_KEY');
-    if (!LOVABLE_API_KEY) {
-      throw new Error('LOVABLE_API_KEY is not configured');
-    }
+    console.log('Generating proposal from template for:', proposalData.companyName);
 
-    console.log('Generating proposal for:', proposalData.companyName);
+    const proposalText = generateProposalFromTemplate(proposalData);
 
-    const scopeText = proposalData.scopeItems.length > 0 
-      ? proposalData.scopeItems.map((item, i) => `${i + 1}. ${item}`).join('\n')
-      : 'Não especificado';
-
-    const formattedValue = new Intl.NumberFormat('pt-BR', {
-      style: 'currency',
-      currency: 'BRL'
-    }).format(proposalData.serviceValue || 0);
-
-    const contextPrompt = `
-Você é um especialista em redação de propostas comerciais profissionais.
-Gere uma proposta comercial completa, profissional e convincente com base nos dados abaixo.
-
-DADOS DA PROPOSTA:
-- Empresa cliente: ${proposalData.companyName}
-- Responsável: ${proposalData.contactName || 'Não informado'}
-- Serviço oferecido: ${proposalData.serviceOffered}
-- Valor: ${formattedValue}
-- Prazo de entrega: ${proposalData.deadline || 'A combinar'}
-- Forma de pagamento: ${proposalData.paymentMethod || 'A combinar'}
-
-ESCOPO DO SERVIÇO:
-${scopeText}
-
-OBSERVAÇÕES ADICIONAIS:
-${proposalData.observations || 'Nenhuma observação adicional.'}
-
-RETORNE UM JSON com exatamente esta estrutura (sem markdown, apenas JSON puro):
-{
-  "apresentacao": "Texto de introdução profissional apresentando a proposta, em 2-3 parágrafos naturais.",
-  "entendimento": "Descrição do problema ou necessidade do cliente em parágrafos corridos.",
-  "solucao": "Explicação clara da solução proposta em linguagem natural.",
-  "escopo": "Detalhamento do que está incluído, em texto corrido e natural.",
-  "prazo": "Especificação dos prazos em formato de texto.",
-  "investimento": "Apresentação do valor e condições de pagamento em linguagem clara.",
-  "proximos_passos": "Indicação de como o cliente pode aprovar e iniciar o projeto."
-}
-
-REGRAS IMPORTANTES:
-- NÃO use hashtags (#), bullets (•), hífens (-) ou asteriscos (**)
-- NÃO use listas numeradas ou com marcadores
-- Escreva tudo em parágrafos corridos e naturais
-- Use linguagem profissional mas acessível
-- Seja objetivo e direto
-- Destaque os benefícios para o cliente
-- Retorne APENAS o JSON, sem texto adicional
-`;
-
-
-    const response = await fetch('https://ai.gateway.lovable.dev/v1/chat/completions', {
-      method: 'POST',
-      headers: {
-        'Authorization': `Bearer ${LOVABLE_API_KEY}`,
-        'Content-Type': 'application/json',
-      },
-      body: JSON.stringify({
-        model: 'google/gemini-2.5-flash',
-        messages: [
-          { role: 'system', content: 'Você é um especialista em vendas e redação de propostas comerciais, com experiência em ajudar pequenas e médias empresas brasileiras.' },
-          { role: 'user', content: contextPrompt }
-        ],
-      }),
-    });
-
-    if (!response.ok) {
-      if (response.status === 429) {
-        return new Response(JSON.stringify({ error: 'Limite de requisições excedido. Tente novamente em alguns minutos.' }), {
-          status: 429,
-          headers: { ...corsHeaders, 'Content-Type': 'application/json' },
-        });
-      }
-      if (response.status === 402) {
-        return new Response(JSON.stringify({ error: 'Créditos insuficientes. Adicione créditos ao seu workspace.' }), {
-          status: 402,
-          headers: { ...corsHeaders, 'Content-Type': 'application/json' },
-        });
-      }
-      const errorText = await response.text();
-      console.error('AI Gateway error:', response.status, errorText);
-      throw new Error(`AI Gateway error: ${response.status}`);
-    }
-
-    const data = await response.json();
-    let proposalText = data.choices?.[0]?.message?.content;
-
-    if (!proposalText) {
-      throw new Error('No proposal generated');
-    }
-
-    // Clean any code block markers from the response
-    proposalText = proposalText
-      .replace(/^```(?:json)?\s*\n?/gi, '')
-      .replace(/\n?```\s*$/gi, '')
-      .replace(/```/g, '')
-      .trim();
-
-    console.log('Proposal generated successfully');
+    console.log('Proposal generated successfully from template');
 
     return new Response(JSON.stringify({ proposalText }), {
       headers: { ...corsHeaders, 'Content-Type': 'application/json' },

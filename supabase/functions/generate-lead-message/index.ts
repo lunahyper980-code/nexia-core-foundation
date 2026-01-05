@@ -5,99 +5,44 @@ const corsHeaders = {
   'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type',
 };
 
+const GEMINI_API_URL = 'https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent';
+
 // Map country to language for outbound messages
 function getLanguageForLocation(location: string): { language: string; languageCode: string } {
   const locationLower = location?.toLowerCase() || '';
   
-  // Brazil - Portuguese (Brazil)
   if (locationLower.includes('brasil') || locationLower.includes('brazil') || 
       locationLower.includes('br') || locationLower.includes('são paulo') || 
-      locationLower.includes('rio de janeiro') || locationLower.includes('belo horizonte') ||
-      locationLower.includes('curitiba') || locationLower.includes('salvador') ||
-      locationLower.includes('fortaleza') || locationLower.includes('brasília')) {
+      locationLower.includes('rio de janeiro') || locationLower.includes('belo horizonte')) {
     return { language: 'Português Brasileiro', languageCode: 'pt-BR' };
   }
   
-  // Portugal - Portuguese (Portugal)
   if (locationLower.includes('portugal') || locationLower.includes('lisboa') || 
-      locationLower.includes('porto') || locationLower.includes('pt')) {
+      locationLower.includes('porto')) {
     return { language: 'Português de Portugal', languageCode: 'pt-PT' };
   }
   
-  // Spain - Spanish
   if (locationLower.includes('españa') || locationLower.includes('spain') || 
-      locationLower.includes('madrid') || locationLower.includes('barcelona') ||
-      locationLower.includes('es')) {
+      locationLower.includes('madrid') || locationLower.includes('barcelona')) {
     return { language: 'Español', languageCode: 'es-ES' };
   }
   
-  // Latin America Spanish-speaking countries
   if (locationLower.includes('méxico') || locationLower.includes('mexico') ||
-      locationLower.includes('argentina') || locationLower.includes('buenos aires') ||
-      locationLower.includes('colombia') || locationLower.includes('bogotá') ||
-      locationLower.includes('chile') || locationLower.includes('santiago') ||
-      locationLower.includes('peru') || locationLower.includes('lima') ||
-      locationLower.includes('venezuela') || locationLower.includes('ecuador') ||
-      locationLower.includes('uruguay') || locationLower.includes('paraguay')) {
+      locationLower.includes('argentina') || locationLower.includes('colombia') ||
+      locationLower.includes('chile') || locationLower.includes('peru')) {
     return { language: 'Español Latinoamericano', languageCode: 'es-419' };
   }
   
-  // France - French
-  if (locationLower.includes('france') || locationLower.includes('francia') ||
-      locationLower.includes('paris') || locationLower.includes('lyon') ||
-      locationLower.includes('fr')) {
-    return { language: 'Français', languageCode: 'fr-FR' };
-  }
-  
-  // Germany - German
-  if (locationLower.includes('germany') || locationLower.includes('alemania') ||
-      locationLower.includes('deutschland') || locationLower.includes('berlin') ||
-      locationLower.includes('münchen') || locationLower.includes('de')) {
-    return { language: 'Deutsch', languageCode: 'de-DE' };
-  }
-  
-  // Italy - Italian
-  if (locationLower.includes('italy') || locationLower.includes('italia') ||
-      locationLower.includes('roma') || locationLower.includes('milano') ||
-      locationLower.includes('it')) {
-    return { language: 'Italiano', languageCode: 'it-IT' };
-  }
-  
-  // UK - English
-  if (locationLower.includes('uk') || locationLower.includes('united kingdom') ||
-      locationLower.includes('england') || locationLower.includes('london') ||
-      locationLower.includes('manchester') || locationLower.includes('reino unido')) {
-    return { language: 'English (UK)', languageCode: 'en-GB' };
-  }
-  
-  // USA - English
   if (locationLower.includes('usa') || locationLower.includes('united states') ||
-      locationLower.includes('estados unidos') || locationLower.includes('new york') ||
-      locationLower.includes('los angeles') || locationLower.includes('chicago') ||
-      locationLower.includes('miami') || locationLower.includes('us')) {
+      locationLower.includes('new york') || locationLower.includes('los angeles')) {
     return { language: 'English (US)', languageCode: 'en-US' };
   }
   
-  // Canada - Could be English or French, default to English
-  if (locationLower.includes('canada') || locationLower.includes('toronto') ||
-      locationLower.includes('vancouver')) {
-    return { language: 'English', languageCode: 'en-CA' };
+  if (locationLower.includes('uk') || locationLower.includes('united kingdom') ||
+      locationLower.includes('london')) {
+    return { language: 'English (UK)', languageCode: 'en-GB' };
   }
   
-  // Japan - Japanese
-  if (locationLower.includes('japan') || locationLower.includes('japão') ||
-      locationLower.includes('tokyo') || locationLower.includes('osaka') ||
-      locationLower.includes('jp')) {
-    return { language: 'Japanese', languageCode: 'ja-JP' };
-  }
-  
-  // China - Chinese
-  if (locationLower.includes('china') || locationLower.includes('beijing') ||
-      locationLower.includes('shanghai') || locationLower.includes('cn')) {
-    return { language: 'Simplified Chinese', languageCode: 'zh-CN' };
-  }
-  
-  // Default to English for unidentified locations
   return { language: 'English', languageCode: 'en-US' };
 }
 
@@ -109,99 +54,78 @@ serve(async (req) => {
   try {
     const { lead } = await req.json();
     
-    const LOVABLE_API_KEY = Deno.env.get("LOVABLE_API_KEY");
-    if (!LOVABLE_API_KEY) {
-      throw new Error("LOVABLE_API_KEY is not configured");
+    const GEMINI_API_KEY = Deno.env.get('GEMINI_API_KEY');
+    if (!GEMINI_API_KEY) {
+      throw new Error('GEMINI_API_KEY is not configured');
     }
 
-    // Detect language based on lead location
     const { language, languageCode } = getLanguageForLocation(lead.localizacao);
     const isBrazilian = languageCode === 'pt-BR';
 
-    console.log(`Generating message for lead: ${lead.nome}, location: ${lead.localizacao}, language: ${language}`);
+    console.log(`Generating message for lead: ${lead.nome}, language: ${language}`);
 
-    // Build system prompt with language adaptation
-    const systemPrompt = `You are a specialist in commercial communication for local businesses.
+    const prompt = `Você é um especialista em comunicação comercial para negócios locais.
 
-Your task is to generate ONE professional prospecting message ready to be sent via WhatsApp.
+Gere UMA mensagem de prospecção profissional para WhatsApp.
 
-CRITICAL RULES:
-1. HUMAN tone, polite and direct - don't be a pushy salesperson
-2. Maximum 3-4 short sentences
-3. NO excessive emojis (maximum 1-2 subtle if needed)
-4. DO NOT promise specific things
-5. Focus on sparking curiosity, not selling directly
-6. Mention something specific about the lead's segment
-7. End with a simple open question
+REGRAS:
+- Tom HUMANO, educado e direto
+- Máximo 3-4 frases curtas
+- NO máximo 1-2 emojis sutis
+- NÃO prometa coisas específicas
+- Foque em despertar curiosidade
+- Mencione algo do segmento do lead
+- Termine com pergunta aberta
 
-LANGUAGE REQUIREMENT:
-- Write the message ENTIRELY in ${language}
-- Use natural expressions and idioms appropriate for ${language} speakers
-${isBrazilian ? '- Use informal "você" and Brazilian Portuguese expressions' : ''}
-${languageCode === 'pt-PT' ? '- Use formal Portuguese from Portugal expressions' : ''}
-${languageCode.startsWith('es') ? '- Use appropriate Spanish for the region' : ''}
+IDIOMA: Escreva em ${language}
+${isBrazilian ? '- Use "você" informal e expressões brasileiras' : ''}
 
-Respond ONLY with the message, no explanations or quotes.`;
+LEAD:
+Negócio: ${lead.nome}
+Segmento: ${lead.segmento}
+Local: ${lead.localizacao}
+${lead.temSite ? 'Tem site' : 'Não tem site'}
+${lead.temInstagram ? 'Tem Instagram' : ''}
 
-    const userPrompt = `Generate a prospecting message for:
+Contexto: Você oferece serviços de criação de sites/apps e marketing digital.
 
-Business: ${lead.nome}
-Segment: ${lead.segmento}
-City/Location: ${lead.localizacao}
-${lead.temSite ? 'Has website' : 'Does not have website'}
-${lead.temInstagram ? 'Has Instagram' : ''}
+Responda APENAS com a mensagem, sem explicações.`;
 
-The message should be as if you are offering website/app creation or digital marketing services.
-
-IMPORTANT: The message MUST be written in ${language} because the lead is located in ${lead.localizacao}.`;
-
-    const response = await fetch("https://ai.gateway.lovable.dev/v1/chat/completions", {
-      method: "POST",
-      headers: {
-        Authorization: `Bearer ${LOVABLE_API_KEY}`,
-        "Content-Type": "application/json",
-      },
+    const response = await fetch(`${GEMINI_API_URL}?key=${GEMINI_API_KEY}`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({
-        model: "google/gemini-2.5-flash",
-        messages: [
-          { role: "system", content: systemPrompt },
-          { role: "user", content: userPrompt }
-        ],
+        contents: [{ role: 'user', parts: [{ text: prompt }] }],
+        generationConfig: { maxOutputTokens: 500, temperature: 0.7 },
       }),
     });
 
     if (!response.ok) {
       if (response.status === 429) {
-        return new Response(JSON.stringify({ error: "Limite de requisições excedido. Tente novamente." }), {
+        return new Response(JSON.stringify({ error: 'Limite de requisições excedido.' }), {
           status: 429,
-          headers: { ...corsHeaders, "Content-Type": "application/json" },
-        });
-      }
-      if (response.status === 402) {
-        return new Response(JSON.stringify({ error: "Créditos de IA esgotados." }), {
-          status: 402,
-          headers: { ...corsHeaders, "Content-Type": "application/json" },
+          headers: { ...corsHeaders, 'Content-Type': 'application/json' },
         });
       }
       const errorText = await response.text();
-      console.error("AI gateway error:", response.status, errorText);
-      throw new Error("Erro ao comunicar com IA");
+      console.error('Gemini API error:', response.status, errorText);
+      throw new Error('Erro ao comunicar com IA');
     }
 
     const data = await response.json();
-    const message = data.choices?.[0]?.message?.content?.trim() || '';
+    const message = data.candidates?.[0]?.content?.parts?.[0]?.text?.trim() || '';
 
-    console.log("Generated message:", message);
+    console.log('Generated message:', message.substring(0, 50) + '...');
 
     return new Response(JSON.stringify({ message, language, languageCode }), {
-      headers: { ...corsHeaders, "Content-Type": "application/json" },
+      headers: { ...corsHeaders, 'Content-Type': 'application/json' },
     });
 
   } catch (error) {
-    console.error("Error in generate-lead-message:", error);
-    return new Response(JSON.stringify({ error: error instanceof Error ? error.message : "Erro desconhecido" }), {
+    console.error('Error in generate-lead-message:', error);
+    return new Response(JSON.stringify({ error: error instanceof Error ? error.message : 'Erro desconhecido' }), {
       status: 500,
-      headers: { ...corsHeaders, "Content-Type": "application/json" },
+      headers: { ...corsHeaders, 'Content-Type': 'application/json' },
     });
   }
 });

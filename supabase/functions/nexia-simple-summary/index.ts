@@ -6,157 +6,141 @@ const corsHeaders = {
   'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type',
 };
 
+const GEMINI_API_URL = 'https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent';
+
+// Simple cache
+const cache = new Map<string, { data: any; timestamp: number }>();
+const CACHE_TTL_MS = 24 * 60 * 60 * 1000;
+
+function getCacheKey(payload: any): string {
+  const str = JSON.stringify(payload);
+  let hash = 0;
+  for (let i = 0; i < str.length; i++) {
+    hash = ((hash << 5) - hash) + str.charCodeAt(i);
+    hash = hash & hash;
+  }
+  return `nexia-simple-summary_${hash}`;
+}
+
 serve(async (req) => {
   if (req.method === 'OPTIONS') {
     return new Response(null, { headers: corsHeaders });
   }
 
   try {
-    const LOVABLE_API_KEY = Deno.env.get('LOVABLE_API_KEY');
-    if (!LOVABLE_API_KEY) {
-      throw new Error('LOVABLE_API_KEY is not configured');
+    const GEMINI_API_KEY = Deno.env.get('GEMINI_API_KEY');
+    if (!GEMINI_API_KEY) {
+      throw new Error('GEMINI_API_KEY is not configured');
     }
 
-    const { planningData } = await req.json();
+    const { planningData, forceRegenerate } = await req.json();
 
-    // Determinar solução prioritária baseada nos dados
+    // Check cache
+    const cacheKey = getCacheKey(planningData);
+    if (!forceRegenerate) {
+      const cached = cache.get(cacheKey);
+      if (cached && (Date.now() - cached.timestamp) < CACHE_TTL_MS) {
+        console.log('Returning cached summary');
+        return new Response(JSON.stringify(cached.data), {
+          headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+        });
+      }
+    }
+
+    // Determine priority solution
     const determinePrioritySolution = () => {
       const solutionType = planningData.solutionType || '';
       const primaryGoal = planningData.primaryGoal || '';
       
-      // Mapear tipo de solução para nome legível
       const solutionMap: Record<string, string> = {
         'app': 'Aplicativo Mobile/PWA',
         'site': 'Site Profissional',
         'landing_page': 'Landing Page de Conversão',
       };
 
-      // Se já tem tipo de solução definido, usar
       if (solutionType && solutionMap[solutionType]) {
         return solutionMap[solutionType];
       }
 
-      // Inferir baseado no objetivo
       if (primaryGoal.includes('vender') || primaryGoal.includes('captar')) {
         return 'Landing Page de Conversão';
       }
       if (primaryGoal.includes('organizar') || primaryGoal.includes('automatizar')) {
         return 'Aplicativo Mobile/PWA';
       }
-      if (primaryGoal.includes('presenca') || primaryGoal.includes('profissional')) {
-        return 'Site Profissional';
-      }
-
       return 'Site Profissional';
     };
 
-    // Determinar soluções complementares
     const determineComplementarySolutions = () => {
       const solutions: string[] = [];
       const primaryGoal = planningData.primaryGoal || '';
       const mainProblem = planningData.mainProblem || '';
-      const solutionType = planningData.solutionType || '';
 
-      // Baseado no objetivo e problema, sugerir complementos
-      if (primaryGoal.includes('presenca') || mainProblem.includes('profissional') || mainProblem.includes('confiança')) {
+      if (primaryGoal.includes('presenca') || mainProblem.includes('profissional')) {
         solutions.push('Autoridade e Reconhecimento Digital');
       }
-      if (primaryGoal.includes('organizar') || mainProblem.includes('controle') || mainProblem.includes('processo')) {
+      if (primaryGoal.includes('organizar') || mainProblem.includes('processo')) {
         solutions.push('Organização de Processos');
       }
       if (!mainProblem.includes('marca') && !mainProblem.includes('logo')) {
         solutions.push('Kit de Lançamento Digital');
       }
-      if (primaryGoal.includes('captar') || primaryGoal.includes('cliente')) {
+      if (primaryGoal.includes('captar')) {
         solutions.push('Posicionamento Digital');
       }
 
-      // Remover duplicatas e limitar
       return [...new Set(solutions)].slice(0, 3);
     };
 
     const prioritySolution = determinePrioritySolution();
     const complementarySolutions = determineComplementarySolutions();
 
-    const systemPrompt = `Você é um consultor de negócios digitais que analisa briefings e gera diagnósticos finais orientados à decisão.
-
-REGRAS OBRIGATÓRIAS:
-- Seja DIRETO e OBJETIVO
-- Use linguagem SIMPLES, sem jargões técnicos de marketing
-- Foque em DECISÃO e AÇÃO, não em descrição
-- O objetivo é que o usuário saiba exatamente O QUE VENDER e POR ONDE COMEÇAR
-
-VOCÊ DEVE RETORNAR UM JSON com exatamente esta estrutura:
-{
-  "diagnosticoFinal": "Um parágrafo curto e direto com o veredito sobre a situação do negócio. Não é resumo, é conclusão.",
-  "problemaCentral": "Uma frase objetiva que o usuário possa repetir para o cliente. Ex: 'O principal gargalo é a ausência de um canal digital profissional.'",
-  "proximoPasso": "Uma frase clara sobre o que fazer agora. Ex: 'O próximo passo é materializar a solução recomendada para apresentar ao cliente.'"
-}
-
-IMPORTANTE:
-- diagnosticoFinal: Máximo 3 frases. Deve ser um veredito, não um resumo.
-- problemaCentral: Máximo 1-2 frases. Algo que o usuário consiga repetir.
-- proximoPasso: Máximo 1 frase. Instrução clara e direta.`;
-
-    const userPrompt = `Analise este briefing e gere o diagnóstico final:
+    const prompt = `Você é um consultor de negócios digitais. Analise o briefing e gere diagnóstico final.
 
 EMPRESA: ${planningData.companyName || 'Não informado'}
-NICHO/SETOR: ${planningData.sectorNiche || 'Não informado'}
-LOCALIZAÇÃO: ${planningData.location || 'Não informada'}
-PRODUTO/SERVIÇO: ${planningData.mainProducts || 'Não informado'}
-PÚBLICO-ALVO: ${planningData.targetAudience || 'Não informado'}
-TICKET MÉDIO: ${planningData.averageTicket || 'Não informado'}
+NICHO: ${planningData.sectorNiche || 'Não informado'}
+LOCAL: ${planningData.location || 'Não informada'}
+PRODUTO: ${planningData.mainProducts || 'Não informado'}
+PÚBLICO: ${planningData.targetAudience || 'Não informado'}
+OBJETIVO: ${planningData.primaryGoal || 'Não informado'}
+TIPO SOLUÇÃO: ${planningData.solutionType || 'Não informado'}
+PROBLEMA: ${planningData.mainProblem || 'Não informado'}
+SOLUÇÃO PRIORITÁRIA: ${prioritySolution}
+COMPLEMENTARES: ${complementarySolutions.join(', ') || 'Nenhuma'}
 
-OBJETIVO PRINCIPAL: ${planningData.primaryGoal || 'Não informado'}
-TIPO DE SOLUÇÃO ESCOLHIDA: ${planningData.solutionType || 'Não informado'}
-PROBLEMA PRINCIPAL RELATADO: ${planningData.mainProblem || 'Não informado'}
+Retorne JSON:
+{
+  "diagnosticoFinal": "Veredito em 2-3 frases",
+  "problemaCentral": "Frase objetiva do gargalo",
+  "proximoPasso": "Instrução clara de ação"
+}`;
 
-SOLUÇÃO PRIORITÁRIA DETERMINADA: ${prioritySolution}
-SOLUÇÕES COMPLEMENTARES SUGERIDAS: ${complementarySolutions.join(', ') || 'Nenhuma'}
+    console.log('Generating summary for:', planningData.companyName);
 
-Gere o diagnóstico final em formato JSON.`;
-
-    const response = await fetch('https://ai.gateway.lovable.dev/v1/chat/completions', {
+    const response = await fetch(`${GEMINI_API_URL}?key=${GEMINI_API_KEY}`, {
       method: 'POST',
-      headers: {
-        'Authorization': `Bearer ${LOVABLE_API_KEY}`,
-        'Content-Type': 'application/json',
-      },
+      headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({
-        model: 'google/gemini-2.5-flash',
-        messages: [
-          { role: 'system', content: systemPrompt },
-          { role: 'user', content: userPrompt }
-        ],
+        contents: [{ role: 'user', parts: [{ text: prompt }] }],
+        generationConfig: { maxOutputTokens: 1000, temperature: 0.7 },
       }),
     });
 
     if (!response.ok) {
       if (response.status === 429) {
-        return new Response(JSON.stringify({ 
-          error: 'Muitas requisições. Aguarde um momento e tente novamente.' 
-        }), {
+        return new Response(JSON.stringify({ error: 'Muitas requisições. Aguarde.' }), {
           status: 429,
           headers: { ...corsHeaders, 'Content-Type': 'application/json' },
         });
       }
-      if (response.status === 402) {
-        return new Response(JSON.stringify({ 
-          error: 'Créditos insuficientes. Adicione créditos para continuar.' 
-        }), {
-          status: 402,
-          headers: { ...corsHeaders, 'Content-Type': 'application/json' },
-        });
-      }
       const errorText = await response.text();
-      console.error('AI Gateway error:', response.status, errorText);
-      throw new Error(`AI Gateway error: ${response.status}`);
+      console.error('Gemini API error:', response.status, errorText);
+      throw new Error(`Gemini API error: ${response.status}`);
     }
 
     const data = await response.json();
-    const rawContent = data.choices?.[0]?.message?.content || '';
+    const rawContent = data.candidates?.[0]?.content?.parts?.[0]?.text || '';
 
-    // Tentar parsear como JSON
     let diagnosis = {
       diagnosticoFinal: '',
       problemaCentral: '',
@@ -164,27 +148,27 @@ Gere o diagnóstico final em formato JSON.`;
     };
 
     try {
-      // Remover possíveis marcadores de código
       const cleanContent = rawContent.replace(/```json\n?/g, '').replace(/```\n?/g, '').trim();
       diagnosis = JSON.parse(cleanContent);
     } catch {
-      // Se falhar o parse, usar o texto como diagnóstico
       diagnosis.diagnosticoFinal = rawContent;
-      diagnosis.problemaCentral = 'Análise detalhada necessária para identificar o gargalo principal.';
-      diagnosis.proximoPasso = 'O próximo passo é materializar a solução recomendada para apresentar ao cliente.';
+      diagnosis.problemaCentral = 'Análise detalhada necessária.';
+      diagnosis.proximoPasso = 'Materializar a solução recomendada.';
     }
 
-    // Montar resposta completa
     const result = {
       summary: diagnosis.diagnosticoFinal || rawContent,
       diagnosis: {
         diagnosticoFinal: diagnosis.diagnosticoFinal || rawContent,
-        problemaCentral: diagnosis.problemaCentral || 'Necessário aprofundar análise do gargalo principal.',
+        problemaCentral: diagnosis.problemaCentral || 'Necessário aprofundar análise.',
         solucaoPrioritaria: prioritySolution,
         solucoesComplementares: complementarySolutions,
-        proximoPasso: diagnosis.proximoPasso || 'O próximo passo é materializar a solução recomendada.',
+        proximoPasso: diagnosis.proximoPasso || 'Materializar a solução recomendada.',
       }
     };
+
+    // Cache result
+    cache.set(cacheKey, { data: result, timestamp: Date.now() });
 
     return new Response(JSON.stringify(result), {
       headers: { ...corsHeaders, 'Content-Type': 'application/json' },

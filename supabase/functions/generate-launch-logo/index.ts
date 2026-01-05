@@ -6,6 +6,8 @@ const corsHeaders = {
   'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type',
 };
 
+const GEMINI_API_URL = 'https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent';
+
 serve(async (req) => {
   if (req.method === 'OPTIONS') {
     return new Response(null, { headers: corsHeaders });
@@ -14,74 +16,71 @@ serve(async (req) => {
   try {
     const { brandName, brandStyle, brandFeeling, preferredColors, visualNotes } = await req.json();
 
-    const LOVABLE_API_KEY = Deno.env.get('LOVABLE_API_KEY');
-    if (!LOVABLE_API_KEY) {
-      throw new Error('LOVABLE_API_KEY is not configured');
+    const GEMINI_API_KEY = Deno.env.get('GEMINI_API_KEY');
+    if (!GEMINI_API_KEY) {
+      throw new Error('GEMINI_API_KEY is not configured');
     }
 
-    // Generate identity concept with AI - TEXT ONLY, NO IMAGE
-    const conceptPrompt = `Você é um especialista em branding e identidade visual. Crie uma identidade de marca TEXTUAL para:
+    // NOTE: Logo generation only happens when user clicks "Gerar Logo (Beta)"
+    // This function only generates TEXT identity - no image generation
 
-Nome da marca: ${brandName}
-Estilo desejado: ${brandStyle}
-Sensação da marca: ${brandFeeling}
-${preferredColors ? `Cores preferidas: ${preferredColors}` : ''}
-${visualNotes ? `Observações visuais: ${visualNotes}` : ''}
+    const prompt = `Você é um especialista em branding e identidade visual.
 
-IMPORTANTE: Você NÃO vai gerar uma imagem. Você vai criar textos estratégicos sobre a identidade.
+MARCA: ${brandName}
+ESTILO: ${brandStyle}
+SENSAÇÃO: ${brandFeeling}
+${preferredColors ? `CORES: ${preferredColors}` : ''}
+${visualNotes ? `OBS: ${visualNotes}` : ''}
 
-Responda APENAS em JSON válido com a estrutura:
+IMPORTANTE: Você NÃO gera imagem. Apenas textos estratégicos.
+
+Retorne JSON válido:
 {
-  "descricao_identidade": "Descrição completa da identidade visual em 2-3 parágrafos. Inclua: estilo visual geral, personalidade da marca, sensações que a marca transmite, tipo de formas e elementos que combinam.",
-  "paleta_cores": "Sugestão de paleta de cores com 3-5 cores em hexadecimal, explicando o significado de cada cor para a marca. Ex: Azul Navy (#1E3A5F) - transmite confiança...",
-  "tipografia_sugerida": "Sugestão de fontes/tipografia que combinem com a marca. Inclua uma fonte para títulos e uma para corpo de texto, com justificativa.",
-  "prompt_logo": "Prompt profissional em INGLÊS otimizado para gerar a logo em ferramentas de IA de imagem como DALL-E, Midjourney ou Canva AI. O prompt deve ser detalhado com estilo: clean modern minimalist logo design, vector style, centered, white background. Inclua cores, formas e elementos específicos."
+  "descricao_identidade": "2-3 parágrafos sobre identidade visual, personalidade, sensações, formas e elementos",
+  "paleta_cores": "3-5 cores em hex com significado. Ex: Azul Navy (#1E3A5F) - transmite confiança...",
+  "tipografia_sugerida": "Sugestão de fontes para títulos e corpo com justificativa",
+  "prompt_logo": "Prompt em INGLÊS para gerar logo em IA (DALL-E, Midjourney). Inclua: clean modern minimalist logo design, vector style, centered, white background, cores e elementos específicos"
 }`;
 
     console.log('Generating brand identity for:', brandName);
 
-    const conceptResponse = await fetch('https://ai.gateway.lovable.dev/v1/chat/completions', {
+    const response = await fetch(`${GEMINI_API_URL}?key=${GEMINI_API_KEY}`, {
       method: 'POST',
-      headers: {
-        'Authorization': `Bearer ${LOVABLE_API_KEY}`,
-        'Content-Type': 'application/json',
-      },
+      headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({
-        model: 'google/gemini-2.5-flash',
-        messages: [
-          { role: 'user', content: conceptPrompt }
-        ],
+        contents: [{ role: 'user', parts: [{ text: prompt }] }],
+        generationConfig: { maxOutputTokens: 2000, temperature: 0.7 },
       }),
     });
 
-    if (!conceptResponse.ok) {
-      const errorText = await conceptResponse.text();
-      console.error('AI Gateway error:', conceptResponse.status, errorText);
-      throw new Error(`AI Gateway error: ${conceptResponse.status}`);
+    if (!response.ok) {
+      const errorText = await response.text();
+      console.error('Gemini API error:', response.status, errorText);
+      throw new Error(`Gemini API error: ${response.status}`);
     }
 
-    const conceptData = await conceptResponse.json();
-    const conceptContent = conceptData.choices[0].message.content;
+    const data = await response.json();
+    const content = data.candidates?.[0]?.content?.parts?.[0]?.text;
 
     let conceptResult;
     try {
-      const jsonMatch = conceptContent.match(/\{[\s\S]*\}/);
+      const jsonMatch = content.match(/\{[\s\S]*\}/);
       if (jsonMatch) {
         conceptResult = JSON.parse(jsonMatch[0]);
       } else {
-        throw new Error('No JSON found in concept response');
+        throw new Error('No JSON found');
       }
     } catch (parseError) {
-      console.error('JSON parse error for concept:', parseError);
+      console.error('JSON parse error:', parseError);
       conceptResult = { 
-        descricao_identidade: `Identidade visual ${brandStyle} para ${brandName}, transmitindo ${brandFeeling}. A marca utiliza elementos visuais modernos e limpos, com foco em legibilidade e impacto visual.`,
-        paleta_cores: preferredColors || 'Cores a definir baseadas no estilo escolhido.',
-        tipografia_sugerida: 'Recomenda-se uma fonte sans-serif moderna para títulos e uma fonte legível para textos.',
-        prompt_logo: `Modern minimalist logo for ${brandName}, ${brandStyle} style, ${brandFeeling} feeling, clean vector design, centered, white background, professional business logo`
+        descricao_identidade: `Identidade visual ${brandStyle} para ${brandName}, transmitindo ${brandFeeling}.`,
+        paleta_cores: preferredColors || 'Cores a definir.',
+        tipografia_sugerida: 'Fonte sans-serif moderna para títulos e fonte legível para textos.',
+        prompt_logo: `Modern minimalist logo for ${brandName}, ${brandStyle} style, ${brandFeeling} feeling, clean vector design, centered, white background`
       };
     }
 
-    console.log('Brand identity generated successfully for:', brandName);
+    console.log('Brand identity generated for:', brandName);
 
     return new Response(JSON.stringify({ 
       success: true, 

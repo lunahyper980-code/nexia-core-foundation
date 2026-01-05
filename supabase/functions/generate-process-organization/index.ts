@@ -6,183 +6,147 @@ const corsHeaders = {
   'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type',
 };
 
+const GEMINI_API_URL = 'https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent';
+
+// Simple cache
+const cache = new Map<string, { data: any; timestamp: number }>();
+const CACHE_TTL_MS = 24 * 60 * 60 * 1000;
+
+function getCacheKey(payload: any): string {
+  const str = JSON.stringify(payload);
+  let hash = 0;
+  for (let i = 0; i < str.length; i++) {
+    hash = ((hash << 5) - hash) + str.charCodeAt(i);
+    hash = hash & hash;
+  }
+  return `generate-process-organization_${hash}`;
+}
+
 serve(async (req) => {
   if (req.method === 'OPTIONS') {
     return new Response(null, { headers: corsHeaders });
   }
 
   try {
-    const { organizationData } = await req.json();
-    const LOVABLE_API_KEY = Deno.env.get('LOVABLE_API_KEY');
+    const { organizationData, forceRegenerate } = await req.json();
+    const GEMINI_API_KEY = Deno.env.get('GEMINI_API_KEY');
     
-    if (!LOVABLE_API_KEY) {
-      throw new Error('LOVABLE_API_KEY is not configured');
+    if (!GEMINI_API_KEY) {
+      throw new Error('GEMINI_API_KEY is not configured');
+    }
+
+    // Check cache
+    const cacheKey = getCacheKey(organizationData);
+    if (!forceRegenerate) {
+      const cached = cache.get(cacheKey);
+      if (cached && (Date.now() - cached.timestamp) < CACHE_TTL_MS) {
+        console.log('Returning cached process organization');
+        return new Response(JSON.stringify(cached.data), {
+          headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+        });
+      }
     }
 
     console.log('Generating process organization for:', organizationData.businessType);
 
-    const systemPrompt = `Você é um consultor de processos especializado em pequenas e médias empresas brasileiras.
-Sua função é criar estruturas de organização práticas, claras e prontas para uso profissional.
+    const prompt = `Você é um consultor de processos para PMEs brasileiras.
 
-REGRAS CRÍTICAS DE FORMATAÇÃO:
-- NUNCA retorne JSON, arrays, código ou estruturas técnicas
-- NUNCA use aspas, colchetes, chaves ou marcadores como -, *, **
-- NUNCA use linguagem de programação ou formatação técnica
-- Escreva APENAS texto corrido, fluido e profissional
-- Use parágrafos bem estruturados com linguagem de manual operacional
-- O resultado deve parecer um documento de consultoria profissional
+NEGÓCIO: ${organizationData.businessType}
+EQUIPE: ${organizationData.teamSize}
+CANAIS: ${organizationData.contactChannels}
+ONDE PERDE TEMPO: ${organizationData.timeWasteAreas}
+PROBLEMA INTERNO: ${organizationData.mainInternalProblem}
+OBJETIVO: ${organizationData.organizationGoal}
 
-REGRAS DE CONTEÚDO:
-- Use linguagem simples, direta e profissional
-- Foque em soluções práticas e aplicáveis imediatamente
-- Considere a realidade de pequenos negócios brasileiros
-- Seja específico ao tipo de negócio informado
-- Mantenha as recomendações realistas para o tamanho da equipe
-
-ESTRUTURA DE RESPOSTA (6 blocos separados por ###):
+Gere organização de processos usando separadores ###:
 
 ###VISAO_GERAL###
-Escreva 3 a 4 parágrafos explicando como a operação deve funcionar no dia a dia. 
-Descreva a visão geral do negócio, a dinâmica de trabalho e o objetivo principal.
+3-4 parágrafos sobre operação ideal.
 
 ###PROBLEMAS_PROCESSO###
-Descreva os principais problemas de processo identificados e como resolvê-los.
-Use parágrafos corridos explicando cada problema e sua solução de forma clara.
+Problemas identificados e soluções.
 
 ###FLUXO_IDEAL###
-Descreva o fluxo ideal de atendimento ao cliente, do primeiro contato à entrega.
-Explique cada etapa de forma narrativa, como um guia de atendimento.
+Fluxo de atendimento do contato à entrega.
 
 ###ORGANIZACAO_INTERNA###
-Explique quem faz o quê na equipe, divisão de responsabilidades por função.
-Descreva de forma clara as atribuições de cada pessoa ou cargo.
+Quem faz o quê na equipe.
 
 ###ROTINA_DIARIA###
-Crie uma rotina recomendada organizada em três momentos:
-
-Manhã (Antes de Abrir):
-Descreva as tarefas de preparação do dia de forma narrativa.
-
-Durante o Expediente:
-Descreva as responsabilidades durante o funcionamento.
-
-Final do Expediente:
-Descreva as tarefas de fechamento e preparação do próximo dia.
+Manhã/Durante/Final do expediente.
 
 ###ROTINA_SEMANAL###
-Crie uma rotina semanal organizada em três momentos:
-
-Início da Semana:
-Explique reuniões, alinhamento de metas e organização inicial.
-
-Meio da Semana:
-Descreva manutenção, ajustes operacionais e acompanhamento.
-
-Final da Semana:
-Explique fechamento estratégico, revisão e preparação para a próxima semana.
+Início/Meio/Final da semana.
 
 ###PONTOS_ATENCAO###
-Descreva pontos de atenção e sugestões de melhoria contínua.
-Escreva como recomendações finais de um consultor experiente.`;
+Recomendações finais.
 
-    const userPrompt = `Crie uma organização de processos completa para o seguinte negócio:
+REGRAS: Texto corrido profissional, sem JSON, sem bullets, sem markdown.`;
 
-TIPO DE NEGÓCIO: ${organizationData.businessType}
-TAMANHO DA EQUIPE: ${organizationData.teamSize}
-CANAIS DE ATENDIMENTO: ${organizationData.contactChannels}
-ONDE SE PERDE MAIS TEMPO: ${organizationData.timeWasteAreas}
-PRINCIPAL PROBLEMA INTERNO: ${organizationData.mainInternalProblem}
-OBJETIVO COM A ORGANIZAÇÃO: ${organizationData.organizationGoal}
-
-Gere o conteúdo seguindo EXATAMENTE a estrutura solicitada, usando os separadores ### para cada bloco.
-Lembre-se: texto profissional corrido, SEM JSON, SEM marcadores, SEM formatação técnica.`;
-
-    const response = await fetch('https://ai.gateway.lovable.dev/v1/chat/completions', {
+    const response = await fetch(`${GEMINI_API_URL}?key=${GEMINI_API_KEY}`, {
       method: 'POST',
-      headers: {
-        'Authorization': `Bearer ${LOVABLE_API_KEY}`,
-        'Content-Type': 'application/json',
-      },
+      headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({
-        model: 'google/gemini-2.5-flash',
-        messages: [
-          { role: 'system', content: systemPrompt },
-          { role: 'user', content: userPrompt }
-        ],
+        contents: [{ role: 'user', parts: [{ text: prompt }] }],
+        generationConfig: { maxOutputTokens: 3000, temperature: 0.7 },
       }),
     });
 
     if (!response.ok) {
       const errorText = await response.text();
-      console.error('AI Gateway error:', response.status, errorText);
+      console.error('Gemini API error:', response.status, errorText);
       
       if (response.status === 429) {
         return new Response(
-          JSON.stringify({ error: 'Limite de requisições excedido. Tente novamente em alguns minutos.' }),
+          JSON.stringify({ error: 'Limite de requisições excedido.' }),
           { status: 429, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
         );
       }
-      if (response.status === 402) {
-        return new Response(
-          JSON.stringify({ error: 'Créditos insuficientes. Adicione créditos para continuar.' }),
-          { status: 402, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
-        );
-      }
       
-      throw new Error(`AI Gateway error: ${response.status}`);
+      throw new Error(`Gemini API error: ${response.status}`);
     }
 
     const data = await response.json();
-    const content = data.choices?.[0]?.message?.content;
+    const content = data.candidates?.[0]?.content?.parts?.[0]?.text;
     
     if (!content) {
       throw new Error('No content returned from AI');
     }
 
-    console.log('AI response received, parsing sections...');
-
-    // Parse the structured response using ### separators
     const parseSection = (text: string, sectionName: string): string => {
       const regex = new RegExp(`###${sectionName}###([\\s\\S]*?)(?=###|$)`, 'i');
       const match = text.match(regex);
       if (match && match[1]) {
         return match[1].trim()
-          .replace(/^\*\*.*?\*\*\s*/gm, '') // Remove bold markdown
-          .replace(/^\*\s*/gm, '') // Remove bullet points
-          .replace(/^-\s*/gm, '') // Remove dashes
-          .replace(/\[|\]|\{|\}/g, '') // Remove brackets
+          .replace(/^\*\*.*?\*\*\s*/gm, '')
+          .replace(/^\*\s*/gm, '')
+          .replace(/^-\s*/gm, '')
+          .replace(/\[|\]|\{|\}/g, '')
           .trim();
       }
       return '';
     };
 
-    const operationOverview = parseSection(content, 'VISAO_GERAL');
-    const processProblems = parseSection(content, 'PROBLEMAS_PROCESSO');
-    const idealFlow = parseSection(content, 'FLUXO_IDEAL');
-    const internalOrganization = parseSection(content, 'ORGANIZACAO_INTERNA');
-    const dailyRoutine = parseSection(content, 'ROTINA_DIARIA');
-    const weeklyRoutine = parseSection(content, 'ROTINA_SEMANAL');
-    const attentionPoints = parseSection(content, 'PONTOS_ATENCAO');
+    const result = {
+      operationOverview: parseSection(content, 'VISAO_GERAL') || 'Conteúdo em processamento.',
+      processProblems: parseSection(content, 'PROBLEMAS_PROCESSO') || 'Conteúdo em processamento.',
+      idealFlow: parseSection(content, 'FLUXO_IDEAL') || 'Conteúdo em processamento.',
+      internalOrganization: parseSection(content, 'ORGANIZACAO_INTERNA') || 'Conteúdo em processamento.',
+      recommendedRoutine: (parseSection(content, 'ROTINA_DIARIA') + '\n\n' + parseSection(content, 'ROTINA_SEMANAL')).trim() || 'Conteúdo em processamento.',
+      attentionPoints: parseSection(content, 'PONTOS_ATENCAO') || 'Conteúdo em processamento.'
+    };
 
-    // Combine routines
-    const recommendedRoutine = dailyRoutine + (weeklyRoutine ? '\n\n' + weeklyRoutine : '');
+    // Cache result
+    cache.set(cacheKey, { data: result, timestamp: Date.now() });
 
-    console.log('Successfully generated process organization');
+    console.log('Process organization generated successfully');
 
-    return new Response(
-      JSON.stringify({
-        operationOverview: operationOverview || 'Conteúdo em processamento.',
-        processProblems: processProblems || 'Conteúdo em processamento.',
-        idealFlow: idealFlow || 'Conteúdo em processamento.',
-        internalOrganization: internalOrganization || 'Conteúdo em processamento.',
-        recommendedRoutine: recommendedRoutine || 'Conteúdo em processamento.',
-        attentionPoints: attentionPoints || 'Conteúdo em processamento.'
-      }),
-      { headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
-    );
+    return new Response(JSON.stringify(result), {
+      headers: { ...corsHeaders, 'Content-Type': 'application/json' }
+    });
   } catch (error: unknown) {
     console.error('Error in generate-process-organization:', error);
-    const errorMessage = error instanceof Error ? error.message : 'Erro ao gerar organização de processos';
+    const errorMessage = error instanceof Error ? error.message : 'Erro ao gerar organização';
     return new Response(
       JSON.stringify({ error: errorMessage }),
       { status: 500, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
