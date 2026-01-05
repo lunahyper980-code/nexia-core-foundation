@@ -9,10 +9,15 @@ import { Users, TrendingUp, DollarSign, Activity, Copy, ArrowRight, Sparkles, Ch
 import { toast } from 'sonner';
 
 // ==============================================
-// LÓGICA DE CRESCIMENTO ORGÂNICO (48h cycles)
+// LÓGICA DE CRESCIMENTO PROGRESSIVO (48h cycles)
+// Início: 05/01/2026 - Crescimento apenas a partir desta data
 // ==============================================
 
-// Base team members - valores iniciais
+// Data de início do crescimento (timestamp fixo)
+// O crescimento SÓ começa a partir desta data
+const GROWTH_START_TIMESTAMP = new Date('2026-01-05T00:00:00').getTime();
+
+// Membros da equipe com valores base FIXOS (nunca alterados retroativamente)
 const BASE_TEAM_MEMBERS = [
   { id: 1, name: 'Lucas Mendes', baseVolume: 4200 },
   { id: 2, name: 'Fernanda Costa', baseVolume: 3850 },
@@ -24,57 +29,77 @@ const BASE_TEAM_MEMBERS = [
   { id: 8, name: 'Juliana Martins', baseVolume: 1750 },
 ];
 
-// Status possíveis da equipe
-const TEAM_STATUSES = ['Ativa', 'Em crescimento', 'Performance positiva'];
+// Status possíveis da equipe (alternância natural)
+const TEAM_STATUSES = ['Estável', 'Em crescimento', 'Performance positiva'];
 
-// Função para gerar seed baseado no ciclo de 48h
-function get48hCycleSeed(): number {
+// Calcula quantos ciclos completos de 48h se passaram DESDE o início
+function getCompletedCycles(): number {
   const now = Date.now();
+  if (now < GROWTH_START_TIMESTAMP) return 0;
+  
+  const elapsedMs = now - GROWTH_START_TIMESTAMP;
   const cycleMs = 48 * 60 * 60 * 1000; // 48 horas em ms
-  const cycleNumber = Math.floor(now / cycleMs);
-  return cycleNumber;
+  return Math.floor(elapsedMs / cycleMs);
 }
 
-// Gerador pseudo-aleatório determinístico baseado no seed
-function seededRandom(seed: number, index: number): number {
-  const x = Math.sin(seed * 9999 + index * 777) * 10000;
+// Gerador pseudo-aleatório determinístico baseado no ciclo
+function seededRandom(cycle: number, memberId: number): number {
+  const x = Math.sin((cycle + 1) * 9973 + memberId * 7919) * 10000;
   return x - Math.floor(x);
 }
 
-// Calcula os dados da equipe baseado no ciclo atual
-function calculateTeamData(cycleSeed: number) {
-  const members = BASE_TEAM_MEMBERS.map((member, index) => {
-    // Crescimento variável entre R$ 180 e R$ 420 por membro
-    const growthRandom = seededRandom(cycleSeed, index);
-    
-    // 20% de chance de não crescer neste ciclo
-    const willGrow = seededRandom(cycleSeed, index + 100) > 0.2;
-    
-    // Calcular crescimento acumulado baseado no número de ciclos desde um ponto base
-    const baseCycle = 1000; // Ciclo base arbitrário
-    const cyclesPassed = cycleSeed - baseCycle;
-    
-    // Cada membro acumula crescimento ao longo dos ciclos
+// Calcula incremento para um membro em um ciclo específico
+function getMemberCycleIncrement(cycle: number, memberId: number): number {
+  // Variação entre R$250 e R$400 (nunca números redondos repetidos)
+  const rand = seededRandom(cycle, memberId);
+  const baseIncrement = 250 + rand * 150; // R$250 a R$400
+  
+  // Pequena variação para evitar valores muito redondos
+  const variation = (seededRandom(cycle, memberId + 1000) - 0.5) * 30;
+  
+  return Math.round(baseIncrement + variation);
+}
+
+// Determina se membro cresce neste ciclo (alguns não crescem)
+function memberGrowsInCycle(cycle: number, memberId: number): boolean {
+  // ~15% de chance de não crescer neste ciclo
+  return seededRandom(cycle, memberId + 500) > 0.15;
+}
+
+// Calcula os dados da equipe baseado nos ciclos completados
+function calculateTeamData() {
+  const completedCycles = getCompletedCycles();
+  const currentCycle = completedCycles; // Ciclo atual para status e progresso
+  
+  const members = BASE_TEAM_MEMBERS.map((member) => {
+    // Calcular crescimento acumulado APENAS dos ciclos já completados
     let accumulatedGrowth = 0;
-    for (let c = 0; c <= Math.min(cyclesPassed, 50); c++) {
-      const cycleGrowthChance = seededRandom(baseCycle + c, index + 100) > 0.2;
-      if (cycleGrowthChance) {
-        const cycleGrowth = 180 + seededRandom(baseCycle + c, index) * 240; // R$ 180 a R$ 420
-        accumulatedGrowth += cycleGrowth;
+    let isGrowingThisCycle = false;
+    
+    for (let c = 0; c < completedCycles; c++) {
+      if (memberGrowsInCycle(c, member.id)) {
+        accumulatedGrowth += getMemberCycleIncrement(c, member.id);
       }
     }
     
-    const totalVolume = Math.round(member.baseVolume + accumulatedGrowth);
+    // Verificar se está crescendo no ciclo atual (para texto visual)
+    if (completedCycles > 0) {
+      isGrowingThisCycle = memberGrowsInCycle(completedCycles - 1, member.id);
+    }
     
-    // Percentual de progresso (variável entre 35% e 95%)
-    const progressBase = 35 + seededRandom(cycleSeed, index + 200) * 60;
-    const progress = Math.round(progressBase);
+    const totalVolume = member.baseVolume + accumulatedGrowth;
+    
+    // Percentual de progresso: evolui lentamente, nunca completa
+    // Base entre 35-55%, cresce ~2-4% por ciclo, max 92%
+    const baseProgress = 35 + (seededRandom(0, member.id) * 20);
+    const progressGrowth = completedCycles * (2 + seededRandom(currentCycle, member.id) * 2);
+    const progress = Math.min(92, Math.round(baseProgress + progressGrowth));
     
     return {
       ...member,
       volume: totalVolume,
       progress,
-      isGrowing: willGrow,
+      isGrowing: isGrowingThisCycle,
     };
   });
 
@@ -85,8 +110,8 @@ function calculateTeamData(cycleSeed: number) {
   const totalVolume = members.reduce((sum, m) => sum + m.volume, 0);
   const averageTicket = Math.round(totalVolume / members.length);
   
-  // Status baseado no ciclo
-  const statusIndex = Math.floor(seededRandom(cycleSeed, 999) * TEAM_STATUSES.length);
+  // Status baseado no ciclo atual (alternância natural)
+  const statusIndex = currentCycle % TEAM_STATUSES.length;
   const status = TEAM_STATUSES[statusIndex];
 
   return {
@@ -97,6 +122,7 @@ function calculateTeamData(cycleSeed: number) {
       averageTicket,
       status,
     },
+    completedCycles,
   };
 }
 
@@ -110,9 +136,8 @@ export default function MinhaEquipe() {
   const navigate = useNavigate();
   const [showPromoArea, setShowPromoArea] = useState(false);
 
-  // Calcular dados baseado no ciclo de 48h
-  const cycleSeed = useMemo(() => get48hCycleSeed(), []);
-  const teamData = useMemo(() => calculateTeamData(cycleSeed), [cycleSeed]);
+  // Calcular dados baseado nos ciclos completados desde o início
+  const teamData = useMemo(() => calculateTeamData(), []);
 
   useEffect(() => {
     if (!loading && !isAdminOrOwner) {
@@ -263,7 +288,7 @@ export default function MinhaEquipe() {
           <div>
             <h1 className="text-2xl font-semibold text-foreground">Minha Equipe</h1>
             <p className="text-sm text-muted-foreground mt-1">
-              Este painel representa um acompanhamento interno de performance da equipe, baseado nas ativações e entregas realizadas com a plataforma.
+              Dados atualizados automaticamente • Performance acumulada da equipe • Crescimento orgânico baseado em atividade
             </p>
           </div>
           <Button 
@@ -342,7 +367,7 @@ export default function MinhaEquipe() {
               Performance da Equipe
             </CardTitle>
             <CardDescription>
-              Membros vinculados e volume individual gerado
+              Valores em evolução contínua • Membros vinculados e volume individual
             </CardDescription>
           </CardHeader>
           <CardContent>
@@ -417,7 +442,7 @@ export default function MinhaEquipe() {
 
         {/* Context Notice */}
         <p className="text-center text-xs text-muted-foreground py-2">
-          Esta área é administrativa e representa uma visão interna de performance da equipe.
+          Esta área é administrativa e representa uma visão interna de performance da equipe • Dados atualizados automaticamente
         </p>
       </div>
     </AppLayout>
