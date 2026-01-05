@@ -34,7 +34,7 @@ interface NavItem {
 }
 
 const baseNavItems: NavItem[] = [
-  { label: 'Dashboard', path: '/dashboard', icon: LayoutDashboard, adminOnly: true },
+  { label: 'Dashboard', path: '/dashboard', icon: LayoutDashboard },
   { label: 'Encontrar Clientes', path: '/encontrar-clientes', icon: Search },
   { label: 'Diagnóstico', path: '/nexia-ai', icon: Brain, badge: 'avançado' },
   { label: 'Vendas', path: '/vendas', icon: Briefcase },
