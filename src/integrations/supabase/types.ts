@@ -1875,6 +1875,7 @@ export type Database = {
       }
       is_admin_or_owner: { Args: { _user_id: string }; Returns: boolean }
       is_device_blocked: { Args: { _device_id: string }; Returns: boolean }
+      user_owns_workspace: { Args: { _workspace_id: string }; Returns: boolean }
     }
     Enums: {
       app_role: "user" | "admin" | "owner"
