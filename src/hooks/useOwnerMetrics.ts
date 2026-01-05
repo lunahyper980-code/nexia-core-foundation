@@ -1,8 +1,6 @@
 import { useState, useEffect, useCallback, useMemo } from 'react';
 import { useAuth } from '@/contexts/AuthContext';
-
-// Email do usuário owner que terá métricas exageradas
-const OWNER_EMAIL = 'emilysantos170706@gmail.com';
+import { useUserRole } from '@/contexts/UserRoleContext';
 
 // ==============================================
 // VALORES BASE REALISTAS E COERENTES
@@ -16,13 +14,13 @@ const OWNER_EMAIL = 'emilysantos170706@gmail.com';
 // ==============================================
 
 const BASE_METRICS = {
-  projects: 32,           // Soluções criadas (entre 25-43)
-  proposals: 38,          // Propostas em aberto (entre 25-43)
-  clients: 29,            // Clientes cadastrados (entre 25-43)
+  projects: 32,           // Soluções criadas
+  proposals: 38,          // Propostas em aberto
+  clients: 29,            // Clientes cadastrados
   plannings: 27,          // Planejamentos
   pendingTasks: 12,       // Tarefas pendentes
   completedTasks: 41,     // Tarefas concluídas
-  deliveries: 26,         // Entregas em andamento (entre 25-43)
+  deliveries: 26,         // Entregas em andamento
   contracts: 24,          // Contratos
   averageTicket: 0,       // Será calculado: pipeline ÷ projetos
   totalPipelineValue: 38743, // Pipeline: R$ 38.743,00
@@ -33,7 +31,7 @@ const BASE_METRICS = {
 const INCREMENT_INTERVAL_MS = 48 * 60 * 60 * 1000;
 
 // Guarda uma data de referência fixa no navegador
-const OWNER_METRICS_REFERENCE_STORAGE_KEY = 'nexia_owner_metrics_reference_date_v3';
+const OWNER_METRICS_REFERENCE_STORAGE_KEY = 'nexia_owner_metrics_reference_date_v4';
 
 const getReferenceDateMs = (): number => {
   if (typeof window === 'undefined') return Date.now();
@@ -69,27 +67,27 @@ const calculateIncrements = (atMs: number = Date.now()): number => {
   return Math.max(0, Math.floor(elapsed / INCREMENT_INTERVAL_MS));
 };
 
-// Gera as métricas do owner com base no tempo decorrido
+// Gera as métricas do admin com base no tempo decorrido
 const generateOwnerMetrics = (): OwnerMetrics => {
   const increments = calculateIncrements();
 
-  // Crescimento moderado a cada 48h
-  const projects = BASE_METRICS.projects + increments * 2;
-  const proposals = BASE_METRICS.proposals + increments * 2;
+  // Crescimento pequeno a cada 48h (entre 1-2 unidades)
+  const projects = BASE_METRICS.projects + increments * 1;
+  const proposals = BASE_METRICS.proposals + increments * 1;
   const clients = BASE_METRICS.clients + increments * 1;
-  const plannings = BASE_METRICS.plannings + increments * 2;
+  const plannings = BASE_METRICS.plannings + increments * 1;
   const pendingTasks = BASE_METRICS.pendingTasks + increments * 1;
-  const completedTasks = BASE_METRICS.completedTasks + increments * 3;
-  const deliveries = BASE_METRICS.deliveries + increments * 2;
+  const completedTasks = BASE_METRICS.completedTasks + increments * 2;
+  const deliveries = BASE_METRICS.deliveries + increments * 1;
   const contracts = BASE_METRICS.contracts + increments * 1;
 
-  // Pipeline: +R$ 1.800 a cada 48h (crescimento realista)
-  const totalPipelineValue = BASE_METRICS.totalPipelineValue + increments * 1800;
+  // Pipeline: +R$ 2.350 a cada 48h
+  const totalPipelineValue = BASE_METRICS.totalPipelineValue + increments * 2350;
 
   // Mantém vendas alinhado ao pipeline
   const totalProposalValue = totalPipelineValue;
 
-  // Ticket médio: pipeline ÷ projetos (esperado entre R$ 1.800 e R$ 2.800)
+  // Ticket médio: pipeline ÷ projetos
   const averageTicket = Math.round(totalPipelineValue / Math.max(1, projects));
 
   return {
@@ -108,13 +106,13 @@ const generateOwnerMetrics = (): OwnerMetrics => {
 };
 
 export function useOwnerMetrics() {
-  const { user } = useAuth();
+  const { isAdmin, isOwner: isOwnerRole } = useUserRole();
   const [metrics, setMetrics] = useState<OwnerMetrics>(generateOwnerMetrics);
 
-  // Verifica se o usuário atual é o owner
+  // Verifica se o usuário atual é admin ou owner (para métricas fictícias)
   const isOwner = useMemo(() => {
-    return user?.email === OWNER_EMAIL;
-  }, [user?.email]);
+    return isAdmin || isOwnerRole;
+  }, [isAdmin, isOwnerRole]);
 
   // Atualiza métricas periodicamente (a cada minuto para detectar mudanças de período)
   useEffect(() => {
@@ -133,7 +131,7 @@ export function useOwnerMetrics() {
     return () => clearInterval(interval);
   }, [isOwner]);
 
-  // Função para obter valor real ou fictício baseado no owner
+  // Função para obter valor real ou fictício baseado no admin
   const getMetricValue = useCallback(<T extends number>(ownerValue: T, realValue: T): T => {
     return isOwner ? ownerValue : realValue;
   }, [isOwner]);
@@ -166,8 +164,8 @@ export function useOwnerMetrics() {
   };
 }
 
-// Hook simplificado para apenas verificar se é owner
+// Hook simplificado para apenas verificar se é admin
 export function useIsOwner(): boolean {
-  const { user } = useAuth();
-  return user?.email === OWNER_EMAIL;
+  const { isAdmin, isOwner } = useUserRole();
+  return isAdmin || isOwner;
 }
