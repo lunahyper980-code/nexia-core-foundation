@@ -1,7 +1,7 @@
 import { useState, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { useQuery } from '@tanstack/react-query';
-import { Rocket, ArrowLeft, Download, Calendar, CheckCircle2, Sparkles, Copy, Check, Lightbulb, MessageSquare, ListChecks, Palette, Trash2, RefreshCw, Loader2, Image } from 'lucide-react';
+import { Rocket, ArrowLeft, Download, Calendar, CheckCircle2, Sparkles, Copy, Check, Lightbulb, MessageSquare, ListChecks, Palette, Trash2, RefreshCw, Loader2, Image, X, Plus } from 'lucide-react';
 import { format } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
 import { toast } from 'sonner';
@@ -33,19 +33,11 @@ interface LaunchKitContent {
   checklist_execucao?: string[];
 }
 
-const COLOR_PALETTE = [
-  { name: 'Azul Navy', color: '#1E3A5F' },
-  { name: 'Verde Esmeralda', color: '#047857' },
-  { name: 'Roxo Violeta', color: '#7C3AED' },
-  { name: 'Rosa Pink', color: '#EC4899' },
-  { name: 'Laranja Vibrante', color: '#EA580C' },
-  { name: 'Amarelo Ouro', color: '#CA8A04' },
-  { name: 'Vermelho Intenso', color: '#DC2626' },
-  { name: 'Cinza Grafite', color: '#374151' },
-  { name: 'Bege Neutro', color: '#D4C4A8' },
-  { name: 'Verde Menta', color: '#10B981' },
-  { name: 'Azul Céu', color: '#0EA5E9' },
-  { name: 'Coral', color: '#F97316' },
+// Quick color suggestions for easy selection
+const QUICK_COLOR_SUGGESTIONS = [
+  '#1E3A5F', '#047857', '#7C3AED', '#EC4899', '#EA580C', '#CA8A04',
+  '#DC2626', '#374151', '#D4C4A8', '#10B981', '#0EA5E9', '#F97316',
+  '#1F2937', '#4B5563', '#0F766E', '#A855F7', '#E11D48', '#F59E0B',
 ];
 
 export default function KitLancamentoDetalhe() {
@@ -133,17 +125,39 @@ export default function KitLancamentoDetalhe() {
     }
   };
 
-  const toggleColor = (colorName: string) => {
+  const addQuickColor = (color: string) => {
     setRegenerateForm(prev => {
-      const colors = prev.preferredColors;
-      if (colors.includes(colorName)) {
-        return { ...prev, preferredColors: colors.filter(c => c !== colorName) };
-      }
-      if (colors.length >= 3) {
+      if (prev.preferredColors.includes(color)) return prev;
+      if (prev.preferredColors.length >= 3) {
         toast.error('Selecione no máximo 3 cores');
         return prev;
       }
-      return { ...prev, preferredColors: [...colors, colorName] };
+      return { ...prev, preferredColors: [...prev.preferredColors, color] };
+    });
+  };
+
+  const removeColor = (color: string) => {
+    setRegenerateForm(prev => ({
+      ...prev,
+      preferredColors: prev.preferredColors.filter(c => c !== color)
+    }));
+  };
+
+  const updateColor = (index: number, newColor: string) => {
+    setRegenerateForm(prev => {
+      const newColors = [...prev.preferredColors];
+      newColors[index] = newColor;
+      return { ...prev, preferredColors: newColors };
+    });
+  };
+
+  const addCustomColor = () => {
+    setRegenerateForm(prev => {
+      if (prev.preferredColors.length >= 3) {
+        toast.error('Selecione no máximo 3 cores');
+        return prev;
+      }
+      return { ...prev, preferredColors: [...prev.preferredColors, '#7C3AED'] };
     });
   };
 
@@ -325,9 +339,7 @@ export default function KitLancamentoDetalhe() {
     </Button>
   );
 
-  const getSelectedColorsInModal = () => {
-    return COLOR_PALETTE.filter(c => regenerateForm.preferredColors.includes(c.name));
-  };
+  // No longer needed - colors are now hex codes directly
 
   if (isLoading) {
     return (
@@ -457,17 +469,12 @@ export default function KitLancamentoDetalhe() {
                     <div>
                       <h4 className="text-sm font-medium mb-1">Cores</h4>
                       <div className="flex gap-2 flex-wrap">
-                        {launchKit.preferred_colors.split(', ').map(colorName => {
-                          const colorObj = COLOR_PALETTE.find(c => c.name === colorName);
-                          return colorObj ? (
-                            <div key={colorName} className="flex items-center gap-1 text-xs bg-muted/50 px-2 py-1 rounded">
-                              <div className="w-3 h-3 rounded-full border" style={{ backgroundColor: colorObj.color }} />
-                              {colorName}
-                            </div>
-                          ) : (
-                            <Badge key={colorName} variant="outline" className="text-xs">{colorName}</Badge>
-                          );
-                        })}
+                        {launchKit.preferred_colors.split(', ').map((colorValue, idx) => (
+                          <div key={idx} className="flex items-center gap-1 text-xs bg-muted/50 px-2 py-1 rounded">
+                            <div className="w-3 h-3 rounded-full border" style={{ backgroundColor: colorValue }} />
+                            {colorValue}
+                          </div>
+                        ))}
                       </div>
                     </div>
                   )}
@@ -794,45 +801,75 @@ export default function KitLancamentoDetalhe() {
                 </Select>
               </div>
 
-              {/* Cores como Cards */}
-              <div className="space-y-2">
-                <Label>Cores principais * (selecione até 3)</Label>
-                <div className="grid grid-cols-4 gap-2">
-                  {COLOR_PALETTE.map((c) => (
-                    <button
-                      key={c.name}
-                      type="button"
-                      onClick={() => toggleColor(c.name)}
-                      className={`relative p-2 rounded-lg border-2 transition-all ${
-                        regenerateForm.preferredColors.includes(c.name)
-                          ? 'border-violet-500 ring-2 ring-violet-500/30'
-                          : 'border-transparent hover:border-muted-foreground/30'
-                      }`}
-                    >
-                      <div
-                        className="w-full aspect-square rounded-md mb-1"
-                        style={{ backgroundColor: c.color }}
+              {/* Cores com Color Picker */}
+              <div className="space-y-3">
+                <Label>Cores principais * (até 3)</Label>
+                
+                {/* Cores selecionadas com color picker */}
+                <div className="space-y-2">
+                  {regenerateForm.preferredColors.map((color, index) => (
+                    <div key={index} className="flex items-center gap-2 p-2 bg-muted/50 rounded-lg">
+                      <input
+                        type="color"
+                        value={color}
+                        onChange={(e) => updateColor(index, e.target.value)}
+                        className="w-10 h-10 rounded cursor-pointer border-2 border-muted"
                       />
-                      <span className="text-[9px] text-muted-foreground line-clamp-1">{c.name}</span>
-                      {regenerateForm.preferredColors.includes(c.name) && (
-                        <div className="absolute -top-1 -right-1 w-4 h-4 bg-violet-500 rounded-full flex items-center justify-center">
-                          <Check className="h-2.5 w-2.5 text-white" />
-                        </div>
-                      )}
-                    </button>
+                      <div className="flex-1">
+                        <Input
+                          value={color}
+                          onChange={(e) => updateColor(index, e.target.value)}
+                          placeholder="#000000"
+                          className="font-mono text-sm h-8"
+                        />
+                      </div>
+                      <Button
+                        type="button"
+                        variant="ghost"
+                        size="sm"
+                        onClick={() => removeColor(color)}
+                        className="h-8 w-8 p-0 text-destructive hover:text-destructive"
+                      >
+                        <X className="h-4 w-4" />
+                      </Button>
+                    </div>
                   ))}
+                  
+                  {regenerateForm.preferredColors.length < 3 && (
+                    <Button
+                      type="button"
+                      variant="outline"
+                      size="sm"
+                      onClick={addCustomColor}
+                      className="w-full gap-2"
+                    >
+                      <Plus className="h-4 w-4" />
+                      Adicionar cor
+                    </Button>
+                  )}
                 </div>
-                {regenerateForm.preferredColors.length > 0 && (
-                  <div className="flex gap-2 mt-2 flex-wrap">
-                    <span className="text-xs text-muted-foreground">Selecionadas:</span>
-                    {getSelectedColorsInModal().map(c => (
-                      <Badge key={c.name} variant="outline" className="text-xs gap-1">
-                        <div className="w-2 h-2 rounded-full" style={{ backgroundColor: c.color }} />
-                        {c.name}
-                      </Badge>
+
+                {/* Sugestões rápidas de cores */}
+                <div className="space-y-1">
+                  <span className="text-xs text-muted-foreground">Sugestões rápidas:</span>
+                  <div className="flex gap-1 flex-wrap">
+                    {QUICK_COLOR_SUGGESTIONS.map((color) => (
+                      <button
+                        key={color}
+                        type="button"
+                        onClick={() => addQuickColor(color)}
+                        disabled={regenerateForm.preferredColors.includes(color) || regenerateForm.preferredColors.length >= 3}
+                        className={`w-6 h-6 rounded border-2 transition-all ${
+                          regenerateForm.preferredColors.includes(color)
+                            ? 'border-violet-500 ring-2 ring-violet-500/30 opacity-50'
+                            : 'border-transparent hover:scale-110 hover:border-muted-foreground/50'
+                        } disabled:opacity-40 disabled:cursor-not-allowed`}
+                        style={{ backgroundColor: color }}
+                        title={color}
+                      />
                     ))}
                   </div>
-                )}
+                </div>
               </div>
 
               {/* Observações */}
