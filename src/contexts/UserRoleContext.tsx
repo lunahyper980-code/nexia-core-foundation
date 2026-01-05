@@ -16,7 +16,7 @@ interface UserRoleContextType {
 const UserRoleContext = createContext<UserRoleContextType | undefined>(undefined);
 
 export function UserRoleProvider({ children }: { children: ReactNode }) {
-  const { user } = useAuth();
+  const { user, loading: authLoading } = useAuth();
   const [role, setRole] = useState<AppRole | null>(null);
   const [loading, setLoading] = useState(true);
 
@@ -35,27 +35,27 @@ export function UserRoleProvider({ children }: { children: ReactNode }) {
         .from('user_roles')
         .select('role')
         .eq('user_id', user.id)
-        .single();
+        .maybeSingle();
 
-      if (error && error.code === 'PGRST116') {
+      if (!data && !error) {
         // No role exists, create one with default 'user'
         const { data: newRole, error: insertError } = await supabase
           .from('user_roles')
           .insert({ user_id: user.id, role: 'user' })
           .select('role')
-          .single();
+          .maybeSingle();
 
         if (insertError) {
           console.error('Error creating user role:', insertError);
           setRole('user'); // Fallback to user
         } else {
-          setRole(newRole?.role as AppRole || 'user');
+          setRole((newRole?.role as AppRole) || 'user');
         }
       } else if (error) {
         console.error('Error fetching user role:', error);
         setRole('user'); // Fallback to user
       } else {
-        setRole(data?.role as AppRole || 'user');
+        setRole((data?.role as AppRole) || 'user');
       }
     } catch (err) {
       console.error('Error in role management:', err);
@@ -66,17 +66,23 @@ export function UserRoleProvider({ children }: { children: ReactNode }) {
   };
 
   useEffect(() => {
-    fetchOrCreateRole();
-  }, [user]);
+    // Wait for auth to finish loading before fetching role
+    if (!authLoading) {
+      fetchOrCreateRole();
+    }
+  }, [user, authLoading]);
 
   const isAdmin = role === 'admin';
   const isOwner = role === 'owner';
   const isAdminOrOwner = role === 'admin' || role === 'owner';
 
+  // While auth is loading, also show loading for role
+  const effectiveLoading = authLoading || loading;
+
   return (
     <UserRoleContext.Provider value={{ 
       role, 
-      loading, 
+      loading: effectiveLoading, 
       isAdmin, 
       isOwner, 
       isAdminOrOwner,
