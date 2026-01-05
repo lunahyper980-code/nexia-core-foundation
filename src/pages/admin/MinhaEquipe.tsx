@@ -104,6 +104,9 @@ export default function MinhaEquipe() {
                     </li>
                   ))}
                 </ul>
+                <p className="text-sm text-center text-muted-foreground font-medium">
+                  pague à vista
+                </p>
                 <Button 
                   onClick={() => copyLink('mensal')} 
                   variant="outline" 
@@ -143,6 +146,9 @@ export default function MinhaEquipe() {
                     </li>
                   ))}
                 </ul>
+                <p className="text-sm text-center text-muted-foreground font-medium">
+                  parcele em até 12x
+                </p>
                 <Button 
                   onClick={() => copyLink('vitalicio')} 
                   className="w-full"
