@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Award, ArrowLeft, ArrowRight, Loader2, Building2, Sparkles, Users } from 'lucide-react';
 import { toast } from 'sonner';
@@ -13,6 +13,7 @@ import { Label } from '@/components/ui/label';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { validateBusinessInput, validateShortInput, sanitizeInput } from '@/lib/inputValidation';
 import { useDemoModeForForms } from '@/hooks/useDemoModeForForms';
+import { useModuleState } from '@/hooks/useModuleState';
 
 interface FormData {
   businessName: string;
@@ -28,6 +29,8 @@ export default function AutoridadeWizard() {
   const { workspace } = useWorkspace();
   const { user } = useAuth();
   const { isDemoMode, validateRequired, getDemoModeFlag } = useDemoModeForForms();
+  const { getSavedState, saveStep, saveFormData, clearState } = useModuleState('autoridade');
+  
   const [step, setStep] = useState(1);
   const [isGenerating, setIsGenerating] = useState(false);
   const [errors, setErrors] = useState<Record<string, string>>({});
@@ -40,8 +43,26 @@ export default function AutoridadeWizard() {
     targetAudience: '',
   });
 
+  // Restore state on mount
+  useEffect(() => {
+    const saved = getSavedState();
+    if (saved) {
+      if (saved.currentStep) setStep(saved.currentStep);
+      if (saved.formData) setFormData(prev => ({ ...prev, ...saved.formData }));
+    }
+  }, [getSavedState]);
+
+  const handleStepChange = (newStep: number) => {
+    setStep(newStep);
+    saveStep(newStep);
+  };
+
   const updateField = (field: keyof FormData, value: string) => {
-    setFormData(prev => ({ ...prev, [field]: value }));
+    setFormData(prev => {
+      const updated = { ...prev, [field]: value };
+      saveFormData(updated);
+      return updated;
+    });
     setErrors(prev => ({ ...prev, [field]: '' }));
   };
 
@@ -78,7 +99,7 @@ export default function AutoridadeWizard() {
 
   const handleAdvanceStep = () => {
     if (validateStep1()) {
-      setStep(2);
+      handleStepChange(2);
     }
   };
 
@@ -317,7 +338,7 @@ export default function AutoridadeWizard() {
               </div>
 
               <div className="flex justify-between pt-4">
-                <Button variant="outline" onClick={() => setStep(1)}>
+                <Button variant="outline" onClick={() => handleStepChange(1)}>
                   <ArrowLeft className="h-4 w-4 mr-2" />
                   Voltar
                 </Button>

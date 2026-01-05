@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { AppLayout } from '@/components/AppLayout';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
@@ -19,6 +19,7 @@ import { useWorkspace } from '@/contexts/WorkspaceContext';
 import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '@/hooks/use-toast';
 import { useDemoModeForForms } from '@/hooks/useDemoModeForForms';
+import { useModuleState } from '@/hooks/useModuleState';
 
 interface FormData {
   businessType: string;
@@ -51,6 +52,7 @@ export default function OrganizacaoWizard() {
   const { workspace } = useWorkspace();
   const { toast } = useToast();
   const { isDemoMode, getDemoModeFlag } = useDemoModeForForms();
+  const { getSavedState, saveStep, saveFormData, clearState } = useModuleState('organizacao');
   
   const [step, setStep] = useState(1);
   const [isGenerating, setIsGenerating] = useState(false);
@@ -65,8 +67,31 @@ export default function OrganizacaoWizard() {
     organizationGoal: ''
   });
 
+  // Restore state on mount
+  useEffect(() => {
+    const saved = getSavedState();
+    if (saved) {
+      if (saved.currentStep) setStep(saved.currentStep);
+      if (saved.formData) {
+        setFormData(prev => ({ ...prev, ...saved.formData }));
+        if (saved.formData.contactChannels) {
+          setSelectedChannels(saved.formData.contactChannels.split(', ').filter(Boolean));
+        }
+      }
+    }
+  }, [getSavedState]);
+
+  const handleStepChange = (newStep: number) => {
+    setStep(newStep);
+    saveStep(newStep);
+  };
+
   const updateFormData = (field: keyof FormData, value: string) => {
-    setFormData(prev => ({ ...prev, [field]: value }));
+    setFormData(prev => {
+      const updated = { ...prev, [field]: value };
+      saveFormData(updated);
+      return updated;
+    });
   };
 
   const toggleChannel = (channel: string) => {
@@ -74,7 +99,12 @@ export default function OrganizacaoWizard() {
       const updated = prev.includes(channel) 
         ? prev.filter(c => c !== channel) 
         : [...prev, channel];
-      updateFormData('contactChannels', updated.join(', '));
+      const channelsStr = updated.join(', ');
+      setFormData(current => {
+        const newFormData = { ...current, contactChannels: channelsStr };
+        saveFormData(newFormData);
+        return newFormData;
+      });
       return updated;
     });
   };
@@ -239,7 +269,7 @@ export default function OrganizacaoWizard() {
 
               <div className="flex gap-3 pt-4">
                 <Button
-                  onClick={() => setStep(2)}
+                  onClick={() => handleStepChange(2)}
                   disabled={!canAdvance}
                   className="flex-1 gap-2"
                 >
@@ -297,7 +327,7 @@ export default function OrganizacaoWizard() {
               <div className="flex gap-3 pt-4">
                 <Button
                   variant="outline"
-                  onClick={() => setStep(1)}
+                  onClick={() => handleStepChange(1)}
                   className="gap-2"
                 >
                   <ArrowLeft className="h-4 w-4" />

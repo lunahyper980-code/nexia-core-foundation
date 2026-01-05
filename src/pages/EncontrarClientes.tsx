@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { AppLayout } from '@/components/AppLayout';
 import { toast } from 'sonner';
 import { supabase } from '@/integrations/supabase/client';
@@ -9,9 +9,12 @@ import { GlobalSearchCard } from '@/components/encontrar-clientes/GlobalSearchCa
 import { LeadsResultsScreen } from '@/components/encontrar-clientes/LeadsResultsScreen';
 import { useWorkspace } from '@/contexts/WorkspaceContext';
 import { NextStepCard } from '@/components/academy/NextStepCard';
+import { useModuleState } from '@/hooks/useModuleState';
 
 export default function EncontrarClientes() {
   const { workspace } = useWorkspace();
+  const { getSavedState, saveFormData, saveExtras, clearState } = useModuleState('prospeccao');
+  
   const [nicho, setNicho] = useState('');
   const [cidade, setCidade] = useState('');
   const [possuiSite, setPossuiSite] = useState(false);
@@ -24,6 +27,31 @@ export default function EncontrarClientes() {
   const [showResults, setShowResults] = useState(false);
   const [lastSearchNicho, setLastSearchNicho] = useState('');
   const [lastSearchCidade, setLastSearchCidade] = useState('');
+
+  // Restore state on mount
+  useEffect(() => {
+    const saved = getSavedState();
+    if (saved) {
+      if (saved.formData) {
+        if (saved.formData.nicho) setNicho(saved.formData.nicho);
+        if (saved.formData.cidade) setCidade(saved.formData.cidade);
+        if (saved.formData.possuiSite !== undefined) setPossuiSite(saved.formData.possuiSite);
+        if (saved.formData.possuiInstagram !== undefined) setPossuiInstagram(saved.formData.possuiInstagram);
+      }
+      if (saved.extras) {
+        if (saved.extras.leads) setLeads(saved.extras.leads);
+        if (saved.extras.leadsNaoConfirmados) setLeadsNaoConfirmados(saved.extras.leadsNaoConfirmados);
+        if (saved.extras.showResults) setShowResults(saved.extras.showResults);
+        if (saved.extras.lastSearchNicho) setLastSearchNicho(saved.extras.lastSearchNicho);
+        if (saved.extras.lastSearchCidade) setLastSearchCidade(saved.extras.lastSearchCidade);
+      }
+    }
+  }, [getSavedState]);
+
+  // Save form data when it changes
+  useEffect(() => {
+    saveFormData({ nicho, cidade, possuiSite, possuiInstagram });
+  }, [nicho, cidade, possuiSite, possuiInstagram, saveFormData]);
 
   const handleSearch = async () => {
     if (!nicho.trim() || !cidade.trim()) {
@@ -61,7 +89,15 @@ export default function EncontrarClientes() {
         setLeads(data.leads);
         setLeadsNaoConfirmados(data.leadsNaoConfirmados || []);
         setIsSearching(false);
-        setShowResults(true); // Show results screen
+        setShowResults(true);
+        // Save results to state
+        saveExtras({
+          leads: data.leads,
+          leadsNaoConfirmados: data.leadsNaoConfirmados || [],
+          showResults: true,
+          lastSearchNicho: nicho,
+          lastSearchCidade: cidade,
+        });
         toast.success(`${data.leads.length} leads encontrados!`);
       } else {
         setIsSearching(false);
@@ -113,6 +149,8 @@ export default function EncontrarClientes() {
     setShowResults(false);
     setLeads([]);
     setLeadsNaoConfirmados([]);
+    // Clear saved results but keep form data
+    saveExtras({ showResults: false, leads: [], leadsNaoConfirmados: [] });
   };
 
   return (
