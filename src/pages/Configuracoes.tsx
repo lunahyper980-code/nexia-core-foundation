@@ -12,7 +12,7 @@ import { useUserRole } from '@/contexts/UserRoleContext';
 import { useDemoMode } from '@/contexts/DemoModeContext';
 import { supabase } from '@/integrations/supabase/client';
 import { toast } from 'sonner';
-import { User, Shield, Save, Loader2, Settings2, Cog, MonitorPlay } from 'lucide-react';
+import { User, Shield, Save, Loader2, Settings2, Cog, MonitorPlay, Users } from 'lucide-react';
 import { NexiaLoader } from '@/components/ui/nexia-loader';
 
 interface Profile {
@@ -206,16 +206,36 @@ export default function Configuracoes() {
                   <Settings2 className="h-5 w-5 text-primary" />
                 </div>
                 <div>
-                  <CardTitle className="text-lg">Painel Admin</CardTitle>
-                  <CardDescription>Área restrita (Admin/Owner)</CardDescription>
+                  <CardTitle className="text-lg">Área Administrativa</CardTitle>
+                  <CardDescription>Gestão de usuários e configurações avançadas</CardDescription>
                 </div>
               </div>
             </CardHeader>
-            <CardContent>
-              <Button onClick={() => navigate('/admin')} className="gap-2">
-                <Settings2 className="h-4 w-4" />
-                Acessar Painel Admin
-              </Button>
+            <CardContent className="space-y-4">
+              <div className="grid sm:grid-cols-2 gap-4">
+                <Button 
+                  onClick={() => navigate('/admin/usuarios')} 
+                  variant="outline"
+                  className="gap-2 justify-start h-auto py-4"
+                >
+                  <Users className="h-5 w-5 text-primary" />
+                  <div className="text-left">
+                    <p className="font-medium">Gerenciar Usuários</p>
+                    <p className="text-xs text-muted-foreground">Controle de acesso e permissões</p>
+                  </div>
+                </Button>
+                <Button 
+                  onClick={() => navigate('/admin')} 
+                  variant="outline"
+                  className="gap-2 justify-start h-auto py-4"
+                >
+                  <Settings2 className="h-5 w-5 text-primary" />
+                  <div className="text-left">
+                    <p className="font-medium">Painel Admin</p>
+                    <p className="text-xs text-muted-foreground">Créditos e configurações</p>
+                  </div>
+                </Button>
+              </div>
             </CardContent>
           </Card>
         )}
