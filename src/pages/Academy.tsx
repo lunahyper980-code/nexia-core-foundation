@@ -25,7 +25,7 @@ export default function Academy() {
             <h1 className="text-3xl font-bold text-foreground">Comece por aqui</h1>
           </div>
           <p className="text-lg text-muted-foreground max-w-xl mx-auto">
-            Siga o passo a passo e faça sua primeira venda com a Nexia Suite.
+            Siga o passo a passo e faça sua primeira venda com a Nexia Suite — sem depender de experiência técnica.
           </p>
         </div>
 
@@ -51,7 +51,7 @@ export default function Academy() {
                   Primeira Venda
                 </p>
                 <p className="text-sm text-muted-foreground leading-relaxed">
-                  Para quem não sabe por onde começar. Você segue o fluxo e a Nexia diz o que fazer.
+                  Para quem está começando do zero. Você segue o passo a passo e a Nexia te guia do primeiro contato até a entrega.
                 </p>
               </div>
               <Button 
@@ -84,7 +84,7 @@ export default function Academy() {
                   Processo Profissional
                 </p>
                 <p className="text-sm text-muted-foreground leading-relaxed">
-                  Para quem já vende serviços e quer padronizar diagnóstico, proposta e entrega.
+                  Para quem quer padronizar atendimento, briefing, diagnóstico, proposta e execução com fluxo de agência.
                 </p>
               </div>
               <Button 
@@ -115,10 +115,10 @@ export default function Academy() {
                   FAQ + Suporte
                 </h2>
                 <p className="text-sm text-muted-foreground font-medium text-amber-600/80 mb-2">
-                  Perguntas Frequentes
+                  Dúvidas frequentes
                 </p>
                 <p className="text-sm text-muted-foreground leading-relaxed">
-                  Dúvidas rápidas e contato direto com nossa equipe de suporte.
+                  Respostas rápidas sobre fluxo, entregas, soluções, propostas e uso da plataforma.
                 </p>
               </div>
               <Button 
@@ -142,11 +142,10 @@ export default function Academy() {
               </div>
               <div className="flex-1">
                 <h3 className="font-semibold text-foreground mb-1">
-                  Dica: Comece pelo Modo Iniciante
+                  Dica: comece pelo Modo Iniciante
                 </h3>
                 <p className="text-sm text-muted-foreground">
-                  Mesmo que você já tenha experiência, o guia iniciante mostra o fluxo ideal do Nexia Suite. 
-                  Depois evolua para o Modo Agência para padronizar sua operação.
+                  Mesmo que você já tenha experiência, o Modo Iniciante mostra o fluxo ideal: prospectar → briefing → diagnóstico → proposta → entrega.
                 </p>
               </div>
               <Button onClick={() => navigate('/academy/guia-iniciante')} className="shrink-0 gap-2">

@@ -17,36 +17,52 @@ import {
 
 const FAQ_ITEMS = [
   {
-    question: 'Preciso saber marketing?',
-    answer: 'Não. A Nexia faz a análise e indica exatamente o que oferecer. Você só precisa seguir o passo a passo e executar. O sistema foi feito para iniciantes que nunca venderam serviços digitais.',
+    question: 'Eu preciso saber marketing para usar o Nexia?',
+    answer: 'Não. A plataforma gera estrutura e entregáveis. Você só aplica o fluxo e personaliza.',
   },
   {
-    question: 'Funciona só com celular?',
-    answer: 'Sim! O Nexia Suite é responsivo e funciona perfeitamente no celular. Você pode fazer diagnósticos, gerar propostas e gerenciar clientes de qualquer lugar.',
+    question: 'O que eu vendo: plano ou execução?',
+    answer: 'Você pode vender só o plano estratégico (entrega instrucional) ou oferecer execução como serviço adicional com ticket maior.',
   },
   {
-    question: 'O que eu vendo primeiro?',
-    answer: 'Use o Nexia Simples para descobrir. Responda as perguntas sobre o cliente e a Nexia vai dizer qual solução oferecer: site, app, organização de processos ou posicionamento digital.',
+    question: "O que é 'Entrega Instrucional'?",
+    answer: 'É o material estratégico gerado pela plataforma, pronto para o cliente executar ou repassar para alguém executar.',
   },
   {
-    question: 'Onde ficam meus apps e sites?',
-    answer: 'Em "Meus Projetos". Lá você encontra todos os apps e sites que está desenvolvendo, com status, prompts gerados e acesso rápido para continuar o trabalho.',
+    question: "O que é 'Execução'?",
+    answer: 'É você (ou sua equipe) executar as tarefas e ações do plano.',
   },
   {
-    question: 'Qual diferença do Nexia Simples e Avançado?',
-    answer: 'Nexia Simples: 7 perguntas rápidas, resultado imediato, ideal para iniciantes. Nexia Avançado: 4 blocos de análise estratégica com justificativas profissionais, ideal para quem quer parecer consultor.',
+    question: 'Como eu envio para o cliente?',
+    answer: 'Você pode enviar link, imprimir em PDF quando disponível e/ou enviar proposta + entrega.',
   },
   {
-    question: 'Como envio para o cliente?',
-    answer: 'Vá em Vendas e gere uma mensagem de WhatsApp personalizada. Você também pode gerar uma proposta formal em PDF para enviar por e-mail ou mostrar em reunião.',
+    question: 'As tarefas são automáticas?',
+    answer: 'Sim. O planejamento gera tarefas acionáveis que você pode acompanhar e concluir.',
   },
   {
-    question: 'Posso usar com mais de um cliente?',
-    answer: 'Sim! Cada diagnóstico e proposta são independentes. Você pode gerenciar quantos clientes quiser, cada um com seu histórico e documentos.',
+    question: 'Soluções Digitais substituem o Diagnóstico?',
+    answer: 'Não. Elas são entregáveis prontos. O diagnóstico orienta qual solução faz mais sentido.',
   },
   {
-    question: 'Como salvo o histórico do cliente?',
-    answer: 'Ao criar diagnósticos, propostas e entregas, tudo fica vinculado ao cliente automaticamente. Acesse o histórico de cada cliente na área de Clientes.',
+    question: 'Consigo usar só pelo celular?',
+    answer: 'Sim, mas algumas ações como copiar/exportar e organizar tarefas ficam melhores no desktop.',
+  },
+  {
+    question: 'Como eu faço proposta comercial?',
+    answer: 'A área de Vendas/Propostas gera uma proposta base. Você personaliza e envia.',
+  },
+  {
+    question: 'O Nexia serve para iniciantes?',
+    answer: 'Sim. O Academy foi feito para guiar do zero até a primeira venda.',
+  },
+  {
+    question: 'O que eu faço se o cliente não responde?',
+    answer: 'Use follow-ups prontos e foque em volume: conversar com mais leads aumenta conversão.',
+  },
+  {
+    question: 'Posso cancelar quando quiser?',
+    answer: 'Sim. Sem fidelidade.',
   },
 ];
 
@@ -67,11 +83,11 @@ export default function FAQ() {
           </Button>
           <div className="flex-1">
             <div className="flex items-center gap-2">
-              <h1 className="text-2xl font-bold text-foreground">Perguntas Frequentes</h1>
+              <h1 className="text-2xl font-bold text-foreground">FAQ + Suporte</h1>
               <HelpCircle className="h-5 w-5 text-primary" />
             </div>
             <p className="text-muted-foreground">
-              Dúvidas rápidas e contato com suporte
+              Respostas rápidas sobre fluxo, entregas, soluções, propostas e uso da plataforma.
             </p>
           </div>
         </div>

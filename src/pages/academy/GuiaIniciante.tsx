@@ -11,16 +11,14 @@ import {
   ArrowRight,
   Search,
   Brain,
-  Layers,
   FileText,
   Rocket,
   CheckCircle2,
   MessageCircle,
   Sparkles,
-  TrendingUp,
   Info,
   Heart,
-  Stethoscope,
+  ShoppingCart,
 } from 'lucide-react';
 
 interface Step {
@@ -28,7 +26,7 @@ interface Step {
   title: string;
   objective: string;
   howTo: string;
-  supportMessage: string;
+  alertMessage: string;
   buttonText: string;
   path: string;
   icon: React.ComponentType<{ className?: string }>;
@@ -39,61 +37,61 @@ const STEPS: Step[] = [
   {
     id: 1,
     title: 'Encontrar um Cliente',
-    objective: 'Encontrar um possível cliente qualificado para iniciar a conversa',
-    howTo: 'Entre em "Encontrar Clientes", escolha nicho e cidade e clique buscar. Use a Abordagem Inteligente para gerar mensagens de primeiro contato. Lembre-se: NÃO fale de preço, serviço ou proposta ainda.',
-    supportMessage: 'Você ainda não precisa saber o que vender. Apenas converse.',
-    buttonText: 'Ir para Encontrar Clientes',
+    objective: 'Encontrar um cliente potencial qualificado para iniciar uma conversa.',
+    howTo: "Entre em 'Encontrar Clientes', selecione nicho e cidade, e gere uma mensagem com a Abordagem Inteligente.",
+    alertMessage: 'Não fale de preço agora. Primeiro faça contato e entenda o negócio.',
+    buttonText: 'Ir para Encontrar Clientes →',
     path: '/encontrar-clientes',
     icon: Search,
     tips: [
-      'O objetivo NÃO é vender',
-      'Use a Abordagem Inteligente',
-      'Apenas converse e entenda o negócio',
+      'O objetivo aqui NÃO é vender',
+      'Apenas iniciar conversa e entender o contexto',
+      'Use a mensagem pronta e personalize 1 linha',
     ],
   },
   {
     id: 2,
     title: 'Gerar Briefing Rápido',
-    objective: 'Conhecer o negócio do cliente de forma estruturada',
-    howTo: 'Após o primeiro contato, se o cliente demonstrou interesse, gere o Briefing Rápido. Preencha as 4 etapas: Negócio, Digital, Situação e Objetivos. Esse briefing alimenta o diagnóstico e planejamento.',
-    supportMessage: 'O briefing serve para entender o cliente. Ele NÃO cria cliente automaticamente.',
-    buttonText: 'Gerar Briefing Rápido',
+    objective: 'Coletar informações essenciais do cliente de forma estruturada.',
+    howTo: 'Após o cliente responder com interesse, gere um Briefing Rápido. Preencha com dados reais do negócio (segmento, público, objetivo, situação).',
+    alertMessage: 'Isso alimenta o diagnóstico e o planejamento. Demora menos de 3 minutos.',
+    buttonText: 'Ir para Briefing →',
     path: '/nexia-ai/briefing-rapido',
     icon: FileText,
     tips: [
-      'Preencha junto com o cliente',
-      'Alimenta diagnóstico e planejamento',
-      'Não cria cliente automaticamente',
+      'Isso alimenta o diagnóstico e o planejamento',
+      'Demora menos de 3 minutos',
+      'Evita retrabalho na entrega',
     ],
   },
   {
     id: 3,
-    title: 'Gerar Diagnóstico e Planejamento',
-    objective: 'Deixar a IA descobrir o que o cliente precisa',
-    howTo: 'Escolha entre Nexia Simples (diagnóstico objetivo + recomendação de solução) ou Nexia Completo (planejamento estratégico com tarefas). O briefing preenchido será reaproveitado automaticamente.',
-    supportMessage: 'Você não precisa saber estratégia. O Nexia faz isso por você.',
-    buttonText: 'Criar Planejamento',
+    title: 'Gerar Diagnóstico + Planejamento',
+    objective: 'Transformar as informações em um plano com tarefas acionáveis.',
+    howTo: "Use o Nexia (Diagnóstico/Planejamento) para gerar o plano estratégico e tarefas. Esse é o 'cérebro' da entrega: ele organiza o que fazer.",
+    alertMessage: 'Você pode editar antes de enviar. O plano vira tarefas automaticamente.',
+    buttonText: 'Ir para Diagnóstico/Planejamento →',
     path: '/nexia-ai/escolha-planejamento',
     icon: Brain,
     tips: [
-      'Nexia Simples: diagnóstico rápido',
-      'Nexia Completo: planejamento detalhado',
-      'Briefing é reaproveitado',
+      'Você pode editar antes de enviar',
+      'O plano vira tarefas automaticamente',
+      'Isso dá clareza e aumenta percepção de valor',
     ],
   },
   {
     id: 4,
-    title: 'Aplicar e Vender a Solução',
-    objective: 'Materializar a solução recomendada pelo Nexia',
-    howTo: 'O Nexia vai indicar a melhor solução: Site, App, Kit de Lançamento, Autoridade Digital, etc. Você apenas aplica usando Soluções Digitais. Tudo já vem estruturado.',
-    supportMessage: 'Você não cria do zero. Você aplica a solução recomendada.',
-    buttonText: 'Ir para Soluções Digitais',
-    path: '/solucoes',
-    icon: Layers,
+    title: 'Gerar Proposta e Entregar',
+    objective: 'Converter o plano em uma entrega profissional (e vender com segurança).',
+    howTo: 'Gere uma proposta comercial e entregue o plano/entregável como PDF quando disponível. Se preferir, ofereça execução como serviço adicional.',
+    alertMessage: 'Proposta pronta aumenta fechamento. Execução é opcional e cobra mais.',
+    buttonText: 'Ir para Propostas/Vendas →',
+    path: '/vendas',
+    icon: ShoppingCart,
     tips: [
-      'Nexia indica a melhor solução',
-      'Tudo já vem estruturado',
-      'Você apenas aplica',
+      'Proposta pronta aumenta fechamento',
+      'Entrega instrucional pode ser enviada em PDF',
+      'Execução é opcional e cobra mais',
     ],
   },
 ];
@@ -129,7 +127,7 @@ export default function GuiaIniciante() {
               </Badge>
             </div>
             <p className="text-muted-foreground">
-              Siga o passo a passo e ganhe dinheiro com a Nexia — sem precisar de conhecimento técnico.
+              Siga o passo a passo e faça sua primeira venda com a Nexia — sem precisar ser expert em marketing, tecnologia ou estratégia.
             </p>
           </div>
         </div>
@@ -138,7 +136,7 @@ export default function GuiaIniciante() {
         <Alert className="border-primary/30 bg-primary/5">
           <Heart className="h-4 w-4 text-primary" />
           <AlertDescription className="text-foreground">
-            <strong>Você não precisa saber marketing, tecnologia ou estratégia.</strong> Este guia foi feito para você que está começando do zero. A Nexia faz o trabalho pesado.
+            <strong>Você não precisa saber tudo.</strong> O Nexia organiza o processo: você só aplica o fluxo e entrega com aparência profissional.
           </AlertDescription>
         </Alert>
 
@@ -237,11 +235,11 @@ export default function GuiaIniciante() {
                         </div>
                       )}
 
-                      {/* Support Message */}
+                      {/* Alert Message */}
                       <div className="flex items-start gap-2 p-3 rounded-lg bg-amber-500/5 border border-amber-500/20">
                         <Info className="h-4 w-4 text-amber-600 shrink-0 mt-0.5" />
                         <p className="text-sm text-amber-700 dark:text-amber-400 font-medium">
-                          {step.supportMessage}
+                          {step.alertMessage}
                         </p>
                       </div>
 
@@ -262,6 +260,15 @@ export default function GuiaIniciante() {
             );
           })}
         </div>
+
+        {/* Critério de conclusão */}
+        <Card className="border-primary/20 bg-primary/5">
+          <CardContent className="p-4">
+            <p className="text-sm text-muted-foreground text-center">
+              <strong className="text-foreground">Você conclui quando:</strong> iniciou conversa, coletou briefing, gerou plano e enviou uma proposta/entrega ao cliente.
+            </p>
+          </CardContent>
+        </Card>
 
         {/* Final CTA */}
         {allCompleted ? (
