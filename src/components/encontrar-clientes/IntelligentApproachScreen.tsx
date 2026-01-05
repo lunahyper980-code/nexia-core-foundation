@@ -1,12 +1,13 @@
 import { useState, useEffect, useMemo, useRef } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { ArrowLeft, MessageCircle, Instagram, Mail, Phone, Copy, ChevronRight, ChevronLeft, RefreshCw, FileText, Save, CheckCircle2, AlertTriangle, Target, MessageSquare, ShieldCheck, Handshake, Sparkles, ArrowRight, Languages } from 'lucide-react';
+import { ArrowLeft, MessageCircle, Instagram, Mail, Phone, Copy, ChevronRight, ChevronLeft, RefreshCw, FileText, Save, CheckCircle2, AlertTriangle, Target, MessageSquare, ShieldCheck, Handshake, Sparkles, ArrowRight, Languages, ClipboardList } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Badge } from '@/components/ui/badge';
 import { toast } from 'sonner';
 import { ApproachLoadingAnimation } from './ApproachLoadingAnimation';
 import { TranslateApproachModal } from './TranslateApproachModal';
+import { SendBriefingModal } from './SendBriefingModal';
 import type { Lead } from './LeadCard';
 
 // Templates prontos - substituem {nome}, {segmento}, {localizacao}
@@ -116,6 +117,7 @@ export function IntelligentApproachScreen({ open, onClose, lead }: IntelligentAp
   const [selectedObjecao, setSelectedObjecao] = useState<number | null>(null);
   const [translateModalOpen, setTranslateModalOpen] = useState(false);
   const [messageToTranslate, setMessageToTranslate] = useState('');
+  const [sendBriefingModalOpen, setSendBriefingModalOpen] = useState(false);
   const mainRef = useRef<HTMLElement>(null);
   const touchStartX = useRef<number | null>(null);
 
@@ -686,39 +688,23 @@ export function IntelligentApproachScreen({ open, onClose, lead }: IntelligentAp
                 <div className="flex flex-col gap-4">
                   <div className="flex items-start gap-4">
                     <div className="p-3 rounded-xl bg-primary/10 shrink-0">
-                      <Sparkles className="h-6 w-6 text-primary" />
+                      <ClipboardList className="h-6 w-6 text-primary" />
                     </div>
                     <div className="flex-1">
                       <h3 className="font-semibold text-foreground text-lg">Próximo passo recomendado</h3>
                       <p className="text-sm text-muted-foreground mt-1">
-                        Agora que você tem a abordagem, colete as informações essenciais do cliente com um briefing.
+                        Agora que você tem a abordagem, colete as informações essenciais do cliente com um briefing profissional.
                       </p>
                     </div>
                   </div>
-                  <div className="flex flex-col sm:flex-row gap-2">
-                    <Button 
-                      variant="outline"
-                      className="gap-2 flex-1" 
-                      onClick={() => {
-                        const params = new URLSearchParams({
-                          leadName: lead?.nome || '',
-                          leadSegment: lead?.segmento || '',
-                          leadLocation: lead?.localizacao || '',
-                        });
-                        navigate(`/briefing-rapido?${params.toString()}`);
-                      }}
-                    >
-                      Briefing Rápido
-                      <ArrowRight className="h-4 w-4" />
-                    </Button>
-                    <Button 
-                      className="gap-2 flex-1 bg-emerald-500 hover:bg-emerald-600" 
-                      onClick={() => navigate('/nexia-ai/briefing/novo')}
-                    >
-                      Briefing Profissional
-                      <ArrowRight className="h-4 w-4" />
-                    </Button>
-                  </div>
+                  <Button 
+                    className="gap-2 w-full bg-emerald-500 hover:bg-emerald-600" 
+                    onClick={() => setSendBriefingModalOpen(true)}
+                  >
+                    <ClipboardList className="h-4 w-4" />
+                    Enviar Briefing Profissional
+                    <ArrowRight className="h-4 w-4" />
+                  </Button>
                 </div>
               </div>
             </div>
@@ -792,6 +778,13 @@ export function IntelligentApproachScreen({ open, onClose, lead }: IntelligentAp
         open={translateModalOpen}
         onOpenChange={setTranslateModalOpen}
         originalMessage={messageToTranslate}
+      />
+
+      {/* Modal de Enviar Briefing */}
+      <SendBriefingModal
+        open={sendBriefingModalOpen}
+        onClose={() => setSendBriefingModalOpen(false)}
+        lead={lead}
       />
     </div>
   );
