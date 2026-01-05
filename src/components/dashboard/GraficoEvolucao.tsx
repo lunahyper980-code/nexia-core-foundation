@@ -142,7 +142,7 @@ const CustomTooltip = ({ active, payload, label }: any) => {
       <div className="bg-background/95 backdrop-blur-sm border border-primary/20 rounded-lg p-3 shadow-lg">
         <p className="text-xs text-muted-foreground mb-1">{label}</p>
         <p className="text-sm font-semibold text-primary">
-          {payload[0].value} projetos
+          {payload[0].value} propostas ganhas
         </p>
         <p className="text-sm font-semibold text-success">
           R$ {(payload[1]?.value ?? 0).toLocaleString('pt-BR', { minimumFractionDigits: 0, maximumFractionDigits: 0 })}
@@ -211,7 +211,7 @@ export function GraficoEvolucao({
   }, [isOwner, data, currentPipelineValue]);
 
   return (
-    <PremiumFrame title="📈 Evolução dos Projetos — Últimos 30 dias" className="fade-in" style={{ animationDelay: '0.25s' }}>
+    <PremiumFrame title="📈 Evolução do Faturamento — Últimos 30 dias" className="fade-in" style={{ animationDelay: '0.25s' }}>
       {/* Métricas - SEM Pipeline Atual */}
       <div className="grid grid-cols-3 gap-3 mb-4">
         {/* Faturamento 30 dias */}
@@ -313,11 +313,11 @@ export function GraficoEvolucao({
       <div className="flex items-center justify-center gap-6 mt-3">
         <div className="flex items-center gap-2">
           <div className="w-3 h-3 rounded-full bg-primary" />
-          <span className="text-xs text-muted-foreground">Projetos</span>
+          <span className="text-xs text-muted-foreground">Propostas Ganhas</span>
         </div>
         <div className="flex items-center gap-2">
           <div className="w-3 h-3 rounded-full bg-success" />
-          <span className="text-xs text-muted-foreground">Valor (R$)</span>
+          <span className="text-xs text-muted-foreground">Faturamento (R$)</span>
         </div>
       </div>
     </PremiumFrame>
