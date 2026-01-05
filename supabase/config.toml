@@ -1,1 +1,55 @@
 project_id = "bpphrgziabmussaydjnm"
+
+[functions.generate-approach]
+verify_jwt = false
+
+[functions.generate-authority-strategy]
+verify_jwt = false
+
+[functions.generate-briefing-analysis]
+verify_jwt = false
+
+[functions.generate-contract]
+verify_jwt = false
+
+[functions.generate-delivery-material]
+verify_jwt = false
+
+[functions.generate-diagnosis]
+verify_jwt = false
+
+[functions.generate-launch-kit]
+verify_jwt = false
+
+[functions.generate-launch-logo]
+verify_jwt = false
+
+[functions.generate-lead-message]
+verify_jwt = false
+
+[functions.generate-leads]
+verify_jwt = false
+
+[functions.generate-positioning]
+verify_jwt = false
+
+[functions.generate-process-organization]
+verify_jwt = false
+
+[functions.generate-proposal]
+verify_jwt = false
+
+[functions.generate-whatsapp-messages]
+verify_jwt = false
+
+[functions.nexia-ai]
+verify_jwt = false
+
+[functions.nexia-diagnosis]
+verify_jwt = false
+
+[functions.nexia-simple-summary]
+verify_jwt = false
+
+[functions.translate-approach]
+verify_jwt = false

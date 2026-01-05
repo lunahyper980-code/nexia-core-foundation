@@ -6,92 +6,105 @@ const corsHeaders = {
   'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type',
 };
 
+const GEMINI_API_URL = 'https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent';
+
+// Simple cache
+const cache = new Map<string, { data: any; timestamp: number }>();
+const CACHE_TTL_MS = 24 * 60 * 60 * 1000;
+
+function getCacheKey(payload: any): string {
+  const str = JSON.stringify(payload);
+  let hash = 0;
+  for (let i = 0; i < str.length; i++) {
+    hash = ((hash << 5) - hash) + str.charCodeAt(i);
+    hash = hash & hash;
+  }
+  return `generate-authority-strategy_${hash}`;
+}
+
 serve(async (req) => {
   if (req.method === 'OPTIONS') {
     return new Response(null, { headers: corsHeaders });
   }
 
   try {
-    const { businessName, segment, mainChannel, frequency, objective, targetAudience } = await req.json();
+    const { businessName, segment, mainChannel, frequency, objective, targetAudience, forceRegenerate } = await req.json();
 
-    const LOVABLE_API_KEY = Deno.env.get('LOVABLE_API_KEY');
-    if (!LOVABLE_API_KEY) {
-      throw new Error('LOVABLE_API_KEY is not configured');
+    const GEMINI_API_KEY = Deno.env.get('GEMINI_API_KEY');
+    if (!GEMINI_API_KEY) {
+      throw new Error('GEMINI_API_KEY is not configured');
     }
 
-    const systemPrompt = `Você é um estrategista de presença e autoridade digital. Sua função é criar estratégias de reconhecimento e autoridade orgânica para marcas que ainda não são conhecidas.
+    const payload = { businessName, segment, mainChannel, frequency, objective, targetAudience };
+    
+    // Check cache
+    const cacheKey = getCacheKey(payload);
+    if (!forceRegenerate) {
+      const cached = cache.get(cacheKey);
+      if (cached && (Date.now() - cached.timestamp) < CACHE_TTL_MS) {
+        console.log('Returning cached authority strategy');
+        return new Response(JSON.stringify({ success: true, data: cached.data }), {
+          headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+        });
+      }
+    }
 
-Você NÃO faz diagnósticos. Você EXECUTA estratégias com base nas informações fornecidas.
+    const prompt = `Você é um estrategista de presença e autoridade digital.
 
-Responda SEMPRE em JSON válido com a seguinte estrutura:
+NEGÓCIO: ${businessName}
+SEGMENTO: ${segment}
+CANAL: ${mainChannel}
+FREQUÊNCIA: ${frequency}
+OBJETIVO: ${objective}
+PÚBLICO: ${targetAudience || 'Não informado'}
+
+Crie estratégia de autoridade e reconhecimento digital focada em ${objective.toLowerCase()}, SEM tráfego pago.
+
+Retorne JSON válido:
 {
-  "estrategia_reconhecimento": "Descrição da estratégia de reconhecimento em 2-3 parágrafos",
-  "diretrizes_posicionamento": [
-    "diretriz 1",
-    "diretriz 2",
-    "diretriz 3",
-    "diretriz 4"
-  ],
+  "estrategia_reconhecimento": "2-3 parágrafos sobre estratégia",
+  "diretrizes_posicionamento": ["diretriz 1", "diretriz 2", "diretriz 3", "diretriz 4"],
   "ideias_conteudo": [
-    {
-      "tipo": "tipo de conteúdo",
-      "descricao": "descrição do conteúdo",
-      "objetivo": "objetivo específico"
-    }
+    {"tipo": "tipo", "descricao": "descrição", "objetivo": "objetivo"}
   ],
   "checklist_acoes_organicas": ["ação 1", "ação 2", "ação 3", "ação 4", "ação 5", "ação 6", "ação 7", "ação 8"]
 }`;
 
-    const userPrompt = `Crie uma estratégia de autoridade e reconhecimento digital para:
-
-**Negócio:** ${businessName}
-**Segmento:** ${segment}
-**Canal principal:** ${mainChannel}
-**Frequência de presença:** ${frequency}
-**Objetivo de autoridade:** ${objective}
-**Público-alvo:** ${targetAudience || 'Não informado'}
-
-Gere uma estratégia completa focada em ${objective.toLowerCase()}, sem tráfego pago, apenas ações orgânicas.`;
-
     console.log('Generating authority strategy for:', businessName);
 
-    const response = await fetch('https://ai.gateway.lovable.dev/v1/chat/completions', {
+    const response = await fetch(`${GEMINI_API_URL}?key=${GEMINI_API_KEY}`, {
       method: 'POST',
-      headers: {
-        'Authorization': `Bearer ${LOVABLE_API_KEY}`,
-        'Content-Type': 'application/json',
-      },
+      headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({
-        model: 'google/gemini-2.5-flash',
-        messages: [
-          { role: 'system', content: systemPrompt },
-          { role: 'user', content: userPrompt }
-        ],
+        contents: [{ role: 'user', parts: [{ text: prompt }] }],
+        generationConfig: { maxOutputTokens: 2000, temperature: 0.7 },
       }),
     });
 
     if (!response.ok) {
       const errorText = await response.text();
-      console.error('AI Gateway error:', response.status, errorText);
-      throw new Error(`AI Gateway error: ${response.status}`);
+      console.error('Gemini API error:', response.status, errorText);
+      throw new Error(`Gemini API error: ${response.status}`);
     }
 
     const data = await response.json();
-    const content = data.choices[0].message.content;
+    const content = data.candidates?.[0]?.content?.parts?.[0]?.text;
 
-    // Parse JSON from response
     let result;
     try {
       const jsonMatch = content.match(/\{[\s\S]*\}/);
       if (jsonMatch) {
         result = JSON.parse(jsonMatch[0]);
       } else {
-        throw new Error('No JSON found in response');
+        throw new Error('No JSON found');
       }
     } catch (parseError) {
       console.error('JSON parse error:', parseError);
       result = { raw_content: content };
     }
+
+    // Cache result
+    cache.set(cacheKey, { data: result, timestamp: Date.now() });
 
     console.log('Authority strategy generated successfully');
 

@@ -5,58 +5,68 @@ const corsHeaders = {
   'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type',
 };
 
+const GEMINI_API_URL = 'https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent';
+
+// Simple cache
+const cache = new Map<string, { data: any; timestamp: number }>();
+const CACHE_TTL_MS = 24 * 60 * 60 * 1000;
+
+function getCacheKey(payload: any): string {
+  const str = JSON.stringify(payload);
+  let hash = 0;
+  for (let i = 0; i < str.length; i++) {
+    hash = ((hash << 5) - hash) + str.charCodeAt(i);
+    hash = hash & hash;
+  }
+  return `generate-leads_${hash}`;
+}
+
 serve(async (req) => {
   if (req.method === 'OPTIONS') {
     return new Response(null, { headers: corsHeaders });
   }
 
   try {
-    const { nicho, cidade, possuiSite, possuiInstagram } = await req.json();
+    const { nicho, cidade, possuiSite, possuiInstagram, forceRegenerate } = await req.json();
     
-    const LOVABLE_API_KEY = Deno.env.get("LOVABLE_API_KEY");
-    if (!LOVABLE_API_KEY) {
-      throw new Error("LOVABLE_API_KEY is not configured");
+    const GEMINI_API_KEY = Deno.env.get('GEMINI_API_KEY');
+    if (!GEMINI_API_KEY) {
+      throw new Error('GEMINI_API_KEY is not configured');
+    }
+
+    const payload = { nicho, cidade, possuiSite, possuiInstagram };
+
+    // Check cache
+    const cacheKey = getCacheKey(payload);
+    if (!forceRegenerate) {
+      const cached = cache.get(cacheKey);
+      if (cached && (Date.now() - cached.timestamp) < CACHE_TTL_MS) {
+        console.log('Returning cached leads');
+        return new Response(JSON.stringify(cached.data), {
+          headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+        });
+      }
     }
 
     console.log(`Generating leads for: ${nicho} in ${cidade}`);
 
-    const systemPrompt = `Você é um especialista em negócios locais brasileiros. Sua tarefa é gerar uma lista de empresas PLAUSÍVEIS e REALISTAS baseadas em padrões reais de mercado.
+    const prompt = `Você é um especialista em negócios locais brasileiros. Gere lista de empresas PLAUSÍVEIS.
 
-REGRAS CRÍTICAS - NUNCA QUEBRE ESSAS REGRAS:
+REGRAS CRÍTICAS:
+- NUNCA INVENTE TELEFONE - sempre null
+- NUNCA INVENTE URLS - linkPublico sempre null
+- NUNCA INVENTE ENDEREÇOS ESPECÍFICOS - apenas bairros/regiões
 
-1. NUNCA INVENTE TELEFONE - O campo "telefone" deve ser SEMPRE null
-2. NUNCA INVENTE WHATSAPP - Não existe esse campo
-3. NUNCA INVENTE AVALIAÇÕES - Não existe esse campo
-4. NUNCA INVENTE SITES OU URLS - O campo "linkPublico" deve ser null se não souber com certeza
-5. NUNCA INVENTE ENDEREÇOS ESPECÍFICOS - Use apenas bairros/regiões prováveis
+NICHO: ${nicho}
+CIDADE: ${cidade}
+${possuiSite ? 'Filtro: empresas que provavelmente têm site' : ''}
+${possuiInstagram ? 'Filtro: empresas que provavelmente têm Instagram' : ''}
 
-CAMPOS OBRIGATÓRIOS:
-- nome: Nome plausível da empresa (seguindo padrões brasileiros reais)
-- segmento: Subcategoria específica do nicho
-- localizacao: Cidade, Estado
-- endereco: Apenas bairro/região provável OU null se incerto (NUNCA número de rua específico)
-- telefone: SEMPRE null (nunca inventar)
-- telefonePublico: SEMPRE false
-- temSite: true/false baseado na probabilidade do segmento
-- temInstagram: true/false baseado na probabilidade do segmento
-- linkPublico: null (nunca inventar URLs)
-- confiancaNome: "alta" | "media" | "baixa"
-
-NÍVEIS DE CONFIANÇA DO NOME:
-- "alta": Nomes genéricos muito comuns no Brasil (ex: "Barbearia do Zé", "Pizzaria Bella Italia", "Clínica Vida")
-- "media": Nomes plausíveis mas menos comuns
-- "baixa": Nomes estimados baseados apenas na região/categoria
-
-VALIDAÇÃO MÍNIMA:
-Cada lead DEVE ter pelo menos 2 destes: nome plausível + localização + segmento específico
-
-Gere entre 6 e 10 leads variados.
-
-Responda APENAS com um JSON válido no formato:
+Gere 6-10 leads. Retorne JSON:
 {
   "leads": [
     {
-      "nome": "Nome da Empresa",
+      "nome": "Nome plausível da empresa",
       "segmento": "Segmento específico",
       "localizacao": "Cidade, Estado",
       "endereco": "Bairro/Região ou null",
@@ -65,63 +75,35 @@ Responda APENAS com um JSON válido no formato:
       "temSite": true/false,
       "temInstagram": true/false,
       "linkPublico": null,
-      "confiancaNome": "alta" | "media" | "baixa"
+      "confiancaNome": "alta|media|baixa"
     }
   ]
 }`;
 
-    const userPrompt = `Gere uma lista de leads plausíveis para prospecção comercial:
-
-Nicho/Segmento: ${nicho}
-Cidade/Região: ${cidade}
-${possuiSite ? 'Filtro: Empresas que provavelmente possuem site' : ''}
-${possuiInstagram ? 'Filtro: Empresas que provavelmente possuem Instagram' : ''}
-
-LEMBRE-SE:
-- NUNCA inventar telefone, WhatsApp, URLs ou endereços específicos
-- Telefone deve ser SEMPRE null
-- Usar apenas dados que podem ser estimados com segurança
-- Indicar o nível de confiança do nome`;
-
-    const response = await fetch("https://ai.gateway.lovable.dev/v1/chat/completions", {
-      method: "POST",
-      headers: {
-        Authorization: `Bearer ${LOVABLE_API_KEY}`,
-        "Content-Type": "application/json",
-      },
+    const response = await fetch(`${GEMINI_API_URL}?key=${GEMINI_API_KEY}`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({
-        model: "google/gemini-2.5-flash",
-        messages: [
-          { role: "system", content: systemPrompt },
-          { role: "user", content: userPrompt }
-        ],
+        contents: [{ role: 'user', parts: [{ text: prompt }] }],
+        generationConfig: { maxOutputTokens: 2000, temperature: 0.7 },
       }),
     });
 
     if (!response.ok) {
       if (response.status === 429) {
-        return new Response(JSON.stringify({ error: "Limite de requisições excedido. Tente novamente em alguns segundos." }), {
+        return new Response(JSON.stringify({ error: 'Limite de requisições excedido.' }), {
           status: 429,
-          headers: { ...corsHeaders, "Content-Type": "application/json" },
-        });
-      }
-      if (response.status === 402) {
-        return new Response(JSON.stringify({ error: "Créditos de IA esgotados. Adicione mais créditos ao workspace." }), {
-          status: 402,
-          headers: { ...corsHeaders, "Content-Type": "application/json" },
+          headers: { ...corsHeaders, 'Content-Type': 'application/json' },
         });
       }
       const errorText = await response.text();
-      console.error("AI gateway error:", response.status, errorText);
-      throw new Error("Erro ao comunicar com IA");
+      console.error('Gemini API error:', response.status, errorText);
+      throw new Error('Erro ao comunicar com IA');
     }
 
     const data = await response.json();
-    const content = data.choices?.[0]?.message?.content || '';
+    const content = data.candidates?.[0]?.content?.parts?.[0]?.text || '';
     
-    console.log("AI response:", content);
-
-    // Parse JSON from response
     let leads = [];
     try {
       const jsonMatch = content.match(/\{[\s\S]*\}/);
@@ -130,13 +112,12 @@ LEMBRE-SE:
         leads = parsed.leads || [];
       }
     } catch (parseError) {
-      console.error("Error parsing AI response:", parseError);
+      console.error('Error parsing AI response:', parseError);
       leads = [];
     }
 
-    // Sanitize and validate leads - NEVER trust AI-generated phone numbers
+    // Sanitize leads - NEVER trust AI-generated data
     leads = leads.map((lead: any, index: number) => {
-      // Count valid fields for validation
       const validFields = [
         lead.nome && lead.nome.length > 2,
         lead.localizacao && lead.localizacao.length > 2,
@@ -150,40 +131,38 @@ LEMBRE-SE:
         segmento: lead.segmento || 'Não especificado',
         localizacao: lead.localizacao || cidade,
         endereco: lead.endereco || null,
-        // FORÇA telefone como null - NUNCA confiar no que a IA gerar
-        telefone: null,
+        telefone: null, // ALWAYS null
         telefonePublico: false,
         temSite: Boolean(lead.temSite),
         temInstagram: Boolean(lead.temInstagram),
-        linkPublico: null, // NUNCA confiar em URLs geradas
+        linkPublico: null, // ALWAYS null
         confiancaNome: ['alta', 'media', 'baixa'].includes(lead.confiancaNome) 
           ? lead.confiancaNome 
           : 'media',
-        // Flag interno de validação
         validado: validFields >= 2,
       };
     });
 
-    // Separate validated and unvalidated leads
     const validatedLeads = leads.filter((l: any) => l.validado);
     const unvalidatedLeads = leads.filter((l: any) => !l.validado);
 
-    // Remove internal flag before sending
     const cleanLeads = validatedLeads.map(({ validado, ...rest }: any) => rest);
     const cleanUnvalidated = unvalidatedLeads.map(({ validado, ...rest }: any) => rest);
 
-    return new Response(JSON.stringify({ 
-      leads: cleanLeads,
-      leadsNaoConfirmados: cleanUnvalidated 
-    }), {
-      headers: { ...corsHeaders, "Content-Type": "application/json" },
+    const result = { leads: cleanLeads, leadsNaoConfirmados: cleanUnvalidated };
+
+    // Cache result
+    cache.set(cacheKey, { data: result, timestamp: Date.now() });
+
+    return new Response(JSON.stringify(result), {
+      headers: { ...corsHeaders, 'Content-Type': 'application/json' },
     });
 
   } catch (error) {
-    console.error("Error in generate-leads:", error);
-    return new Response(JSON.stringify({ error: error instanceof Error ? error.message : "Erro desconhecido" }), {
+    console.error('Error in generate-leads:', error);
+    return new Response(JSON.stringify({ error: error instanceof Error ? error.message : 'Erro desconhecido' }), {
       status: 500,
-      headers: { ...corsHeaders, "Content-Type": "application/json" },
+      headers: { ...corsHeaders, 'Content-Type': 'application/json' },
     });
   }
 });
