@@ -1,14 +1,19 @@
-import { Clock, MessageCircle, LogOut } from 'lucide-react';
+import { Clock, MessageCircle, LogOut, Mail } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { useAuth } from '@/contexts/AuthContext';
 
 const WHATSAPP_SUPPORT_LINK = 'https://wa.me/5511999999999?text=Olá!%20Acabei%20de%20criar%20minha%20conta%20e%20gostaria%20de%20liberar%20meu%20acesso.';
 
 export function AccessPendingScreen() {
-  const { signOut } = useAuth();
+  const { user, signOut } = useAuth();
 
   const handleWhatsApp = () => {
-    window.open(WHATSAPP_SUPPORT_LINK, '_blank');
+    // Include user email in WhatsApp message for easier identification
+    const message = user?.email 
+      ? `Olá! Acabei de criar minha conta (${user.email}) e gostaria de liberar meu acesso.`
+      : 'Olá! Acabei de criar minha conta e gostaria de liberar meu acesso.';
+    const encodedMessage = encodeURIComponent(message);
+    window.open(`https://wa.me/5511999999999?text=${encodedMessage}`, '_blank');
   };
 
   return (
@@ -26,6 +31,14 @@ export function AccessPendingScreen() {
             Seu acesso ainda não foi liberado. Envie o comprovante de pagamento para liberação.
           </p>
         </div>
+
+        {/* User Email */}
+        {user?.email && (
+          <div className="flex items-center justify-center gap-2 p-3 bg-muted/50 rounded-lg">
+            <Mail className="h-4 w-4 text-muted-foreground" />
+            <span className="text-sm text-foreground font-medium">{user.email}</span>
+          </div>
+        )}
 
         {/* Actions */}
         <div className="space-y-3 pt-4">

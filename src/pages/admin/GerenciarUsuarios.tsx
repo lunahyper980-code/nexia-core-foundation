@@ -122,6 +122,32 @@ export default function GerenciarUsuarios() {
     }
   }, [isAdminOrOwner, roleLoading, navigate, fetchUsers]);
 
+  // Realtime subscription for new users and status changes
+  useEffect(() => {
+    if (!isAdminOrOwner) return;
+
+    const channel = supabase
+      .channel('admin-profiles-changes')
+      .on(
+        'postgres_changes',
+        {
+          event: '*', // Listen to INSERT, UPDATE, DELETE
+          schema: 'public',
+          table: 'profiles',
+        },
+        (payload) => {
+          console.log('Profile change detected:', payload.eventType);
+          // Refetch the full list to ensure consistency
+          fetchUsers();
+        }
+      )
+      .subscribe();
+
+    return () => {
+      supabase.removeChannel(channel);
+    };
+  }, [isAdminOrOwner, fetchUsers]);
+
   const handleRefresh = () => {
     setRefreshing(true);
     fetchUsers();
