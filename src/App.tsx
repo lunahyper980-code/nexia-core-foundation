@@ -8,9 +8,12 @@ import { WorkspaceProvider } from "@/contexts/WorkspaceContext";
 import { SidebarProvider } from "@/contexts/SidebarContext";
 import { UserRoleProvider } from "@/contexts/UserRoleContext";
 import { DemoModeProvider } from "@/contexts/DemoModeContext";
+import { GlobalLoaderProvider } from "@/contexts/GlobalLoaderContext";
 import { ProtectedRoute } from "@/components/ProtectedRoute";
 import { PWAProvider } from "@/components/pwa";
 import { DemoModeBadge } from "@/components/DemoModeBadge";
+import { GlobalLoaderOverlay } from "@/components/GlobalLoaderOverlay";
+import { RouteLoaderWrapper } from "@/components/RouteLoaderWrapper";
 import Login from "./pages/Login";
 import Cadastro from "./pages/Cadastro";
 import Dashboard from "./pages/Dashboard";
@@ -99,8 +102,11 @@ const App = () => (
           <WorkspaceProvider>
             <UserRoleProvider>
               <DemoModeProvider>
+              <GlobalLoaderProvider>
               <SidebarProvider>
                 <PWAProvider>
+                <GlobalLoaderOverlay />
+                <RouteLoaderWrapper>
                 <DemoModeBadge />
                 <Routes>
                   <Route path="/" element={<Navigate to="/dashboard" replace />} />
@@ -187,8 +193,10 @@ const App = () => (
                   <Route path="/academy/faq" element={<ProtectedRoute><AcademyFAQ /></ProtectedRoute>} />
                   <Route path="*" element={<NotFound />} />
                 </Routes>
+                </RouteLoaderWrapper>
                 </PWAProvider>
               </SidebarProvider>
+              </GlobalLoaderProvider>
               </DemoModeProvider>
             </UserRoleProvider>
           </WorkspaceProvider>
