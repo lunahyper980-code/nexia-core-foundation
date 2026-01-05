@@ -30,7 +30,7 @@ const maxVolume = Math.max(...teamMembers.map(m => m.volume));
 
 const promoLinks = {
   mensal: 'https://go.perfectpay.com.br/PPU38CQ5GFF',
-  vitalicio: 'https://go.perfectpay.com.br/PPU38CQ5GFG',
+  vitalicio: 'https://go.perfectpay.com.br/PPU38CQ5JOM',
 };
 
 export default function MinhaEquipe() {
