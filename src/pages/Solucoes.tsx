@@ -138,8 +138,11 @@ export default function Solucoes() {
         {/* Header */}
         <div className="text-center space-y-3 mb-8">
           <h1 className="text-2xl md:text-3xl font-bold text-foreground">Soluções Digitais</h1>
-          <p className="text-muted-foreground max-w-2xl mx-auto">
-            Soluções geradas a partir de diagnósticos inteligentes e planejamentos estratégicos do Nexia.
+          <p className="text-sm font-medium text-foreground/80 max-w-2xl mx-auto">
+            Camada de execução do Nexia. Aqui você entrega o plano estratégico como orientação ou executa o plano para o cliente.
+          </p>
+          <p className="text-xs text-muted-foreground max-w-2xl mx-auto">
+            O Nexia analisa o negócio, gera o plano estratégico e define as ações. As Soluções Digitais transformam esse plano em entrega ou execução.
           </p>
         </div>
 

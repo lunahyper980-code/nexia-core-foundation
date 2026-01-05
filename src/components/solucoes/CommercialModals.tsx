@@ -88,18 +88,31 @@ const commercialContent: Record<string, CommercialData> = {
     },
     pricing: {
       instructional: {
-        description: 'Você entrega o plano e o cliente executa',
-        items: ['Estrutura de lançamento completa', 'Cronograma de ações', 'Mensagens de divulgação', 'Checklist de execução', 'Exportação em PDF'],
+        description: 'Você recebe o plano estratégico completo gerado pela IA Nexia, com diretrizes claras e ações organizadas para execução.',
+        items: [
+          'Plano estratégico gerado pela IA Nexia',
+          'Estrutura lógica da solução escolhida',
+          'Diretrizes práticas de execução',
+          'Checklists de ações organizadas',
+          'Orientações estratégicas aplicáveis ao negócio',
+          'Documento estruturado e exportável (PDF)'
+        ],
         minPrice: 'R$ 197',
         maxPrice: 'R$ 497',
-        note: 'Ideal para clientes que têm equipe ou tempo para executar'
+        note: 'Você executa internamente ou contrata alguém de sua confiança. Execução em formato de projeto, com início, meio e fim. Ideal para lançamentos de curto prazo.'
       },
       execution: {
-        description: 'Você executa todo o lançamento para o cliente',
-        items: ['Tudo da entrega instrucional', 'Criação de artes', 'Agendamento de posts', 'Acompanhamento do lançamento', 'Ajustes em tempo real'],
+        description: 'Além do plano estratégico, o Nexia executa para você as ações definidas pela IA, de forma organizada e prática.',
+        items: [
+          'Tudo o que está incluído na entrega instrucional',
+          'Execução prática das ações orgânicas geradas pelo plano',
+          'Implementação dos checklists definidos pela IA Nexia',
+          'Organização e acompanhamento da execução',
+          'Aplicação real da estratégia no negócio'
+        ],
         minPrice: 'R$ 997',
         maxPrice: 'R$ 2.500',
-        note: 'Para clientes que querem resultado sem se preocupar com execução'
+        note: 'Nós executamos o plano que a IA criou para o seu negócio. Execução em formato de projeto, com início, meio e fim.'
       }
     },
     hasInstructionalExecution: true
@@ -114,18 +127,31 @@ const commercialContent: Record<string, CommercialData> = {
     },
     pricing: {
       instructional: {
-        description: 'Você entrega a estratégia e o cliente aplica',
-        items: ['Diretrizes de autoridade', 'Ideias de conteúdo', 'Calendário editorial', 'Guia de posicionamento', 'Exportação em PDF'],
+        description: 'Você recebe o plano estratégico completo gerado pela IA Nexia, com diretrizes claras e ações organizadas para execução.',
+        items: [
+          'Plano estratégico gerado pela IA Nexia',
+          'Estrutura lógica da solução escolhida',
+          'Diretrizes práticas de execução',
+          'Checklists de ações organizadas',
+          'Orientações estratégicas aplicáveis ao negócio',
+          'Documento estruturado e exportável (PDF)'
+        ],
         minPrice: 'R$ 297',
         maxPrice: 'R$ 697',
-        note: 'Para clientes que já produzem conteúdo e precisam de direção'
+        note: 'Você executa internamente ou contrata alguém de sua confiança. Execução contínua, focada em presença digital orgânica e construção de autoridade.'
       },
       execution: {
-        description: 'Você implementa a estratégia de autoridade',
-        items: ['Tudo da entrega instrucional', 'Criação de conteúdos', 'Gestão de redes por 30 dias', 'Otimização de perfis', 'Relatório de resultados'],
+        description: 'Além do plano estratégico, o Nexia executa para você as ações definidas pela IA, de forma organizada e prática.',
+        items: [
+          'Tudo o que está incluído na entrega instrucional',
+          'Execução prática das ações orgânicas geradas pelo plano',
+          'Implementação dos checklists definidos pela IA Nexia',
+          'Organização e acompanhamento da execução',
+          'Aplicação real da estratégia no negócio'
+        ],
         minPrice: 'R$ 1.500',
         maxPrice: 'R$ 3.500',
-        note: 'Para clientes que querem construir autoridade sem esforço próprio'
+        note: 'Nós executamos o plano que a IA criou para o seu negócio. Execução contínua, focada em presença digital orgânica.'
       }
     },
     hasInstructionalExecution: true
@@ -140,18 +166,31 @@ const commercialContent: Record<string, CommercialData> = {
     },
     pricing: {
       instructional: {
-        description: 'Você entrega o posicionamento documentado',
-        items: ['Proposta de posicionamento', 'Mensagem central', 'Bio profissional', 'Tom de voz', 'Guia de aplicação'],
+        description: 'Você recebe o plano estratégico completo gerado pela IA Nexia, com diretrizes claras e ações organizadas para execução.',
+        items: [
+          'Plano estratégico gerado pela IA Nexia',
+          'Estrutura lógica da solução escolhida',
+          'Diretrizes práticas de execução',
+          'Checklists de ações organizadas',
+          'Orientações estratégicas aplicáveis ao negócio',
+          'Documento estruturado e exportável (PDF)'
+        ],
         minPrice: 'R$ 197',
         maxPrice: 'R$ 497',
-        note: 'Para clientes que vão aplicar sozinhos nas redes'
+        note: 'Você executa internamente ou contrata alguém de sua confiança.'
       },
       execution: {
-        description: 'Você implementa o posicionamento completo',
-        items: ['Tudo da entrega instrucional', 'Atualização de perfis', 'Criação de destaques', 'Bio otimizada aplicada', 'Revisão de comunicação atual'],
+        description: 'Além do plano estratégico, o Nexia executa para você as ações definidas pela IA, de forma organizada e prática.',
+        items: [
+          'Tudo o que está incluído na entrega instrucional',
+          'Execução prática das ações orgânicas geradas pelo plano',
+          'Implementação dos checklists definidos pela IA Nexia',
+          'Organização e acompanhamento da execução',
+          'Aplicação real da estratégia no negócio'
+        ],
         minPrice: 'R$ 697',
         maxPrice: 'R$ 1.500',
-        note: 'Para clientes que querem tudo pronto e aplicado'
+        note: 'Nós executamos o plano que a IA criou para o seu negócio.'
       }
     },
     hasInstructionalExecution: true
@@ -166,18 +205,31 @@ const commercialContent: Record<string, CommercialData> = {
     },
     pricing: {
       instructional: {
-        description: 'Você entrega o mapa de processos',
-        items: ['Diagnóstico de processos', 'Fluxos documentados', 'Rotinas diárias/semanais', 'Checklists operacionais', 'Manual de processos PDF'],
+        description: 'Você recebe o plano estratégico completo gerado pela IA Nexia, com diretrizes claras e ações organizadas para execução.',
+        items: [
+          'Plano estratégico gerado pela IA Nexia',
+          'Estrutura lógica da solução escolhida',
+          'Diretrizes práticas de execução',
+          'Checklists de ações organizadas',
+          'Orientações estratégicas aplicáveis ao negócio',
+          'Documento estruturado e exportável (PDF)'
+        ],
         minPrice: 'R$ 297',
         maxPrice: 'R$ 697',
-        note: 'Para clientes que vão implementar com a equipe'
+        note: 'Você executa internamente ou contrata alguém de sua confiança.'
       },
       execution: {
-        description: 'Você implementa os processos no negócio',
-        items: ['Tudo da entrega instrucional', 'Configuração de ferramentas', 'Treinamento da equipe', 'Acompanhamento por 15 dias', 'Ajustes pós-implementação'],
+        description: 'Além do plano estratégico, o Nexia executa para você as ações definidas pela IA, de forma organizada e prática.',
+        items: [
+          'Tudo o que está incluído na entrega instrucional',
+          'Execução prática das ações orgânicas geradas pelo plano',
+          'Implementação dos checklists definidos pela IA Nexia',
+          'Organização e acompanhamento da execução',
+          'Aplicação real da estratégia no negócio'
+        ],
         minPrice: 'R$ 1.200',
         maxPrice: 'R$ 3.000',
-        note: 'Para clientes que querem processos rodando sem dor de cabeça'
+        note: 'Nós executamos o plano que a IA criou para o seu negócio.'
       }
     },
     hasInstructionalExecution: true
