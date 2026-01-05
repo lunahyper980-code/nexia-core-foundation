@@ -9,6 +9,7 @@ import { SidebarProvider } from "@/contexts/SidebarContext";
 import { UserRoleProvider } from "@/contexts/UserRoleContext";
 import { DemoModeProvider } from "@/contexts/DemoModeContext";
 import { GlobalLoaderProvider } from "@/contexts/GlobalLoaderContext";
+import { NavigationStateProvider } from "@/contexts/NavigationStateContext";
 import { ProtectedRoute } from "@/components/ProtectedRoute";
 import { PWAProvider } from "@/components/pwa";
 import { DemoModeBadge } from "@/components/DemoModeBadge";
@@ -102,6 +103,7 @@ const App = () => (
           <WorkspaceProvider>
             <UserRoleProvider>
               <DemoModeProvider>
+              <NavigationStateProvider>
               <GlobalLoaderProvider>
               <SidebarProvider>
                 <PWAProvider>
@@ -197,6 +199,7 @@ const App = () => (
                 </PWAProvider>
               </SidebarProvider>
               </GlobalLoaderProvider>
+              </NavigationStateProvider>
               </DemoModeProvider>
             </UserRoleProvider>
           </WorkspaceProvider>

@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { AppLayout } from '@/components/AppLayout';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
@@ -25,6 +25,7 @@ import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '@/hooks/use-toast';
 import { useQuery } from '@tanstack/react-query';
 import { useDemoModeForForms } from '@/hooks/useDemoModeForForms';
+import { useModuleState } from '@/hooks/useModuleState';
 
 interface DiagnosisFormData {
   companyName: string;
@@ -68,6 +69,9 @@ export default function DiagnosticoWizard() {
   const { toast } = useToast();
   const { isDemoMode, validateRequired, getDemoModeFlag } = useDemoModeForForms();
   
+  // State persistence for this module
+  const { getSavedState, saveStep, saveFormData, clearState } = useModuleState('diagnostico');
+  
   const [briefingConfirmed, setBriefingConfirmed] = useState(false);
   const [step, setStep] = useState(1);
   const [isLoading, setIsLoading] = useState(false);
@@ -87,6 +91,19 @@ export default function DiagnosticoWizard() {
     professionalismRating: 3,
     mainProblemPerceived: ''
   });
+
+  // Restore state on mount (only for new diagnoses, not edits)
+  useEffect(() => {
+    if (!id) {
+      const savedState = getSavedState();
+      if (savedState) {
+        if (savedState.currentStep) setStep(savedState.currentStep);
+        if (savedState.formData) {
+          setFormData(prev => ({ ...prev, ...savedState.formData }));
+        }
+      }
+    }
+  }, [id, getSavedState]);
 
   // Load existing diagnosis if editing
   useQuery({
@@ -126,16 +143,31 @@ export default function DiagnosticoWizard() {
   });
 
   const updateFormData = (field: keyof DiagnosisFormData, value: any) => {
-    setFormData(prev => ({ ...prev, [field]: value }));
+    setFormData(prev => {
+      const updated = { ...prev, [field]: value };
+      // Save to navigation state (debounced)
+      if (!id) saveFormData(updated);
+      return updated;
+    });
   };
 
   const toggleSocialNetwork = (network: string) => {
-    setFormData(prev => ({
-      ...prev,
-      socialNetworks: prev.socialNetworks.includes(network)
-        ? prev.socialNetworks.filter(n => n !== network)
-        : [...prev.socialNetworks, network]
-    }));
+    setFormData(prev => {
+      const updated = {
+        ...prev,
+        socialNetworks: prev.socialNetworks.includes(network)
+          ? prev.socialNetworks.filter(n => n !== network)
+          : [...prev.socialNetworks, network]
+      };
+      if (!id) saveFormData(updated);
+      return updated;
+    });
+  };
+
+  // Save step changes
+  const handleStepChange = (newStep: number) => {
+    setStep(newStep);
+    if (!id) saveStep(newStep);
   };
 
   const saveDraft = async () => {
@@ -242,7 +274,9 @@ export default function DiagnosticoWizard() {
         entity_id: diagnosisId
       });
 
-      setStep(3);
+      // Clear saved state after successful generation
+      clearState();
+      handleStepChange(3);
       navigate(`/solucoes/diagnostico/${diagnosisId}`, { replace: true });
     } catch (error: any) {
       toast({
@@ -466,7 +500,7 @@ export default function DiagnosticoWizard() {
                   Salvar rascunho
                 </Button>
                 <Button
-                  onClick={() => setStep(2)}
+                  onClick={() => handleStepChange(2)}
                   disabled={!formData.companyName || !formData.segment || !formData.cityState}
                   className="flex-1 gap-2"
                 >
@@ -526,7 +560,7 @@ export default function DiagnosticoWizard() {
               <div className="flex gap-3 pt-4">
                 <Button
                   variant="outline"
-                  onClick={() => setStep(1)}
+                  onClick={() => handleStepChange(1)}
                   className="gap-2"
                 >
                   <ArrowLeft className="h-4 w-4" />
