@@ -259,6 +259,12 @@ export default function ProjetoEditar() {
         editType={selectedEdit}
         projectName={project.app_name}
         projectType={isApp ? 'app' : 'site'}
+        projectContext={{
+          templateId: project.template_id || undefined,
+          targetAudience: project.target_audience || undefined,
+          mainBenefit: project.main_benefit || undefined,
+          pages: project.pages || undefined,
+        }}
         onComplete={handleEditComplete}
       />
     </AppLayout>

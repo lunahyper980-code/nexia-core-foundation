@@ -22,9 +22,12 @@ import {
   Zap,
   Image,
   Smartphone,
-  Copy
+  Copy,
+  Sparkles,
+  Loader2
 } from 'lucide-react';
 import { toast } from 'sonner';
+import { supabase } from '@/integrations/supabase/client';
 
 export type EditType = 
   | 'add-function'
@@ -38,12 +41,20 @@ export type EditType =
   | 'change-images'
   | 'make-pwa';
 
+interface ProjectContext {
+  templateId?: string;
+  targetAudience?: string;
+  mainBenefit?: string;
+  pages?: string;
+}
+
 interface EditProjectModalProps {
   open: boolean;
   onOpenChange: (open: boolean) => void;
   editType: EditType | null;
   projectName: string;
   projectType: 'app' | 'site';
+  projectContext?: ProjectContext;
   onComplete: (prompt: string) => void;
 }
 
@@ -442,9 +453,12 @@ export function EditProjectModal({
   editType,
   projectName,
   projectType,
+  projectContext,
   onComplete,
 }: EditProjectModalProps) {
   const [values, setValues] = useState<Record<string, string>>({});
+  const [isGeneratingAI, setIsGeneratingAI] = useState(false);
+  const [aiGeneratedPrompt, setAiGeneratedPrompt] = useState<string | null>(null);
 
   if (!editType) return null;
 
@@ -452,28 +466,68 @@ export function EditProjectModal({
   const Icon = config.icon;
 
   const handleSubmit = () => {
-    // Validate required fields
     const emptyFields = config.fields.filter(f => !values[f.id]?.trim());
     if (emptyFields.length > 0) {
       toast.error('Preencha todos os campos');
       return;
     }
 
-    const prompt = config.promptTemplate(projectName, projectType, values);
+    const prompt = aiGeneratedPrompt || config.promptTemplate(projectName, projectType, values);
     onComplete(prompt);
     setValues({});
+    setAiGeneratedPrompt(null);
   };
 
   const handleCopy = () => {
-    const prompt = config.promptTemplate(projectName, projectType, values);
+    const prompt = aiGeneratedPrompt || config.promptTemplate(projectName, projectType, values);
     navigator.clipboard.writeText(prompt);
     toast.success('Prompt copiado!');
+  };
+
+  const handleGenerateWithAI = async () => {
+    const emptyFields = config.fields.filter(f => !values[f.id]?.trim());
+    if (emptyFields.length > 0) {
+      toast.error('Preencha todos os campos primeiro');
+      return;
+    }
+
+    setIsGeneratingAI(true);
+    setAiGeneratedPrompt(null);
+
+    try {
+      const { data, error } = await supabase.functions.invoke('generate-edit-prompt', {
+        body: {
+          editType,
+          projectName,
+          projectType,
+          values,
+          projectContext
+        }
+      });
+
+      if (error) throw error;
+      if (data?.error) throw new Error(data.error);
+
+      setAiGeneratedPrompt(data.prompt);
+      toast.success('Prompt gerado com IA!');
+    } catch (error) {
+      console.error('Error generating AI prompt:', error);
+      toast.error(error instanceof Error ? error.message : 'Erro ao gerar prompt com IA');
+    } finally {
+      setIsGeneratingAI(false);
+    }
   };
 
   const isPWA = editType === 'make-pwa';
 
   return (
-    <Dialog open={open} onOpenChange={onOpenChange}>
+    <Dialog open={open} onOpenChange={(open) => {
+      if (!open) {
+        setValues({});
+        setAiGeneratedPrompt(null);
+      }
+      onOpenChange(open);
+    }}>
       <DialogContent className="sm:max-w-lg max-h-[90vh] overflow-y-auto">
         <DialogHeader>
           <div className="flex items-center gap-3">
@@ -502,6 +556,7 @@ export function EditProjectModal({
                   placeholder={field.placeholder}
                   value={values[field.id] || ''}
                   onChange={(e) => setValues({ ...values, [field.id]: e.target.value })}
+                  disabled={isGeneratingAI}
                 />
               ) : (
                 <Textarea
@@ -510,13 +565,27 @@ export function EditProjectModal({
                   value={values[field.id] || ''}
                   onChange={(e) => setValues({ ...values, [field.id]: e.target.value })}
                   rows={3}
+                  disabled={isGeneratingAI}
                 />
               )}
             </div>
           ))}
         </div>
 
-        {isPWA && (
+        {/* AI Generated Preview */}
+        {aiGeneratedPrompt && (
+          <div className="bg-primary/5 border border-primary/20 rounded-lg p-3 space-y-2">
+            <div className="flex items-center gap-2 text-sm font-medium text-primary">
+              <Sparkles className="h-4 w-4" />
+              Prompt gerado com IA
+            </div>
+            <pre className="whitespace-pre-wrap text-sm bg-muted/50 p-3 rounded-lg max-h-48 overflow-y-auto font-mono text-foreground">
+              {aiGeneratedPrompt}
+            </pre>
+          </div>
+        )}
+
+        {isPWA && !aiGeneratedPrompt && (
           <div className="bg-muted/50 border border-border rounded-lg p-3 text-sm text-muted-foreground">
             <p className="font-medium text-foreground mb-1">ℹ️ Como usar este prompt</p>
             <p>Este prompt atualiza seu aplicativo para PWA quando colado no Lovable. Copie e cole para implementar.</p>
@@ -524,15 +593,33 @@ export function EditProjectModal({
         )}
 
         <DialogFooter className="flex-col sm:flex-row gap-2">
-          <Button variant="outline" onClick={() => onOpenChange(false)}>
+          <Button variant="outline" onClick={() => onOpenChange(false)} disabled={isGeneratingAI}>
             Cancelar
           </Button>
-          <Button variant="outline" onClick={handleCopy} className="gap-2">
-            <Copy className="h-4 w-4" />
-            Copiar Prompt
+          <Button 
+            variant="outline" 
+            onClick={handleGenerateWithAI} 
+            disabled={isGeneratingAI}
+            className="gap-2 border-primary/30 text-primary hover:bg-primary/10"
+          >
+            {isGeneratingAI ? (
+              <>
+                <Loader2 className="h-4 w-4 animate-spin" />
+                Gerando...
+              </>
+            ) : (
+              <>
+                <Sparkles className="h-4 w-4" />
+                Gerar com IA
+              </>
+            )}
           </Button>
-          <Button onClick={handleSubmit}>
-            Gerar Prompt
+          <Button variant="outline" onClick={handleCopy} className="gap-2" disabled={isGeneratingAI}>
+            <Copy className="h-4 w-4" />
+            Copiar
+          </Button>
+          <Button onClick={handleSubmit} disabled={isGeneratingAI}>
+            Usar Prompt
           </Button>
         </DialogFooter>
       </DialogContent>
