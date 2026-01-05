@@ -195,42 +195,6 @@ export default function Configuracoes() {
           </CardContent>
         </Card>
 
-        {/* Plan Section */}
-        <Card>
-          <CardHeader>
-            <div className="flex items-center gap-3">
-              <div className="p-2 rounded-lg bg-success/10">
-                <CreditCard className="h-5 w-5 text-success" />
-              </div>
-              <div>
-                <CardTitle className="text-lg">Plano e Assinatura</CardTitle>
-                <CardDescription>Gerencie seu plano atual</CardDescription>
-              </div>
-            </div>
-          </CardHeader>
-          <CardContent>
-            <div className="flex items-center justify-between p-4 rounded-lg bg-secondary">
-              <div className="flex items-center gap-4">
-                <div>
-                  <div className="flex items-center gap-2">
-                    <p className="font-semibold text-foreground capitalize">
-                      Plano {subscription?.plan_name || 'Free'}
-                    </p>
-                    <Badge variant="outline" className="border-success text-success bg-success/10">
-                      Ativo
-                    </Badge>
-                  </div>
-                  <p className="text-sm text-muted-foreground">
-                    Acesso a recursos básicos da plataforma
-                  </p>
-                </div>
-              </div>
-              <Button variant="outline" onClick={() => toast.info('Recurso em breve!')}>
-                Gerenciar Assinatura
-              </Button>
-            </div>
-          </CardContent>
-        </Card>
 
         {/* Admin Section - Only visible to admins/owners */}
         {isAdminOrOwner && (
