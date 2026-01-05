@@ -20,20 +20,20 @@ interface GraficoEvolucaoProps {
 // ==============================================
 // VALORES REALISTAS E COERENTES
 // ==============================================
-// Pipeline total: R$ 31.500
-// Últimos 30 dias: R$ 10.800 (dentro de R$ 9.000-12.000)
-// Últimos 7 dias: R$ 3.200 (dentro de R$ 2.000-4.000)
-// Crescimento 30 dias: +26% (dentro de +18%-35%)
-// Crescimento 7 dias: +9% (dentro de +6%-12%)
+// Pipeline total: R$ 74.500 (32 projetos x ~R$ 2.328)
+// Últimos 30 dias: R$ 18.500 (crescimento real)
+// Últimos 7 dias: R$ 5.200
+// Crescimento 30 dias: +28%
+// Crescimento 7 dias: +8%
 // ==============================================
 
-const OWNER_GROWTH_30_DAYS = 26;
-const OWNER_GROWTH_7_DAYS = 9;
-const OWNER_REVENUE_30_DAYS = 10800;
-const OWNER_REVENUE_7_DAYS = 3200;
+const OWNER_GROWTH_30_DAYS = 28;
+const OWNER_GROWTH_7_DAYS = 8;
+const OWNER_REVENUE_30_DAYS = 18500;
+const OWNER_REVENUE_7_DAYS = 5200;
 
 // Gera dados do owner com curva de crescimento progressiva e realista
-const generateOwnerData = (currentProjects = 14, currentPipelineValue = 31500) => {
+const generateOwnerData = (currentProjects = 32, currentPipelineValue = 74500) => {
   const data = [];
   const today = new Date();
 
@@ -41,8 +41,8 @@ const generateOwnerData = (currentProjects = 14, currentPipelineValue = 31500) =
   const startValue = currentPipelineValue / (1 + OWNER_GROWTH_30_DAYS / 100);
   const totalGrowth = currentPipelineValue - startValue;
   
-  // Projetos: começar mais baixo e crescer progressivamente
-  const startProjects = Math.max(1, Math.floor(currentProjects * 0.65));
+  // Projetos: começar BAIXO e crescer progressivamente (nunca no máximo)
+  const startProjects = Math.max(1, Math.floor(currentProjects * 0.55)); // Começa em 55% do total
   const projectGrowth = currentProjects - startProjects;
   
   // Seed para variação natural baseado no pipeline
@@ -52,15 +52,17 @@ const generateOwnerData = (currentProjects = 14, currentPipelineValue = 31500) =
     const date = new Date(today);
     date.setDate(date.getDate() - i);
 
-    // Progresso não-linear: começa lento, acelera no meio, estabiliza no fim
+    // Progresso não-linear: começa LENTO, acelera gradualmente, estabiliza no fim
     const progress = (29 - i) / 29;
-    const smoothProgress = Math.pow(progress, 1.4);
+    // Curva exponencial suave - começa bem baixo e cresce progressivamente
+    const smoothProgress = Math.pow(progress, 1.6);
     
-    // Variação natural diária (pequenas oscilações realistas)
-    const dayVariation = Math.sin((i + seed) * 0.7) * 0.05;
-    const weekendDip = (i % 7 === 0 || i % 7 === 6) ? -0.02 : 0;
+    // Variação natural diária (pequenas oscilações realistas - nunca reto)
+    const dayVariation = Math.sin((i + seed) * 0.8) * 0.04;
+    const midWeekBoost = (i % 7 >= 2 && i % 7 <= 4) ? 0.02 : 0; // Leve boost no meio da semana
+    const weekendDip = (i % 7 === 0 || i % 7 === 6) ? -0.025 : 0;
     
-    const adjustedProgress = Math.max(0, Math.min(1, smoothProgress + dayVariation + weekendDip));
+    const adjustedProgress = Math.max(0, Math.min(1, smoothProgress + dayVariation + midWeekBoost + weekendDip));
     const dayValue = startValue + (totalGrowth * adjustedProgress);
     const dayProjects = Math.round(startProjects + (projectGrowth * smoothProgress));
 
@@ -234,12 +236,10 @@ export function GraficoEvolucao({
           <p className="text-xs text-emerald-500/80">no período</p>
         </div>
         
-        {/* Pipeline atual */}
+        {/* Pipeline atual - SEM ÍCONE */}
         <div className="p-3 rounded-lg bg-foreground/5 border border-foreground/10">
-          <div className="flex items-center gap-2 mb-1">
-            <span className="text-xs text-muted-foreground">Pipeline Atual</span>
-          </div>
-          <p className="text-lg font-bold text-foreground">
+          <span className="text-xs text-muted-foreground">Pipeline Atual</span>
+          <p className="text-lg font-bold text-foreground mt-1">
             R$ {lastValue.valor.toLocaleString('pt-BR', { minimumFractionDigits: 0, maximumFractionDigits: 0 })}
           </p>
           <p className="text-xs text-muted-foreground">{lastValue.projetos} projetos ativos</p>
