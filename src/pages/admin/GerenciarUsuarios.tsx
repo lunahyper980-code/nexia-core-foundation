@@ -37,6 +37,9 @@ import {
 import { toast } from 'sonner';
 import { formatDistanceToNow } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
+import { useAuth } from '@/contexts/AuthContext';
+import { Collapsible, CollapsibleContent, CollapsibleTrigger } from '@/components/ui/collapsible';
+import { AlertTriangle, Bug, ChevronDown } from 'lucide-react';
 
 interface UserProfile {
   id: string;
@@ -62,13 +65,17 @@ const statusConfig: Record<AccessStatus, { label: string; color: string; icon: t
 };
 
 export default function GerenciarUsuarios() {
-  const { isAdminOrOwner, loading: roleLoading } = useUserRole();
+  const { isAdminOrOwner, role, loading: roleLoading } = useUserRole();
+  const { user } = useAuth();
   const navigate = useNavigate();
   const [users, setUsers] = useState<UserWithRole[]>([]);
   const [loading, setLoading] = useState(true);
   const [refreshing, setRefreshing] = useState(false);
   const [searchTerm, setSearchTerm] = useState('');
   const [statusFilter, setStatusFilter] = useState<string>('all');
+  const [diagOpen, setDiagOpen] = useState(false);
+  const [lastError, setLastError] = useState<string | null>(null);
+  const [adminProfile, setAdminProfile] = useState<any>(null);
   
   // Block dialog
   const [blockDialogOpen, setBlockDialogOpen] = useState(false);
@@ -76,21 +83,33 @@ export default function GerenciarUsuarios() {
   const [blockReason, setBlockReason] = useState('');
 
   const fetchUsers = useCallback(async () => {
+    setLastError(null);
     try {
+      console.log('[Admin] Fetching all profiles...');
+      
       // Fetch all profiles
       const { data: profiles, error: profilesError } = await supabase
         .from('profiles')
         .select('*')
         .order('created_at', { ascending: false });
 
-      if (profilesError) throw profilesError;
+      if (profilesError) {
+        console.error('[Admin] Profiles error:', profilesError);
+        setLastError(`Profiles: ${profilesError.message}`);
+        throw profilesError;
+      }
+
+      console.log('[Admin] Fetched profiles:', profiles?.length || 0);
 
       // Fetch all user roles
       const { data: roles, error: rolesError } = await supabase
         .from('user_roles')
         .select('user_id, role');
 
-      if (rolesError) throw rolesError;
+      if (rolesError) {
+        console.error('[Admin] Roles error:', rolesError);
+        // Don't throw, roles might just be empty
+      }
 
       // Merge profiles with roles
       const usersWithRoles: UserWithRole[] = (profiles || []).map((profile: any) => {
@@ -102,14 +121,26 @@ export default function GerenciarUsuarios() {
       });
 
       setUsers(usersWithRoles);
-    } catch (error) {
+    } catch (error: any) {
       console.error('Error fetching users:', error);
+      setLastError(error?.message || 'Erro desconhecido');
       toast.error('Erro ao carregar usuários');
     } finally {
       setLoading(false);
       setRefreshing(false);
     }
   }, []);
+
+  // Fetch admin's own profile for diagnostics
+  const fetchAdminProfile = useCallback(async () => {
+    if (!user?.id) return;
+    const { data } = await supabase
+      .from('profiles')
+      .select('*')
+      .eq('id', user.id)
+      .maybeSingle();
+    setAdminProfile(data);
+  }, [user?.id]);
 
   useEffect(() => {
     if (!roleLoading && !isAdminOrOwner) {
@@ -119,8 +150,9 @@ export default function GerenciarUsuarios() {
     
     if (isAdminOrOwner) {
       fetchUsers();
+      fetchAdminProfile();
     }
-  }, [isAdminOrOwner, roleLoading, navigate, fetchUsers]);
+  }, [isAdminOrOwner, roleLoading, navigate, fetchUsers, fetchAdminProfile]);
 
   // Realtime subscription for new users and status changes
   useEffect(() => {
@@ -280,6 +312,57 @@ export default function GerenciarUsuarios() {
   return (
     <AppLayout title="Gerenciar Usuários">
       <div className="max-w-6xl mx-auto space-y-6">
+        {/* Diagnostic Panel - Admin Only */}
+        <Collapsible open={diagOpen} onOpenChange={setDiagOpen}>
+          <Card className="border-primary/20 bg-primary/5">
+            <CollapsibleTrigger asChild>
+              <CardHeader className="cursor-pointer py-3">
+                <div className="flex items-center justify-between">
+                  <div className="flex items-center gap-2">
+                    <Bug className="h-4 w-4 text-primary" />
+                    <CardTitle className="text-sm">Diagnóstico Admin</CardTitle>
+                  </div>
+                  <ChevronDown className={`h-4 w-4 transition-transform ${diagOpen ? 'rotate-180' : ''}`} />
+                </div>
+              </CardHeader>
+            </CollapsibleTrigger>
+            <CollapsibleContent>
+              <CardContent className="pt-0 pb-4 space-y-2 text-xs font-mono">
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
+                  <div className="p-2 bg-background rounded border">
+                    <span className="text-muted-foreground">auth.uid():</span>
+                    <span className="ml-2 text-foreground break-all">{user?.id || 'null'}</span>
+                  </div>
+                  <div className="p-2 bg-background rounded border">
+                    <span className="text-muted-foreground">role (user_roles):</span>
+                    <span className="ml-2 text-foreground">{role || 'null'}</span>
+                  </div>
+                  <div className="p-2 bg-background rounded border">
+                    <span className="text-muted-foreground">access_status (profile):</span>
+                    <span className="ml-2 text-foreground">{adminProfile?.access_status || 'null'}</span>
+                  </div>
+                  <div className="p-2 bg-background rounded border">
+                    <span className="text-muted-foreground">total registros:</span>
+                    <span className="ml-2 text-foreground font-bold">{users.length}</span>
+                  </div>
+                </div>
+                {lastError && (
+                  <div className="p-2 bg-destructive/10 text-destructive rounded border border-destructive/20 flex items-start gap-2">
+                    <AlertTriangle className="h-4 w-4 shrink-0 mt-0.5" />
+                    <span>Último erro: {lastError}</span>
+                  </div>
+                )}
+                {users.length === 0 && !loading && (
+                  <div className="p-2 bg-warning/10 text-warning rounded border border-warning/20 flex items-start gap-2">
+                    <AlertTriangle className="h-4 w-4 shrink-0 mt-0.5" />
+                    <span>Nenhum registro retornado. Verifique se RLS permite SELECT para admins.</span>
+                  </div>
+                )}
+              </CardContent>
+            </CollapsibleContent>
+          </Card>
+        </Collapsible>
+
         {/* Header */}
         <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
           <div>
