@@ -177,7 +177,12 @@ export function useAdminCreditRequests() {
     adminNote?: string,
     adminMessage?: string
   ) => {
-    const updates: Partial<LovableCreditRequest> = { status };
+    const updates: {
+      status: CreditRequestStatus;
+      admin_note?: string | null;
+      admin_message?: string | null;
+      resolved_at?: string | null;
+    } = { status };
     
     if (adminNote !== undefined) updates.admin_note = adminNote;
     if (adminMessage !== undefined) updates.admin_message = adminMessage;
