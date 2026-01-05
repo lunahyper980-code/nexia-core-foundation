@@ -5,10 +5,9 @@ import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
-import { Separator } from '@/components/ui/separator';
 import { Badge } from '@/components/ui/badge';
 import { useAuth } from '@/contexts/AuthContext';
-import { useIsAdmin } from '@/hooks/useIsAdmin';
+import { useUserRole } from '@/contexts/UserRoleContext';
 import { supabase } from '@/integrations/supabase/client';
 import { toast } from 'sonner';
 import { User, Shield, CreditCard, Save, Loader2, Settings2 } from 'lucide-react';
@@ -27,7 +26,7 @@ interface Subscription {
 
 export default function Configuracoes() {
   const { user } = useAuth();
-  const { isAdmin } = useIsAdmin();
+  const { isAdminOrOwner, loading: roleLoading } = useUserRole();
   const navigate = useNavigate();
   const [profile, setProfile] = useState<Profile | null>(null);
   const [subscription, setSubscription] = useState<Subscription | null>(null);
@@ -94,7 +93,7 @@ export default function Configuracoes() {
     }
   };
 
-  if (loading) {
+  if (loading || roleLoading) {
     return (
       <AppLayout title="Configurações">
         <div className="flex items-center justify-center py-12">
@@ -217,8 +216,8 @@ export default function Configuracoes() {
           </CardContent>
         </Card>
 
-        {/* Admin Section - Only visible to admins */}
-        {isAdmin && (
+        {/* Admin Section - Only visible to admins/owners */}
+        {isAdminOrOwner && (
           <Card className="border-primary/20">
             <CardHeader>
               <div className="flex items-center gap-3">
@@ -227,12 +226,12 @@ export default function Configuracoes() {
                 </div>
                 <div>
                   <CardTitle className="text-lg">Painel Admin</CardTitle>
-                  <CardDescription>Área restrita para administradores</CardDescription>
+                  <CardDescription>Área restrita (Admin/Owner)</CardDescription>
                 </div>
               </div>
             </CardHeader>
             <CardContent>
-              <Button onClick={() => navigate('/admin/creditos')} className="gap-2">
+              <Button onClick={() => navigate('/admin')} className="gap-2">
                 <Settings2 className="h-4 w-4" />
                 Acessar Painel Admin
               </Button>
