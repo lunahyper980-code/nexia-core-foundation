@@ -1,9 +1,10 @@
 import { useState } from 'react';
+import { useNavigate } from 'react-router-dom';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from '@/components/ui/dialog';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import { MessageSquare, DollarSign, CheckCircle, AlertTriangle, Target, Zap, Copy, Check, BookOpen, Wrench, Package, Layers, ArrowRight } from 'lucide-react';
+import { MessageSquare, DollarSign, CheckCircle, AlertTriangle, Target, Zap, Copy, Check, BookOpen, Wrench, Package, Layers, ArrowRight, FileSignature } from 'lucide-react';
 import { toast } from 'sonner';
 
 // ==============================================
@@ -731,6 +732,7 @@ interface CommercialButtonsProps {
 }
 
 export function CommercialButtons({ solutionId, solutionTitle }: CommercialButtonsProps) {
+  const navigate = useNavigate();
   const [argumentOpen, setArgumentOpen] = useState(false);
   const [pricingOpen, setPricingOpen] = useState(false);
   const [packagesOpen, setPackagesOpen] = useState(false);
@@ -739,6 +741,11 @@ export function CommercialButtons({ solutionId, solutionTitle }: CommercialButto
   const packages = getPackagesForSolution(solutionId);
 
   if (!hasContent) return null;
+
+  const handleGenerateContract = (e: React.MouseEvent) => {
+    e.stopPropagation();
+    navigate(`/vendas/contratos/nexia?solucao=${solutionId}`);
+  };
 
   return (
     <>
@@ -766,6 +773,15 @@ export function CommercialButtons({ solutionId, solutionTitle }: CommercialButto
         >
           <DollarSign className="h-3.5 w-3.5" />
           Preço
+        </Button>
+        <Button 
+          variant="ghost" 
+          size="sm" 
+          className="flex-1 text-xs gap-1.5 h-8"
+          onClick={handleGenerateContract}
+        >
+          <FileSignature className="h-3.5 w-3.5" />
+          Contrato
         </Button>
         {packages.length > 0 && (
           <Button 

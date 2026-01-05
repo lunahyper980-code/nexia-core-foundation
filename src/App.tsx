@@ -67,6 +67,7 @@ import Propostas from "./pages/vendas/Propostas";
 import PropostaForm from "./pages/vendas/PropostaForm";
 import Contratos from "./pages/vendas/Contratos";
 import ContratoForm from "./pages/vendas/ContratoForm";
+import ContratoNexiaWizard from "./pages/vendas/ContratoNexiaWizard";
 import MensagensWhatsApp from "./pages/vendas/MensagensWhatsApp";
 import EntregaHub from "./pages/entrega/EntregaHub";
 import EntregaForm from "./pages/entrega/EntregaForm";
@@ -164,6 +165,7 @@ const App = () => (
                   <Route path="/vendas/propostas/:id" element={<ProtectedRoute><PropostaForm /></ProtectedRoute>} />
                   <Route path="/vendas/contratos" element={<ProtectedRoute><Contratos /></ProtectedRoute>} />
                   <Route path="/vendas/contratos/novo" element={<ProtectedRoute><ContratoForm /></ProtectedRoute>} />
+                  <Route path="/vendas/contratos/nexia" element={<ProtectedRoute><ContratoNexiaWizard /></ProtectedRoute>} />
                   <Route path="/vendas/contratos/:id" element={<ProtectedRoute><ContratoForm /></ProtectedRoute>} />
                   <Route path="/vendas/whatsapp" element={<ProtectedRoute><MensagensWhatsApp /></ProtectedRoute>} />
                   <Route path="/vendas/whatsapp/nova" element={<ProtectedRoute><MensagensWhatsApp /></ProtectedRoute>} />
