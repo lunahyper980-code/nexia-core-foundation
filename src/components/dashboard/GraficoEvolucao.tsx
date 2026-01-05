@@ -20,21 +20,20 @@ interface GraficoEvolucaoProps {
 // ==============================================
 // VALORES REALISTAS E COERENTES
 // ==============================================
-// Pipeline atual: R$ 74.500 (32 projetos)
-// Valor inicial 30 dias atrás: R$ 56.000 (crescimento de +33%)
-// Últimos 30 dias faturamento: R$ 18.500
-// Últimos 7 dias faturamento: R$ 5.200
-// Crescimento 30 dias: +33%
+// Pipeline atual: R$ 38.743
+// Valor inicial 30 dias atrás: R$ 29.057 (75% do atual)
+// Crescimento 30 dias: +33% (~R$ 9.686)
+// Últimos 7 dias: ~R$ 2.900
 // Crescimento 7 dias: +8%
 // ==============================================
 
 const OWNER_GROWTH_30_DAYS = 33;
 const OWNER_GROWTH_7_DAYS = 8;
-const OWNER_REVENUE_30_DAYS = 18500;
-const OWNER_REVENUE_7_DAYS = 5200;
+const OWNER_REVENUE_30_DAYS = 9686;
+const OWNER_REVENUE_7_DAYS = 2900;
 
 // Gera dados do owner - COMEÇA DE BAIXO E CRESCE PROGRESSIVAMENTE
-const generateOwnerData = (currentProjects = 32, currentPipelineValue = 74500) => {
+const generateOwnerData = (currentProjects = 32, currentPipelineValue = 38743) => {
   const data = [];
   const today = new Date();
 

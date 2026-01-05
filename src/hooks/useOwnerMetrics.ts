@@ -25,8 +25,8 @@ const BASE_METRICS = {
   deliveries: 26,         // Entregas em andamento (entre 25-43)
   contracts: 24,          // Contratos
   averageTicket: 0,       // Será calculado: pipeline ÷ projetos
-  totalPipelineValue: 74500, // Pipeline coerente com mais projetos
-  totalProposalValue: 74500,
+  totalPipelineValue: 38743, // Pipeline: R$ 38.743,00
+  totalProposalValue: 38743,
 };
 
 // Incremento a cada 48 horas
