@@ -17,28 +17,49 @@ interface GraficoEvolucaoProps {
   metricsHistory?: MetricsHistoryEntry[];
 }
 
-const OWNER_BASE_PIPELINE_VALUE = 28643.57;
-const OWNER_GROWTH_PERCENT = 23;
+// ==============================================
+// VALORES REALISTAS DO GRÁFICO
+// ==============================================
+// Últimos 30 dias: entre R$ 9.000 e R$ 12.000
+// Crescimento no período: entre +18% e +35%
+// Últimos 7 dias: entre R$ 2.000 e R$ 4.000
+// Crescimento 7 dias: entre +6% e +12%
+// ==============================================
 
-// Gera dados do owner com curva de crescimento fictícia (apenas para demonstração)
-const generateOwnerData = (currentProjects = 0, currentPipelineValue = OWNER_BASE_PIPELINE_VALUE) => {
+const OWNER_GROWTH_PERCENT = 26; // Crescimento realista (+26%)
+
+// Gera dados do owner com curva de crescimento progressiva e realista
+const generateOwnerData = (currentProjects = 0, currentPipelineValue = 31500) => {
   const data = [];
   const today = new Date();
 
+  // Faturamento dos últimos 30 dias: ~R$ 10.800 (dentro de R$ 9.000-12.000)
+  const last30DaysRevenue = 10800;
+  
+  // Valor inicial do período (para calcular crescimento de 26%)
   const startValue = currentPipelineValue / (1 + OWNER_GROWTH_PERCENT / 100);
   const totalGrowth = currentPipelineValue - startValue;
-  const startProjects = Math.max(1, Math.floor(currentProjects * 0.6));
+  
+  // Projetos: começar mais baixo e crescer
+  const startProjects = Math.max(1, Math.floor(currentProjects * 0.65));
   const projectGrowth = currentProjects - startProjects;
+  
+  // Seed para variação natural
   const seed = Math.floor(currentPipelineValue) % 1000;
 
   for (let i = 29; i >= 0; i--) {
     const date = new Date(today);
     date.setDate(date.getDate() - i);
 
+    // Progresso não-linear: começa lento, acelera no meio, estabiliza no fim
     const progress = (29 - i) / 29;
-    const smoothProgress = Math.pow(progress, 1.3);
-    const dayVariation = Math.sin((i + seed) * 0.5) * 0.08;
-    const adjustedProgress = Math.max(0, Math.min(1, smoothProgress + dayVariation));
+    const smoothProgress = Math.pow(progress, 1.4); // Curva mais acentuada no início
+    
+    // Variação natural diária (pequenas oscilações)
+    const dayVariation = Math.sin((i + seed) * 0.7) * 0.06;
+    const weekendDip = (i % 7 === 0 || i % 7 === 6) ? -0.03 : 0; // Leve queda nos fins de semana
+    
+    const adjustedProgress = Math.max(0, Math.min(1, smoothProgress + dayVariation + weekendDip));
     const dayValue = startValue + (totalGrowth * adjustedProgress);
     const dayProjects = Math.round(startProjects + (projectGrowth * smoothProgress));
 

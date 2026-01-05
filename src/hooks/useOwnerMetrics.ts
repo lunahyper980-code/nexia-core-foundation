@@ -4,27 +4,36 @@ import { useAuth } from '@/contexts/AuthContext';
 // Email do usuário owner que terá métricas exageradas
 const OWNER_EMAIL = 'emilysantos170706@gmail.com';
 
-// Valores base das métricas para o owner (começa exatamente daqui)
+// ==============================================
+// VALORES BASE REALISTAS E COERENTES
+// ==============================================
+// Referência de preços:
+// - Autoridade Digital (mensal): R$ 2.500
+// - Kit de Lançamento (projeto): R$ 3.000
+// - Posicionamento Digital (projeto): R$ 2.000
+// - Organização de Processos (projeto): R$ 2.500
+// Ticket médio esperado: ~R$ 2.200
+// ==============================================
+
 const BASE_METRICS = {
-  projects: 18,
-  proposals: 22,
-  clients: 16,
-  plannings: 19,
-  pendingTasks: 8,
-  completedTasks: 24,
-  deliveries: 17,
-  contracts: 15,
-  // será calculado automaticamente a partir do pipeline/projetos
-  averageTicket: 0,
-  totalPipelineValue: 28643.57,
-  totalProposalValue: 28643.57,
+  projects: 14,           // Projetos ativos (entre 12-18)
+  proposals: 18,          // Propostas em aberto
+  clients: 12,            // Clientes cadastrados
+  plannings: 15,          // Planejamentos
+  pendingTasks: 6,        // Tarefas pendentes
+  completedTasks: 19,     // Tarefas concluídas
+  deliveries: 11,         // Entregas em andamento
+  contracts: 10,          // Contratos
+  averageTicket: 0,       // Será calculado: pipeline ÷ projetos
+  totalPipelineValue: 31500, // Pipeline entre R$ 28.000 e R$ 35.000
+  totalProposalValue: 31500,
 };
 
 // Incremento a cada 48 horas
-const INCREMENT_INTERVAL_MS = 48 * 60 * 60 * 1000; // 48 horas em milissegundos
+const INCREMENT_INTERVAL_MS = 48 * 60 * 60 * 1000;
 
-// Guarda uma data de referência fixa no navegador (para não “resetar” ao recarregar)
-const OWNER_METRICS_REFERENCE_STORAGE_KEY = 'nexia_owner_metrics_reference_date_v2';
+// Guarda uma data de referência fixa no navegador
+const OWNER_METRICS_REFERENCE_STORAGE_KEY = 'nexia_owner_metrics_reference_date_v3';
 
 const getReferenceDateMs = (): number => {
   if (typeof window === 'undefined') return Date.now();
@@ -64,23 +73,23 @@ const calculateIncrements = (atMs: number = Date.now()): number => {
 const generateOwnerMetrics = (): OwnerMetrics => {
   const increments = calculateIncrements();
 
-  // Crescimento de ~3 unidades a cada 48h para cada métrica
-  const projects = BASE_METRICS.projects + increments * 3;
-  const proposals = BASE_METRICS.proposals + increments * 3;
-  const clients = BASE_METRICS.clients + increments * 2;
+  // Crescimento moderado a cada 48h
+  const projects = BASE_METRICS.projects + increments * 2;
+  const proposals = BASE_METRICS.proposals + increments * 2;
+  const clients = BASE_METRICS.clients + increments * 1;
   const plannings = BASE_METRICS.plannings + increments * 2;
   const pendingTasks = BASE_METRICS.pendingTasks + increments * 1;
-  const completedTasks = BASE_METRICS.completedTasks + increments * 4;
-  const deliveries = BASE_METRICS.deliveries + increments * 3;
-  const contracts = BASE_METRICS.contracts + increments * 2;
+  const completedTasks = BASE_METRICS.completedTasks + increments * 3;
+  const deliveries = BASE_METRICS.deliveries + increments * 2;
+  const contracts = BASE_METRICS.contracts + increments * 1;
 
-  // Pipeline: +R$ 2.350 a cada 48h (mantendo os centavos do base)
-  const totalPipelineValue = BASE_METRICS.totalPipelineValue + increments * 2350;
+  // Pipeline: +R$ 1.800 a cada 48h (crescimento realista)
+  const totalPipelineValue = BASE_METRICS.totalPipelineValue + increments * 1800;
 
-  // Mantém vendas/resumo alinhado ao pipeline
+  // Mantém vendas alinhado ao pipeline
   const totalProposalValue = totalPipelineValue;
 
-  // Ticket médio alinhado ao pipeline ÷ projetos
+  // Ticket médio: pipeline ÷ projetos (esperado entre R$ 1.800 e R$ 2.800)
   const averageTicket = Math.round(totalPipelineValue / Math.max(1, projects));
 
   return {
