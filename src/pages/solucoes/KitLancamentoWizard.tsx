@@ -32,9 +32,26 @@ interface IdentityContent {
   descricao_identidade: string;
   prompt_logo: string;
   tipografia_sugerida: string;
-  paleta_cores: string;
+  paleta_cores: string | Array<{ cor: string; significado: string }> | any;
   logo_url?: string;
 }
+
+// Helper to safely render paleta_cores regardless of format
+const renderPaletaCores = (paleta: any): string => {
+  if (typeof paleta === 'string') return paleta;
+  if (Array.isArray(paleta)) {
+    return paleta.map((item: any) => {
+      if (typeof item === 'string') return item;
+      if (item.cor && item.significado) return `${item.cor} - ${item.significado}`;
+      if (item.cor) return item.cor;
+      return JSON.stringify(item);
+    }).join('\n');
+  }
+  if (typeof paleta === 'object' && paleta !== null) {
+    return Object.entries(paleta).map(([key, value]) => `${key}: ${value}`).join('\n');
+  }
+  return String(paleta || '');
+};
 
 const TOTAL_STEPS = 4;
 
@@ -817,9 +834,9 @@ export default function KitLancamentoWizard() {
                       <div className="p-4 bg-pink-500/5 rounded-lg border border-pink-500/20">
                         <div className="flex items-center justify-between mb-2">
                           <h4 className="font-medium text-pink-600">Paleta de Cores Sugerida</h4>
-                          <CopyButton text={identityContent.paleta_cores} field="identity_colors" />
+                          <CopyButton text={renderPaletaCores(identityContent.paleta_cores)} field="identity_colors" />
                         </div>
-                        <p className="text-sm text-muted-foreground">{identityContent.paleta_cores}</p>
+                        <p className="text-sm text-muted-foreground whitespace-pre-line">{renderPaletaCores(identityContent.paleta_cores)}</p>
                       </div>
                     )}
 
