@@ -5,11 +5,12 @@ import { useWorkspace } from '@/contexts/WorkspaceContext';
 export interface RealMetrics {
   projects: number;
   proposals: number;
+  proposalsWon: number;       // Propostas ganhas/fechadas
   clients: number;
   deliveries: number;
   contracts: number;
-  totalPipelineValue: number;
-  averageTicket: number;
+  totalPipelineValue: number; // Soma apenas de propostas GANHAS
+  averageTicket: number;      // Média das propostas ganhas
   userCreatedAt: string | null;
 }
 
@@ -24,6 +25,7 @@ export function useRealMetrics() {
   const [metrics, setMetrics] = useState<RealMetrics>({
     projects: 0,
     proposals: 0,
+    proposalsWon: 0,
     clients: 0,
     deliveries: 0,
     contracts: 0,
@@ -47,7 +49,6 @@ export function useRealMetrics() {
     try {
       const today = new Date().toISOString().split('T')[0];
       
-      // Usa upsert para inserir ou atualizar o registro do dia
       await supabase
         .from('metrics_history')
         .upsert({
@@ -116,7 +117,7 @@ export function useRealMetrics() {
             .eq('workspace_id', workspace.id),
           supabase
             .from('proposals')
-            .select('id, total_value, status', { count: 'exact' })
+            .select('id, total_value, status')
             .eq('workspace_id', workspace.id),
           supabase
             .from('clients')
@@ -138,23 +139,31 @@ export function useRealMetrics() {
         const deliveriesCount = deliveriesRes.count || 0;
         const contractsCount = contractsRes.count || 0;
 
-        // Calcular valor total do pipeline (soma dos valores das propostas ACEITAS)
-        const totalPipelineValue = proposalsRes.data?.reduce(
-          (sum, p) => sum + ((p as any).status === 'accepted' ? ((p as any).total_value || 0) : 0),
+        // REGRA PRINCIPAL: Somente propostas com status "accepted" ou "won" contam como faturamento
+        const wonProposals = proposalsRes.data?.filter((p: any) => 
+          p.status === 'accepted' || p.status === 'won' || p.status === 'closed'
+        ) || [];
+        
+        const proposalsWon = wonProposals.length;
+        
+        // Valor total do pipeline = soma APENAS das propostas GANHAS
+        const totalPipelineValue = wonProposals.reduce(
+          (sum: number, p: any) => sum + ((p as any).total_value || 0),
           0
-        ) || 0;
+        );
 
-        // Calcular ticket médio
-        const averageTicket = projectsCount > 0 
-          ? totalPipelineValue / projectsCount 
+        // Ticket médio = média das propostas ganhas
+        const averageTicket = proposalsWon > 0 
+          ? Math.round(totalPipelineValue / proposalsWon)
           : 0;
 
-        // Pegar data de criação do workspace (data de cadastro do usuário)
+        // Data de criação do workspace
         const userCreatedAt = workspace.created_at;
 
         setMetrics({
           projects: projectsCount,
           proposals: proposalsCount,
+          proposalsWon,
           clients: clientsCount,
           deliveries: deliveriesCount,
           contracts: contractsCount,
@@ -163,7 +172,7 @@ export function useRealMetrics() {
           userCreatedAt,
         });
 
-        // Salva métricas atuais no histórico
+        // Salva métricas atuais no histórico (apenas propostas ganhas)
         await saveCurrentMetrics(
           workspace.id,
           projectsCount,
