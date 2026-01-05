@@ -1,6 +1,7 @@
 import { NavLink, useLocation } from 'react-router-dom';
 import { cn } from '@/lib/utils';
 import { useSidebarState } from '@/contexts/SidebarContext';
+import { useUserRole } from '@/contexts/UserRoleContext';
 import {
   LayoutDashboard,
   Layers,
@@ -15,13 +16,24 @@ import {
   ChevronRight,
   Search,
   GraduationCap,
+  UsersRound,
 } from 'lucide-react';
 import logoNexia from '@/assets/logo-nexia.png';
 import { Tooltip, TooltipContent, TooltipTrigger } from '@/components/ui/tooltip';
 import { Badge } from '@/components/ui/badge';
-import { useEffect } from 'react';
+import { useEffect, useMemo } from 'react';
 
-const navItems = [
+import { LucideIcon } from 'lucide-react';
+
+interface NavItem {
+  label: string;
+  path: string;
+  icon: LucideIcon;
+  badge?: string;
+  adminOnly?: boolean;
+}
+
+const baseNavItems: NavItem[] = [
   { label: 'Dashboard', path: '/dashboard', icon: LayoutDashboard },
   { label: 'Encontrar Clientes', path: '/encontrar-clientes', icon: Search },
   { label: 'Diagnóstico', path: '/nexia-ai', icon: Brain, badge: 'avançado' },
@@ -32,6 +44,7 @@ const navItems = [
   { label: 'Identidade', path: '/identidade', icon: Fingerprint },
   { label: 'Histórico / Atividade', path: '/historico', icon: History },
   { label: 'Academy / Ajuda', path: '/academy', icon: GraduationCap },
+  { label: 'Minha Equipe', path: '/admin/equipe', icon: UsersRound, adminOnly: true },
   { label: 'Configurações', path: '/configuracoes', icon: Settings },
 ];
 
@@ -41,7 +54,13 @@ interface AppSidebarProps {
 
 export function AppSidebar({ forceCollapsed = false }: AppSidebarProps) {
   const { collapsed, toggle, setCollapsed } = useSidebarState();
+  const { isAdminOrOwner } = useUserRole();
   const location = useLocation();
+
+  // Filter nav items based on user role
+  const navItems = useMemo(() => {
+    return baseNavItems.filter(item => !item.adminOnly || isAdminOrOwner);
+  }, [isAdminOrOwner]);
 
   // Force collapsed state on tablet
   useEffect(() => {
