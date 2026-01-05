@@ -1,6 +1,6 @@
 import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { Rocket, ArrowLeft, ArrowRight, Loader2, Building2, Sparkles, Palette, ListChecks, CheckCircle2, FileText, ExternalLink, Download } from 'lucide-react';
+import { Rocket, ArrowLeft, ArrowRight, Loader2, Building2, Sparkles, Palette, ListChecks, CheckCircle2, FileText, ExternalLink, Download, Copy, Check, MessageSquare, Lightbulb } from 'lucide-react';
 import { toast } from 'sonner';
 import { supabase } from '@/integrations/supabase/client';
 import { useWorkspace } from '@/contexts/WorkspaceContext';
@@ -12,6 +12,7 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+import { Badge } from '@/components/ui/badge';
 import { validateShortInput, validateBusinessInput, sanitizeInput } from '@/lib/inputValidation';
 
 interface FormData {
@@ -23,8 +24,9 @@ interface FormData {
   // Step 3 - Visual Identity
   brandStyle: string;
   brandFeeling: string;
-  preferredColors: string;
+  preferredColors: string[];
   visualNotes: string;
+  secondaryText: string;
 }
 
 interface IdentityContent {
@@ -35,6 +37,22 @@ interface IdentityContent {
 }
 
 const TOTAL_STEPS = 4;
+
+// Predefined color palette options
+const COLOR_PALETTE = [
+  { name: 'Azul Navy', color: '#1E3A5F', textColor: 'white' },
+  { name: 'Verde Esmeralda', color: '#047857', textColor: 'white' },
+  { name: 'Roxo Violeta', color: '#7C3AED', textColor: 'white' },
+  { name: 'Rosa Pink', color: '#EC4899', textColor: 'white' },
+  { name: 'Laranja Vibrante', color: '#EA580C', textColor: 'white' },
+  { name: 'Amarelo Ouro', color: '#CA8A04', textColor: 'black' },
+  { name: 'Vermelho Intenso', color: '#DC2626', textColor: 'white' },
+  { name: 'Cinza Grafite', color: '#374151', textColor: 'white' },
+  { name: 'Bege Neutro', color: '#D4C4A8', textColor: 'black' },
+  { name: 'Verde Menta', color: '#10B981', textColor: 'white' },
+  { name: 'Azul Céu', color: '#0EA5E9', textColor: 'white' },
+  { name: 'Coral', color: '#F97316', textColor: 'white' },
+];
 
 export default function KitLancamentoWizard() {
   const navigate = useNavigate();
@@ -47,6 +65,7 @@ export default function KitLancamentoWizard() {
   const [generatedContent, setGeneratedContent] = useState<any>(null);
   const [identityContent, setIdentityContent] = useState<IdentityContent | null>(null);
   const [launchKitId, setLaunchKitId] = useState<string | null>(null);
+  const [copiedField, setCopiedField] = useState<string | null>(null);
   
   const [formData, setFormData] = useState<FormData>({
     projectName: '',
@@ -55,14 +74,57 @@ export default function KitLancamentoWizard() {
     mainObjective: '',
     brandStyle: '',
     brandFeeling: '',
-    preferredColors: '',
+    preferredColors: [],
     visualNotes: '',
+    secondaryText: '',
   });
 
-  const updateField = (field: keyof FormData, value: string) => {
+  const updateField = (field: keyof FormData, value: string | string[]) => {
     setFormData(prev => ({ ...prev, [field]: value }));
     setErrors(prev => ({ ...prev, [field]: '' }));
   };
+
+  const toggleColor = (colorName: string) => {
+    setFormData(prev => {
+      const colors = prev.preferredColors;
+      if (colors.includes(colorName)) {
+        return { ...prev, preferredColors: colors.filter(c => c !== colorName) };
+      }
+      if (colors.length >= 3) {
+        toast.error('Selecione no máximo 3 cores');
+        return prev;
+      }
+      return { ...prev, preferredColors: [...colors, colorName] };
+    });
+  };
+
+  const handleCopy = async (text: string, field: string) => {
+    await navigator.clipboard.writeText(text);
+    setCopiedField(field);
+    toast.success('Copiado para a área de transferência!');
+    setTimeout(() => setCopiedField(null), 2000);
+  };
+
+  const CopyButton = ({ text, field, label }: { text: string; field: string; label?: string }) => (
+    <Button 
+      variant="outline" 
+      size="sm" 
+      onClick={() => handleCopy(text, field)} 
+      className="gap-2 h-8"
+    >
+      {copiedField === field ? (
+        <>
+          <Check className="h-3 w-3 text-green-500" />
+          <span className="text-green-600 text-xs">Copiado!</span>
+        </>
+      ) : (
+        <>
+          <Copy className="h-3 w-3" />
+          <span className="text-xs">{label || 'Copiar'}</span>
+        </>
+      )}
+    </Button>
+  );
 
   const validateStep1 = (): boolean => {
     const newErrors: Record<string, string> = {};
@@ -87,6 +149,7 @@ export default function KitLancamentoWizard() {
 
     if (!formData.brandStyle) newErrors.brandStyle = 'Selecione o estilo desejado.';
     if (!formData.brandFeeling) newErrors.brandFeeling = 'Selecione a sensação da marca.';
+    if (formData.preferredColors.length === 0) newErrors.preferredColors = 'Selecione pelo menos uma cor.';
 
     setErrors(newErrors);
     return Object.keys(newErrors).length === 0;
@@ -176,13 +239,16 @@ export default function KitLancamentoWizard() {
     setIsGeneratingIdentity(true);
 
     try {
+      const colorsText = formData.preferredColors.join(', ');
+      
       const { data: identityResult, error: identityError } = await supabase.functions.invoke('generate-launch-logo', {
         body: {
           brandName: formData.projectName,
           brandStyle: formData.brandStyle,
           brandFeeling: formData.brandFeeling,
-          preferredColors: formData.preferredColors,
+          preferredColors: colorsText,
           visualNotes: formData.visualNotes,
+          secondaryText: formData.secondaryText,
         }
       });
 
@@ -200,7 +266,7 @@ export default function KitLancamentoWizard() {
         .update({
           brand_style: formData.brandStyle,
           brand_feeling: formData.brandFeeling,
-          preferred_colors: formData.preferredColors,
+          preferred_colors: colorsText,
           visual_notes: formData.visualNotes,
           logo_concept: identityResult.data.descricao_identidade,
           logo_usage_guidelines: identityResult.data.prompt_logo,
@@ -255,6 +321,10 @@ export default function KitLancamentoWizard() {
     { icon: Palette, title: 'Identidade', desc: 'Visual e logo' },
     { icon: ListChecks, title: 'Conclusão', desc: 'Resumo final' },
   ];
+
+  const getSelectedColors = () => {
+    return COLOR_PALETTE.filter(c => formData.preferredColors.includes(c.name));
+  };
 
   return (
     <AppLayout title="Criar Kit de Lançamento">
@@ -384,7 +454,7 @@ export default function KitLancamentoWizard() {
           </Card>
         )}
 
-        {/* Step 2: Structure Review - MANDATORY VISIBLE STEP */}
+        {/* Step 2: Structure Review */}
         {step === 2 && generatedContent && (
           <div className="space-y-4">
             <Card>
@@ -551,7 +621,7 @@ export default function KitLancamentoWizard() {
           </div>
         )}
 
-        {/* Step 3: Visual Identity - TEXT ONLY, NO IMAGE */}
+        {/* Step 3: Visual Identity */}
         {step === 3 && (
           <div className="space-y-4">
             <Card>
@@ -561,7 +631,7 @@ export default function KitLancamentoWizard() {
                   Identidade do Lançamento
                 </CardTitle>
                 <CardDescription>
-                  Configure o estilo visual para gerar a identidade de marca em texto
+                  Configure o estilo visual para gerar a identidade de marca
                 </CardDescription>
               </CardHeader>
               <CardContent className="space-y-4">
@@ -571,8 +641,31 @@ export default function KitLancamentoWizard() {
                   </p>
                 </div>
 
+                {/* Nome principal da marca */}
                 <div className="space-y-2">
-                  <Label>Estilo desejado *</Label>
+                  <Label htmlFor="brandName">Nome principal da marca</Label>
+                  <Input
+                    id="brandName"
+                    value={formData.projectName}
+                    disabled
+                    className="bg-muted"
+                  />
+                  <p className="text-xs text-muted-foreground">Definido na etapa anterior</p>
+                </div>
+
+                {/* Texto secundário */}
+                <div className="space-y-2">
+                  <Label htmlFor="secondaryText">Texto secundário / Slogan (opcional)</Label>
+                  <Input
+                    id="secondaryText"
+                    placeholder="Ex: Moda que transforma, Sua parceira digital"
+                    value={formData.secondaryText}
+                    onChange={(e) => updateField('secondaryText', e.target.value)}
+                  />
+                </div>
+
+                <div className="space-y-2">
+                  <Label>Estilo da logo *</Label>
                   <Select value={formData.brandStyle} onValueChange={(v) => updateField('brandStyle', v)}>
                     <SelectTrigger className={errors.brandStyle ? 'border-destructive' : ''}>
                       <SelectValue placeholder="Selecione o estilo" />
@@ -580,9 +673,11 @@ export default function KitLancamentoWizard() {
                     <SelectContent>
                       <SelectItem value="moderno">Moderno</SelectItem>
                       <SelectItem value="minimalista">Minimalista</SelectItem>
-                      <SelectItem value="premium">Premium</SelectItem>
-                      <SelectItem value="criativo">Criativo</SelectItem>
+                      <SelectItem value="premium">Premium / Luxo</SelectItem>
+                      <SelectItem value="criativo">Criativo / Artístico</SelectItem>
                       <SelectItem value="tecnologico">Tecnológico</SelectItem>
+                      <SelectItem value="organico">Orgânico / Natural</SelectItem>
+                      <SelectItem value="vintage">Vintage / Retrô</SelectItem>
                     </SelectContent>
                   </Select>
                   {errors.brandStyle && <p className="text-sm text-destructive">{errors.brandStyle}</p>}
@@ -595,30 +690,64 @@ export default function KitLancamentoWizard() {
                       <SelectValue placeholder="Selecione a sensação" />
                     </SelectTrigger>
                     <SelectContent>
-                      <SelectItem value="confianca">Confiança</SelectItem>
-                      <SelectItem value="autoridade">Autoridade</SelectItem>
-                      <SelectItem value="proximidade">Proximidade</SelectItem>
-                      <SelectItem value="inovacao">Inovação</SelectItem>
+                      <SelectItem value="confianca">Confiança e Segurança</SelectItem>
+                      <SelectItem value="autoridade">Autoridade e Expertise</SelectItem>
+                      <SelectItem value="proximidade">Proximidade e Acolhimento</SelectItem>
+                      <SelectItem value="inovacao">Inovação e Modernidade</SelectItem>
+                      <SelectItem value="elegancia">Elegância e Sofisticação</SelectItem>
+                      <SelectItem value="energia">Energia e Dinamismo</SelectItem>
                     </SelectContent>
                   </Select>
                   {errors.brandFeeling && <p className="text-sm text-destructive">{errors.brandFeeling}</p>}
                 </div>
 
+                {/* Cores como Cards */}
                 <div className="space-y-2">
-                  <Label htmlFor="preferredColors">Cores preferidas (opcional)</Label>
-                  <Input
-                    id="preferredColors"
-                    placeholder="Ex: Azul e dourado, tons terrosos, roxo vibrante"
-                    value={formData.preferredColors}
-                    onChange={(e) => updateField('preferredColors', e.target.value)}
-                  />
+                  <Label>Cores principais * (selecione até 3)</Label>
+                  <div className="grid grid-cols-4 sm:grid-cols-6 gap-2">
+                    {COLOR_PALETTE.map((c) => (
+                      <button
+                        key={c.name}
+                        type="button"
+                        onClick={() => toggleColor(c.name)}
+                        className={`relative p-2 rounded-lg border-2 transition-all ${
+                          formData.preferredColors.includes(c.name)
+                            ? 'border-violet-500 ring-2 ring-violet-500/30'
+                            : 'border-transparent hover:border-muted-foreground/30'
+                        }`}
+                      >
+                        <div
+                          className="w-full aspect-square rounded-md mb-1"
+                          style={{ backgroundColor: c.color }}
+                        />
+                        <span className="text-[10px] text-muted-foreground line-clamp-1">{c.name}</span>
+                        {formData.preferredColors.includes(c.name) && (
+                          <div className="absolute -top-1 -right-1 w-4 h-4 bg-violet-500 rounded-full flex items-center justify-center">
+                            <Check className="h-2.5 w-2.5 text-white" />
+                          </div>
+                        )}
+                      </button>
+                    ))}
+                  </div>
+                  {errors.preferredColors && <p className="text-sm text-destructive">{errors.preferredColors}</p>}
+                  {formData.preferredColors.length > 0 && (
+                    <div className="flex gap-2 mt-2">
+                      <span className="text-xs text-muted-foreground">Selecionadas:</span>
+                      {getSelectedColors().map(c => (
+                        <Badge key={c.name} variant="outline" className="text-xs gap-1">
+                          <div className="w-2 h-2 rounded-full" style={{ backgroundColor: c.color }} />
+                          {c.name}
+                        </Badge>
+                      ))}
+                    </div>
+                  )}
                 </div>
 
                 <div className="space-y-2">
-                  <Label htmlFor="visualNotes">Observações visuais (opcional)</Label>
+                  <Label htmlFor="visualNotes">Observações adicionais (opcional)</Label>
                   <Textarea
                     id="visualNotes"
-                    placeholder="Ex: Gostaria de algo mais feminino, com formas orgânicas"
+                    placeholder="Ex: Gostaria de algo mais feminino, com formas orgânicas, evitar cores escuras"
                     value={formData.visualNotes}
                     onChange={(e) => updateField('visualNotes', e.target.value)}
                     rows={2}
@@ -634,26 +763,38 @@ export default function KitLancamentoWizard() {
                     </h3>
                     
                     <div className="p-4 bg-violet-500/5 rounded-lg border border-violet-500/20">
-                      <h4 className="font-medium text-violet-600 mb-2">Descrição da Identidade Visual</h4>
+                      <div className="flex items-center justify-between mb-2">
+                        <h4 className="font-medium text-violet-600">Descrição da Identidade Visual</h4>
+                        <CopyButton text={identityContent.descricao_identidade} field="identity_desc" />
+                      </div>
                       <p className="text-sm text-muted-foreground whitespace-pre-line">{identityContent.descricao_identidade}</p>
                     </div>
 
                     {identityContent.paleta_cores && (
                       <div className="p-4 bg-pink-500/5 rounded-lg border border-pink-500/20">
-                        <h4 className="font-medium text-pink-600 mb-2">Paleta de Cores Sugerida</h4>
+                        <div className="flex items-center justify-between mb-2">
+                          <h4 className="font-medium text-pink-600">Paleta de Cores Sugerida</h4>
+                          <CopyButton text={identityContent.paleta_cores} field="identity_colors" />
+                        </div>
                         <p className="text-sm text-muted-foreground">{identityContent.paleta_cores}</p>
                       </div>
                     )}
 
                     {identityContent.tipografia_sugerida && (
                       <div className="p-4 bg-blue-500/5 rounded-lg border border-blue-500/20">
-                        <h4 className="font-medium text-blue-600 mb-2">Tipografia Sugerida</h4>
+                        <div className="flex items-center justify-between mb-2">
+                          <h4 className="font-medium text-blue-600">Tipografia Sugerida</h4>
+                          <CopyButton text={identityContent.tipografia_sugerida} field="identity_font" />
+                        </div>
                         <p className="text-sm text-muted-foreground">{identityContent.tipografia_sugerida}</p>
                       </div>
                     )}
 
                     <div className="p-4 bg-amber-500/5 rounded-lg border border-amber-500/20">
-                      <h4 className="font-medium text-amber-600 mb-2">🎨 Prompt para Gerar Logo em IA de Imagem</h4>
+                      <div className="flex items-center justify-between mb-2">
+                        <h4 className="font-medium text-amber-600">🎨 Prompt para Gerar Logo em IA de Imagem</h4>
+                        <CopyButton text={identityContent.prompt_logo} field="identity_prompt" label="Copiar Prompt" />
+                      </div>
                       <p className="text-sm text-muted-foreground font-mono bg-muted/50 p-3 rounded">{identityContent.prompt_logo}</p>
                       <p className="text-xs text-muted-foreground mt-2">
                         Use este prompt em ferramentas como DALL-E, Midjourney, ou Canva AI para gerar sua logo.
@@ -700,83 +841,248 @@ export default function KitLancamentoWizard() {
           </div>
         )}
 
-        {/* Step 4: Conclusion */}
+        {/* Step 4: Conclusion - COMPLETE */}
         {step === 4 && (
           <div className="space-y-4">
             <Card className="border-green-500/30 bg-green-500/5">
               <CardHeader>
                 <CardTitle className="flex items-center gap-2">
                   <CheckCircle2 className="h-5 w-5 text-green-600" />
-                  Kit de Lançamento Finalizado
+                  Resumo do Kit de Lançamento
                 </CardTitle>
                 <CardDescription>
-                  Seu kit de lançamento está pronto! Revise o resumo abaixo.
+                  Revise todas as informações antes de finalizar
                 </CardDescription>
               </CardHeader>
               <CardContent className="space-y-6">
                 {/* Resumo do Projeto */}
-                <div className="grid gap-3 sm:grid-cols-2">
-                  <div className="p-3 bg-muted/50 rounded-lg">
-                    <span className="text-xs text-muted-foreground">Projeto</span>
-                    <p className="font-medium">{formData.projectName}</p>
-                  </div>
-                  <div className="p-3 bg-muted/50 rounded-lg">
-                    <span className="text-xs text-muted-foreground">Tipo</span>
-                    <p className="font-medium capitalize">{formData.projectType?.replace('_', ' ')}</p>
-                  </div>
-                </div>
-
-                {/* Objetivo */}
-                <div className="p-4 bg-green-500/10 rounded-lg border border-green-500/20">
-                  <h3 className="font-medium text-green-600 mb-2">🎯 Objetivo do Lançamento</h3>
-                  <p className="text-sm text-muted-foreground">{formData.mainObjective}</p>
-                </div>
-
-                {/* Estrutura Resumida */}
-                {generatedContent && (
-                  <div className="p-4 bg-violet-500/5 rounded-lg border border-violet-500/20">
-                    <h3 className="font-medium text-violet-600 mb-3 flex items-center gap-2">
-                      <Sparkles className="h-4 w-4" />
-                      Estrutura de Lançamento
-                    </h3>
-                    <div className="grid gap-2 sm:grid-cols-3 text-sm">
-                      <div className="p-2 bg-muted/50 rounded">
-                        <span className="text-xs text-amber-600 font-medium">Pré-lançamento</span>
-                        <p className="text-xs text-muted-foreground mt-1">
-                          {generatedContent.sequencia_acoes?.pre_lancamento?.length || 0} ações
-                        </p>
-                      </div>
-                      <div className="p-2 bg-muted/50 rounded">
-                        <span className="text-xs text-green-600 font-medium">Durante</span>
-                        <p className="text-xs text-muted-foreground mt-1">
-                          {generatedContent.sequencia_acoes?.durante?.length || 0} ações
-                        </p>
-                      </div>
-                      <div className="p-2 bg-muted/50 rounded">
-                        <span className="text-xs text-blue-600 font-medium">Pós-lançamento</span>
-                        <p className="text-xs text-muted-foreground mt-1">
-                          {generatedContent.sequencia_acoes?.pos_lancamento?.length || 0} ações
-                        </p>
-                      </div>
+                <div className="p-4 bg-muted/50 rounded-lg border">
+                  <h3 className="font-medium mb-3 flex items-center gap-2">
+                    <Building2 className="h-4 w-4 text-violet-500" />
+                    Resumo do Projeto
+                  </h3>
+                  <div className="grid gap-3 sm:grid-cols-2">
+                    <div>
+                      <span className="text-xs text-muted-foreground">Nome do Projeto</span>
+                      <p className="font-medium">{formData.projectName}</p>
                     </div>
+                    <div>
+                      <span className="text-xs text-muted-foreground">Tipo</span>
+                      <p className="font-medium capitalize">{formData.projectType?.replace('_', ' ')}</p>
+                    </div>
+                    <div className="sm:col-span-2">
+                      <span className="text-xs text-muted-foreground">Objetivo</span>
+                      <p className="text-sm text-muted-foreground">{formData.mainObjective}</p>
+                    </div>
+                  </div>
+                </div>
+
+                {/* Estrutura de Lançamento COMPLETA */}
+                {generatedContent && (
+                  <div className="space-y-4">
+                    <h3 className="font-medium flex items-center gap-2">
+                      <Sparkles className="h-4 w-4 text-violet-500" />
+                      Estrutura de Lançamento Gerada
+                    </h3>
+
+                    {/* Fases com ações reais */}
+                    {generatedContent.sequencia_acoes && (
+                      <div className="grid gap-4 md:grid-cols-3">
+                        {/* Pré-Lançamento */}
+                        {generatedContent.sequencia_acoes.pre_lancamento && (
+                          <div className="p-4 bg-amber-500/5 rounded-lg border border-amber-500/20">
+                            <h4 className="font-medium text-amber-600 mb-3 text-sm flex items-center gap-2">
+                              🎯 Pré-Lançamento
+                              <Badge variant="outline" className="text-[10px]">
+                                {generatedContent.sequencia_acoes.pre_lancamento.length} ações
+                              </Badge>
+                            </h4>
+                            <ul className="space-y-2">
+                              {generatedContent.sequencia_acoes.pre_lancamento.map((a: string, i: number) => (
+                                <li key={i} className="text-xs text-muted-foreground flex items-start gap-2">
+                                  <CheckCircle2 className="h-3 w-3 text-amber-500 mt-0.5 shrink-0" />
+                                  {a}
+                                </li>
+                              ))}
+                            </ul>
+                          </div>
+                        )}
+
+                        {/* Durante */}
+                        {generatedContent.sequencia_acoes.durante && (
+                          <div className="p-4 bg-green-500/5 rounded-lg border border-green-500/20">
+                            <h4 className="font-medium text-green-600 mb-3 text-sm flex items-center gap-2">
+                              🚀 Durante
+                              <Badge variant="outline" className="text-[10px] border-green-500/30">
+                                {generatedContent.sequencia_acoes.durante.length} ações
+                              </Badge>
+                            </h4>
+                            <ul className="space-y-2">
+                              {generatedContent.sequencia_acoes.durante.map((a: string, i: number) => (
+                                <li key={i} className="text-xs text-muted-foreground flex items-start gap-2">
+                                  <CheckCircle2 className="h-3 w-3 text-green-500 mt-0.5 shrink-0" />
+                                  {a}
+                                </li>
+                              ))}
+                            </ul>
+                          </div>
+                        )}
+
+                        {/* Pós-Lançamento */}
+                        {generatedContent.sequencia_acoes.pos_lancamento && (
+                          <div className="p-4 bg-blue-500/5 rounded-lg border border-blue-500/20">
+                            <h4 className="font-medium text-blue-600 mb-3 text-sm flex items-center gap-2">
+                              💡 Pós-Lançamento
+                              <Badge variant="outline" className="text-[10px] border-blue-500/30">
+                                {generatedContent.sequencia_acoes.pos_lancamento.length} ações
+                              </Badge>
+                            </h4>
+                            <ul className="space-y-2">
+                              {generatedContent.sequencia_acoes.pos_lancamento.map((a: string, i: number) => (
+                                <li key={i} className="text-xs text-muted-foreground flex items-start gap-2">
+                                  <CheckCircle2 className="h-3 w-3 text-blue-500 mt-0.5 shrink-0" />
+                                  {a}
+                                </li>
+                              ))}
+                            </ul>
+                          </div>
+                        )}
+                      </div>
+                    )}
+
+                    {/* Gatilhos e Mensagens de Divulgação */}
+                    {generatedContent.mensagens_divulgacao && (
+                      <div className="p-4 bg-pink-500/5 rounded-lg border border-pink-500/20">
+                        <h4 className="font-medium text-pink-600 mb-4 flex items-center gap-2">
+                          <MessageSquare className="h-4 w-4" />
+                          Gatilhos e Mensagens de Divulgação
+                        </h4>
+                        <div className="grid gap-3 md:grid-cols-3">
+                          {generatedContent.mensagens_divulgacao.teaser && (
+                            <div className="p-3 bg-background rounded-lg border">
+                              <div className="flex items-center justify-between mb-2">
+                                <Badge variant="outline" className="text-xs">Teaser</Badge>
+                                <CopyButton text={generatedContent.mensagens_divulgacao.teaser} field="msg_teaser" />
+                              </div>
+                              <p className="text-sm text-muted-foreground">{generatedContent.mensagens_divulgacao.teaser}</p>
+                            </div>
+                          )}
+                          {generatedContent.mensagens_divulgacao.lancamento && (
+                            <div className="p-3 bg-background rounded-lg border">
+                              <div className="flex items-center justify-between mb-2">
+                                <Badge variant="outline" className="text-xs border-green-500/30 text-green-600">Lançamento</Badge>
+                                <CopyButton text={generatedContent.mensagens_divulgacao.lancamento} field="msg_lancamento" />
+                              </div>
+                              <p className="text-sm text-muted-foreground">{generatedContent.mensagens_divulgacao.lancamento}</p>
+                            </div>
+                          )}
+                          {generatedContent.mensagens_divulgacao.urgencia && (
+                            <div className="p-3 bg-background rounded-lg border">
+                              <div className="flex items-center justify-between mb-2">
+                                <Badge variant="outline" className="text-xs border-amber-500/30 text-amber-600">Urgência</Badge>
+                                <CopyButton text={generatedContent.mensagens_divulgacao.urgencia} field="msg_urgencia" />
+                              </div>
+                              <p className="text-sm text-muted-foreground">{generatedContent.mensagens_divulgacao.urgencia}</p>
+                            </div>
+                          )}
+                        </div>
+                      </div>
+                    )}
+
+                    {/* Ideia de Oferta */}
+                    {generatedContent.ideia_oferta && (
+                      <div className="p-4 bg-violet-500/5 rounded-lg border border-violet-500/20">
+                        <div className="flex items-center justify-between mb-2">
+                          <h4 className="font-medium text-violet-600 flex items-center gap-2">
+                            <Lightbulb className="h-4 w-4" />
+                            Oferta Principal Sugerida
+                          </h4>
+                          <CopyButton text={generatedContent.ideia_oferta} field="oferta" />
+                        </div>
+                        <p className="text-sm text-muted-foreground">{generatedContent.ideia_oferta}</p>
+                      </div>
+                    )}
                   </div>
                 )}
 
-                {/* Identidade Resumida */}
-                {identityContent && (
-                  <div className="p-4 bg-pink-500/5 rounded-lg border border-pink-500/20">
-                    <h3 className="font-medium text-pink-600 mb-2 flex items-center gap-2">
-                      <Palette className="h-4 w-4" />
-                      Identidade de Marca
+                {/* Identidade Visual na Conclusão */}
+                {identityContent ? (
+                  <div className="p-4 bg-gradient-to-br from-violet-500/5 to-pink-500/5 rounded-lg border border-violet-500/20">
+                    <h3 className="font-medium mb-4 flex items-center gap-2">
+                      <Palette className="h-4 w-4 text-violet-500" />
+                      Identidade Visual
                     </h3>
-                    <p className="text-sm text-muted-foreground line-clamp-2">
-                      {identityContent.descricao_identidade}
-                    </p>
-                    <div className="mt-2 p-2 bg-muted/50 rounded">
-                      <span className="text-xs font-medium">Prompt da Logo:</span>
-                      <p className="text-xs text-muted-foreground mt-1 line-clamp-2 font-mono">
-                        {identityContent.prompt_logo}
+                    
+                    <div className="grid gap-4 sm:grid-cols-2">
+                      <div>
+                        <span className="text-xs text-muted-foreground">Nome da Marca</span>
+                        <p className="font-medium">{formData.projectName}</p>
+                        {formData.secondaryText && (
+                          <p className="text-sm text-muted-foreground">{formData.secondaryText}</p>
+                        )}
+                      </div>
+                      <div>
+                        <span className="text-xs text-muted-foreground">Estilo Visual</span>
+                        <p className="font-medium capitalize">{formData.brandStyle}</p>
+                        <p className="text-sm text-muted-foreground capitalize">{formData.brandFeeling}</p>
+                      </div>
+                    </div>
+
+                    {/* Cores Selecionadas como Cards */}
+                    {formData.preferredColors.length > 0 && (
+                      <div className="mt-4">
+                        <span className="text-xs text-muted-foreground mb-2 block">Cores Principais</span>
+                        <div className="flex gap-2">
+                          {getSelectedColors().map(c => (
+                            <div key={c.name} className="flex items-center gap-2 p-2 bg-background rounded-lg border">
+                              <div 
+                                className="w-6 h-6 rounded-md border"
+                                style={{ backgroundColor: c.color }}
+                              />
+                              <span className="text-xs">{c.name}</span>
+                            </div>
+                          ))}
+                        </div>
+                      </div>
+                    )}
+
+                    {/* Status da Logo */}
+                    <div className="mt-4 p-3 bg-muted/50 rounded-lg">
+                      <div className="flex items-center justify-between">
+                        <div>
+                          <span className="text-xs text-muted-foreground">Status da Logo</span>
+                          <p className="text-sm font-medium">
+                            Prompt de logo gerado ✓
+                          </p>
+                        </div>
+                        <CopyButton 
+                          text={identityContent.prompt_logo} 
+                          field="conclusion_prompt" 
+                          label="Copiar Prompt"
+                        />
+                      </div>
+                    </div>
+
+                    {/* Descrição resumida */}
+                    <div className="mt-3">
+                      <p className="text-sm text-muted-foreground line-clamp-2">
+                        {identityContent.descricao_identidade}
                       </p>
+                    </div>
+                  </div>
+                ) : (
+                  <div className="p-4 bg-muted/30 rounded-lg border border-dashed">
+                    <div className="flex items-center justify-between">
+                      <div className="flex items-center gap-3">
+                        <Palette className="h-5 w-5 text-muted-foreground" />
+                        <div>
+                          <p className="font-medium">Identidade Visual</p>
+                          <p className="text-sm text-muted-foreground">Não configurada</p>
+                        </div>
+                      </div>
+                      <Button variant="outline" size="sm" onClick={() => setStep(3)}>
+                        Configurar
+                      </Button>
                     </div>
                   </div>
                 )}
@@ -822,7 +1128,7 @@ export default function KitLancamentoWizard() {
             <div className="flex flex-col sm:flex-row gap-3 justify-between">
               <Button variant="outline" onClick={() => setStep(3)}>
                 <ArrowLeft className="h-4 w-4 mr-2" />
-                Editar Kit
+                Voltar para Identidade
               </Button>
               <div className="flex gap-2">
                 <Button variant="outline" onClick={() => navigate('/solucoes')} className="gap-2">
