@@ -164,7 +164,6 @@ const App = () => (
                   <Route path="/vendas/propostas/nova" element={<ProtectedRoute><PropostaForm /></ProtectedRoute>} />
                   <Route path="/vendas/propostas/:id" element={<ProtectedRoute><PropostaForm /></ProtectedRoute>} />
                   <Route path="/vendas/contratos" element={<ProtectedRoute><Contratos /></ProtectedRoute>} />
-                  <Route path="/vendas/contratos/novo" element={<ProtectedRoute><ContratoForm /></ProtectedRoute>} />
                   <Route path="/vendas/contratos/nexia" element={<ProtectedRoute><ContratoNexiaWizard /></ProtectedRoute>} />
                   <Route path="/vendas/contratos/:id" element={<ProtectedRoute><ContratoForm /></ProtectedRoute>} />
                   <Route path="/vendas/whatsapp" element={<ProtectedRoute><MensagensWhatsApp /></ProtectedRoute>} />
