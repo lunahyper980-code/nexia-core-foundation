@@ -18,62 +18,65 @@ interface GraficoEvolucaoProps {
 }
 
 // ==============================================
-// CÁLCULO MATEMÁTICO BASEADO NO INCREMENTO DE 48H
+// OWNER (ADMIN): cresce somente quando o pipeline cresce
 // ==============================================
-// Pipeline base: R$ 38.743
-// Incremento: +R$ 2.350 a cada 48h
-// Projetos base: 32, +1 a cada 48h
-// 
-// Em 30 dias = 15 períodos de 48h
-// Crescimento total 30 dias: 15 × R$ 2.350 = R$ 35.250
-// Em 7 dias = 3.5 períodos ≈ 3 períodos = R$ 7.050
+// A ideia aqui é:
+// - manter o visual/linha do gráfico como estava (progressivo e crível)
+// - manter os números de 30d/7d nos mesmos patamares “de antes”
+// - e, quando o pipeline subir (a cada 48h), esses números sobem junto, proporcionalmente
+//
+// Base histórica (no momento em que calibramos os valores "de antes"):
+// - Pipeline: 38.743
+// - Últimos 30 dias: R$ 9.686 (+33%)
+// - Últimos 7 dias: R$ 2.900 (+8%)
 // ==============================================
 
-const PIPELINE_INCREMENT = 2350; // R$ 2.350 a cada 48h
-const PROJECTS_INCREMENT = 1;    // +1 projeto a cada 48h
-const INCREMENT_HOURS = 48;
+const OWNER_BASE_PIPELINE = 38743;
+const OWNER_START_RATIO_30_DAYS = 0.75; // 30d atrás ~75% do atual (como era antes)
+const OWNER_REVENUE_30_RATIO = 9686 / OWNER_BASE_PIPELINE;
+const OWNER_REVENUE_7_RATIO = 2900 / OWNER_BASE_PIPELINE;
 
-// Calcula métricas baseadas em períodos de 48h retroativos
-const calculateMetricsForDaysAgo = (
-  currentPipeline: number,
-  currentProjects: number,
-  daysAgo: number
-) => {
-  // Quantos períodos de 48h cabem em "daysAgo" dias
-  const periodsAgo = Math.floor((daysAgo * 24) / INCREMENT_HOURS);
-  
-  // Valores anteriores (subtraindo o crescimento)
-  const pipelineValue = Math.max(0, currentPipeline - (periodsAgo * PIPELINE_INCREMENT));
-  const projectsCount = Math.max(1, currentProjects - (periodsAgo * PROJECTS_INCREMENT));
-  
-  return { pipelineValue, projectsCount };
-};
-
-// Gera dados do owner - CÁLCULO MATEMÁTICO REAL
+// Gera dados do owner - COMEÇA DE BAIXO E CRESCE PROGRESSIVAMENTE (como era antes)
 const generateOwnerData = (currentProjects = 32, currentPipelineValue = 38743) => {
   const data = [];
   const today = new Date();
+
+  // Começa mais baixo e cresce até o valor atual
+  const startValue = currentPipelineValue * OWNER_START_RATIO_30_DAYS;
+  const endValue = currentPipelineValue;
+  const totalGrowth = endValue - startValue;
+
+  // Projetos: começa com menos da metade e cresce
+  const startProjects = Math.max(8, Math.floor(currentProjects * 0.5));
+  const projectGrowth = currentProjects - startProjects;
+
+  // Seed para variação natural
+  const seed = 42;
 
   for (let i = 29; i >= 0; i--) {
     const date = new Date(today);
     date.setDate(date.getDate() - i);
 
-    // Calcula valores para esse dia baseado nos períodos de 48h
-    const { pipelineValue, projectsCount } = calculateMetricsForDaysAgo(
-      currentPipelineValue,
-      currentProjects,
-      i
-    );
-
-    // Pequena variação natural (±2%) para suavizar o gráfico
+    // Dia 0 = primeiro dia (29 dias atrás), Dia 29 = hoje
     const dayIndex = 29 - i;
-    const noise = Math.sin(dayIndex * 0.7) * 0.015;
-    const adjustedValue = Math.round(pipelineValue * (1 + noise));
+    const progress = dayIndex / 29;
+
+    // Curva que começa mais devagar e acelera
+    const baseProgress = Math.pow(progress, 1.3);
+
+    // Variações diárias naturais (pequenas oscilações)
+    const noise = Math.sin(dayIndex * 0.9 + seed) * 0.025;
+    const weekendEffect = (dayIndex % 7 === 0 || dayIndex % 7 === 6) ? -0.015 : 0.01;
+
+    const finalProgress = Math.min(1, Math.max(0, baseProgress + noise + weekendEffect));
+
+    const dayValue = startValue + (totalGrowth * finalProgress);
+    const dayProjects = Math.round(startProjects + (projectGrowth * baseProgress));
 
     data.push({
       date: date.toLocaleDateString('pt-BR', { day: '2-digit', month: '2-digit' }),
-      projetos: projectsCount,
-      valor: adjustedValue,
+      projetos: Math.max(startProjects, dayProjects),
+      valor: Math.round(dayValue),
     });
   }
 
@@ -188,25 +191,16 @@ export function GraficoEvolucao({
       };
     }
 
-    // Admin/Owner - cálculo matemático baseado em períodos de 48h
-    // 30 dias = 15 períodos de 48h
-    const periods30Days = Math.floor((30 * 24) / INCREMENT_HOURS); // 15 períodos
-    const periods7Days = Math.floor((7 * 24) / INCREMENT_HOURS);   // 3 períodos
+    // Admin/Owner - mantém os mesmos patamares de antes, ajustando proporcionalmente
+    // quando o pipeline (que só muda a cada 48h) muda.
+    const revenue30Days = Math.round(currentPipelineValue * OWNER_REVENUE_30_RATIO);
+    const revenue7Days = Math.round(currentPipelineValue * OWNER_REVENUE_7_RATIO);
 
-    const revenue30Days = periods30Days * PIPELINE_INCREMENT; // 15 × 2350 = 35.250
-    const revenue7Days = periods7Days * PIPELINE_INCREMENT;   // 3 × 2350 = 7.050
+    const pipeline30DaysAgo = Math.max(1, currentPipelineValue - revenue30Days);
+    const pipeline7DaysAgo = Math.max(1, currentPipelineValue - revenue7Days);
 
-    // Valor inicial 30 dias atrás
-    const pipeline30DaysAgo = currentPipelineValue - revenue30Days;
-    const pipeline7DaysAgo = currentPipelineValue - revenue7Days;
-
-    // Porcentagem de crescimento
-    const growth30Days = pipeline30DaysAgo > 0 
-      ? Math.round((revenue30Days / pipeline30DaysAgo) * 100)
-      : 0;
-    const growth7Days = pipeline7DaysAgo > 0
-      ? Math.round((revenue7Days / pipeline7DaysAgo) * 100)
-      : 0;
+    const growth30Days = Math.round((revenue30Days / pipeline30DaysAgo) * 100);
+    const growth7Days = Math.round((revenue7Days / pipeline7DaysAgo) * 100);
 
     return {
       revenue30Days,
