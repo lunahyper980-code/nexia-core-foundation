@@ -49,39 +49,70 @@ serve(async (req) => {
 
     console.log('Generating process organization for:', organizationData.businessType);
 
-    const prompt = `Você é um consultor de processos para PMEs brasileiras.
+    const prompt = `Você é um consultor de processos para pequenos negócios brasileiros, especializado em criar planos práticos e executáveis.
 
 NEGÓCIO: ${organizationData.businessType}
 EQUIPE: ${organizationData.teamSize}
-CANAIS: ${organizationData.contactChannels}
+CANAIS DE ATENDIMENTO: ${organizationData.contactChannels}
 ONDE PERDE TEMPO: ${organizationData.timeWasteAreas}
-PROBLEMA INTERNO: ${organizationData.mainInternalProblem}
+PRINCIPAL PROBLEMA: ${organizationData.mainInternalProblem}
 OBJETIVO: ${organizationData.organizationGoal}
 
-Gere organização de processos usando separadores ###:
+Crie um PLANO PRÁTICO DE ORGANIZAÇÃO usando linguagem simples e frases curtas.
+Conecte processos com melhoria no atendimento e vendas.
+Evite textos longos - seja objetivo e direto.
 
-###VISAO_GERAL###
-3-4 parágrafos sobre operação ideal.
+Retorne JSON válido com esta estrutura exata:
+{
+  "objetivo_organizacao": "2-3 frases explicando o que essa organização vai melhorar (atendimento, vendas, menos erros).",
+  
+  "gargalos_atuais": [
+    "Problema operacional 1 (frase curta)",
+    "Problema operacional 2 (frase curta)",
+    "Problema operacional 3 (frase curta)"
+  ],
+  
+  "fluxo_atendimento": [
+    {"etapa": 1, "titulo": "Título curto", "descricao": "O que fazer nesta etapa (1-2 frases)"},
+    {"etapa": 2, "titulo": "Título curto", "descricao": "O que fazer nesta etapa (1-2 frases)"},
+    {"etapa": 3, "titulo": "Título curto", "descricao": "O que fazer nesta etapa (1-2 frases)"},
+    {"etapa": 4, "titulo": "Título curto", "descricao": "O que fazer nesta etapa (1-2 frases)"},
+    {"etapa": 5, "titulo": "Título curto", "descricao": "O que fazer nesta etapa (1-2 frases)"}
+  ],
+  
+  "papeis_responsabilidades": [
+    {"funcao": "Quem atende", "responsavel": "Nome do papel", "descricao": "1 parágrafo curto sobre o que faz"},
+    {"funcao": "Quem separa/prepara", "responsavel": "Nome do papel", "descricao": "1 parágrafo curto sobre o que faz"},
+    {"funcao": "Quem apoia", "responsavel": "Nome do papel", "descricao": "1 parágrafo curto sobre o que faz"}
+  ],
+  
+  "rotina_essencial": {
+    "inicio_dia": ["Ação 1", "Ação 2", "Ação 3"],
+    "durante_dia": ["Ação 1", "Ação 2", "Ação 3"],
+    "final_dia": ["Ação 1", "Ação 2", "Ação 3"]
+  },
+  
+  "checklist_organizacao": [
+    "Ação prática 1",
+    "Ação prática 2",
+    "Ação prática 3",
+    "Ação prática 4",
+    "Ação prática 5",
+    "Ação prática 6"
+  ],
+  
+  "impacto_esperado": {
+    "atendimento": "O que melhora no atendimento (1-2 frases)",
+    "vendas": "O que melhora nas vendas (1-2 frases)",
+    "erros": "O que reduz em erros ou retrabalho (1-2 frases)"
+  }
+}
 
-###PROBLEMAS_PROCESSO###
-Problemas identificados e soluções.
-
-###FLUXO_IDEAL###
-Fluxo de atendimento do contato à entrega.
-
-###ORGANIZACAO_INTERNA###
-Quem faz o quê na equipe.
-
-###ROTINA_DIARIA###
-Manhã/Durante/Final do expediente.
-
-###ROTINA_SEMANAL###
-Início/Meio/Final da semana.
-
-###PONTOS_ATENCAO###
-Recomendações finais.
-
-REGRAS: Texto corrido profissional, sem JSON, sem bullets, sem markdown.`;
+REGRAS:
+- Linguagem simples, sem termos técnicos
+- Frases curtas e diretas
+- Foco em ações práticas
+- O plano deve ser aplicável imediatamente por qualquer pequeno negócio`;
 
     const response = await fetch(`${GEMINI_API_URL}?key=${GEMINI_API_KEY}`, {
       method: 'POST',
@@ -113,28 +144,40 @@ REGRAS: Texto corrido profissional, sem JSON, sem bullets, sem markdown.`;
       throw new Error('No content returned from AI');
     }
 
-    const parseSection = (text: string, sectionName: string): string => {
-      const regex = new RegExp(`###${sectionName}###([\\s\\S]*?)(?=###|$)`, 'i');
-      const match = text.match(regex);
-      if (match && match[1]) {
-        return match[1].trim()
-          .replace(/^\*\*.*?\*\*\s*/gm, '')
-          .replace(/^\*\s*/gm, '')
-          .replace(/^-\s*/gm, '')
-          .replace(/\[|\]|\{|\}/g, '')
-          .trim();
+    let result;
+    try {
+      const jsonMatch = content.match(/\{[\s\S]*\}/);
+      if (jsonMatch) {
+        result = JSON.parse(jsonMatch[0]);
+      } else {
+        throw new Error('No JSON found');
       }
-      return '';
-    };
+    } catch (parseError) {
+      console.error('JSON parse error:', parseError);
+      // Fallback to old format for backwards compatibility
+      const parseSection = (text: string, sectionName: string): string => {
+        const regex = new RegExp(`###${sectionName}###([\\s\\S]*?)(?=###|$)`, 'i');
+        const match = text.match(regex);
+        if (match && match[1]) {
+          return match[1].trim()
+            .replace(/^\*\*.*?\*\*\s*/gm, '')
+            .replace(/^\*\s*/gm, '')
+            .replace(/^-\s*/gm, '')
+            .replace(/\[|\]|\{|\}/g, '')
+            .trim();
+        }
+        return '';
+      };
 
-    const result = {
-      operationOverview: parseSection(content, 'VISAO_GERAL') || 'Conteúdo em processamento.',
-      processProblems: parseSection(content, 'PROBLEMAS_PROCESSO') || 'Conteúdo em processamento.',
-      idealFlow: parseSection(content, 'FLUXO_IDEAL') || 'Conteúdo em processamento.',
-      internalOrganization: parseSection(content, 'ORGANIZACAO_INTERNA') || 'Conteúdo em processamento.',
-      recommendedRoutine: (parseSection(content, 'ROTINA_DIARIA') + '\n\n' + parseSection(content, 'ROTINA_SEMANAL')).trim() || 'Conteúdo em processamento.',
-      attentionPoints: parseSection(content, 'PONTOS_ATENCAO') || 'Conteúdo em processamento.'
-    };
+      result = {
+        operationOverview: parseSection(content, 'VISAO_GERAL') || 'Conteúdo em processamento.',
+        processProblems: parseSection(content, 'PROBLEMAS_PROCESSO') || 'Conteúdo em processamento.',
+        idealFlow: parseSection(content, 'FLUXO_IDEAL') || 'Conteúdo em processamento.',
+        internalOrganization: parseSection(content, 'ORGANIZACAO_INTERNA') || 'Conteúdo em processamento.',
+        recommendedRoutine: (parseSection(content, 'ROTINA_DIARIA') + '\n\n' + parseSection(content, 'ROTINA_SEMANAL')).trim() || 'Conteúdo em processamento.',
+        attentionPoints: parseSection(content, 'PONTOS_ATENCAO') || 'Conteúdo em processamento.'
+      };
+    }
 
     // Cache result
     cache.set(cacheKey, { data: result, timestamp: Date.now() });
