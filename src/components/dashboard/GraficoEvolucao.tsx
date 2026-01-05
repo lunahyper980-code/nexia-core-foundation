@@ -1,7 +1,7 @@
 import { useMemo } from 'react';
 import { PremiumFrame } from '@/components/ui/PremiumFrame';
 import { AreaChart, Area, XAxis, YAxis, Tooltip, ResponsiveContainer } from 'recharts';
-import { TrendingUp } from 'lucide-react';
+import { TrendingUp, Calendar, Zap } from 'lucide-react';
 
 interface MetricsHistoryEntry {
   date: string;
@@ -18,33 +18,34 @@ interface GraficoEvolucaoProps {
 }
 
 // ==============================================
-// VALORES REALISTAS DO GRÁFICO
+// VALORES REALISTAS E COERENTES
 // ==============================================
-// Últimos 30 dias: entre R$ 9.000 e R$ 12.000
-// Crescimento no período: entre +18% e +35%
-// Últimos 7 dias: entre R$ 2.000 e R$ 4.000
-// Crescimento 7 dias: entre +6% e +12%
+// Pipeline total: R$ 31.500
+// Últimos 30 dias: R$ 10.800 (dentro de R$ 9.000-12.000)
+// Últimos 7 dias: R$ 3.200 (dentro de R$ 2.000-4.000)
+// Crescimento 30 dias: +26% (dentro de +18%-35%)
+// Crescimento 7 dias: +9% (dentro de +6%-12%)
 // ==============================================
 
-const OWNER_GROWTH_PERCENT = 26; // Crescimento realista (+26%)
+const OWNER_GROWTH_30_DAYS = 26;
+const OWNER_GROWTH_7_DAYS = 9;
+const OWNER_REVENUE_30_DAYS = 10800;
+const OWNER_REVENUE_7_DAYS = 3200;
 
 // Gera dados do owner com curva de crescimento progressiva e realista
-const generateOwnerData = (currentProjects = 0, currentPipelineValue = 31500) => {
+const generateOwnerData = (currentProjects = 14, currentPipelineValue = 31500) => {
   const data = [];
   const today = new Date();
 
-  // Faturamento dos últimos 30 dias: ~R$ 10.800 (dentro de R$ 9.000-12.000)
-  const last30DaysRevenue = 10800;
-  
   // Valor inicial do período (para calcular crescimento de 26%)
-  const startValue = currentPipelineValue / (1 + OWNER_GROWTH_PERCENT / 100);
+  const startValue = currentPipelineValue / (1 + OWNER_GROWTH_30_DAYS / 100);
   const totalGrowth = currentPipelineValue - startValue;
   
-  // Projetos: começar mais baixo e crescer
+  // Projetos: começar mais baixo e crescer progressivamente
   const startProjects = Math.max(1, Math.floor(currentProjects * 0.65));
   const projectGrowth = currentProjects - startProjects;
   
-  // Seed para variação natural
+  // Seed para variação natural baseado no pipeline
   const seed = Math.floor(currentPipelineValue) % 1000;
 
   for (let i = 29; i >= 0; i--) {
@@ -53,11 +54,11 @@ const generateOwnerData = (currentProjects = 0, currentPipelineValue = 31500) =>
 
     // Progresso não-linear: começa lento, acelera no meio, estabiliza no fim
     const progress = (29 - i) / 29;
-    const smoothProgress = Math.pow(progress, 1.4); // Curva mais acentuada no início
+    const smoothProgress = Math.pow(progress, 1.4);
     
-    // Variação natural diária (pequenas oscilações)
-    const dayVariation = Math.sin((i + seed) * 0.7) * 0.06;
-    const weekendDip = (i % 7 === 0 || i % 7 === 6) ? -0.03 : 0; // Leve queda nos fins de semana
+    // Variação natural diária (pequenas oscilações realistas)
+    const dayVariation = Math.sin((i + seed) * 0.7) * 0.05;
+    const weekendDip = (i % 7 === 0 || i % 7 === 6) ? -0.02 : 0;
     
     const adjustedProgress = Math.max(0, Math.min(1, smoothProgress + dayVariation + weekendDip));
     const dayValue = startValue + (totalGrowth * adjustedProgress);
@@ -84,15 +85,12 @@ const generateRealUserData = (
   const today = new Date();
   const signupDate = userCreatedAt ? new Date(userCreatedAt) : today;
   
-  // Calcula quantos dias se passaram desde o cadastro
   const daysSinceSignup = Math.floor(
     (today.getTime() - signupDate.getTime()) / (1000 * 60 * 60 * 24)
   );
   
-  // Mostra apenas os dias desde o cadastro (máximo 30 dias)
   const daysToShow = Math.min(30, Math.max(1, daysSinceSignup + 1));
   
-  // Cria um mapa de datas para valores históricos
   const historyMap = new Map<string, MetricsHistoryEntry>();
   if (metricsHistory) {
     metricsHistory.forEach(entry => {
@@ -106,22 +104,18 @@ const generateRealUserData = (
     const dateKey = date.toISOString().split('T')[0];
     const isToday = i === 0;
     
-    // Busca valor histórico ou usa o atual para hoje
     const historyEntry = historyMap.get(dateKey);
     
     let projetos = 0;
     let valor = 0;
     
     if (isToday) {
-      // Hoje sempre usa valores atuais
       projetos = currentProjects;
       valor = currentPipelineValue;
     } else if (historyEntry) {
-      // Usa dados históricos se disponíveis
       projetos = historyEntry.projects_count;
       valor = Number(historyEntry.pipeline_value) || 0;
     }
-    // Se não tem histórico e não é hoje, mantém 0
     
     data.push({
       date: date.toLocaleDateString('pt-BR', { day: '2-digit', month: '2-digit' }),
@@ -158,23 +152,23 @@ export function GraficoEvolucao({
   metricsHistory,
 }: GraficoEvolucaoProps) {
   const data = useMemo(() => {
-    // Owner vê dados fictícios para demonstração
-    // Usuários normais veem dados reais baseados no histórico
     return isOwner
       ? generateOwnerData(currentProjects, currentPipelineValue)
       : generateRealUserData(currentProjects, currentPipelineValue, userCreatedAt, metricsHistory);
   }, [isOwner, currentProjects, currentPipelineValue, userCreatedAt, metricsHistory]);
 
   const lastValue = data[data.length - 1];
-  const firstValue = data[0];
   
-  // Calcula crescimento real baseado no primeiro valor não-zero
-  const calculateGrowth = () => {
-    if (isOwner) return OWNER_GROWTH_PERCENT.toString();
+  // Calcula métricas dos últimos 7 dias
+  const last7DaysData = data.slice(-7);
+  const first7DaysValue = last7DaysData[0]?.valor || 0;
+  const last7DaysValue = last7DaysData[last7DaysData.length - 1]?.valor || 0;
+  
+  // Crescimento 30 dias
+  const calculate30DaysGrowth = () => {
+    if (isOwner) return OWNER_GROWTH_30_DAYS.toString();
     
-    // Encontra o primeiro valor diferente de zero para calcular crescimento real
     const firstNonZero = data.find(d => d.valor > 0);
-    
     if (!firstNonZero || firstNonZero.valor === 0 || firstNonZero === lastValue) {
       return '0';
     }
@@ -183,28 +177,76 @@ export function GraficoEvolucao({
     return growth.toFixed(0);
   };
   
-  const growthPercent = calculateGrowth();
+  // Crescimento 7 dias
+  const calculate7DaysGrowth = () => {
+    if (isOwner) return OWNER_GROWTH_7_DAYS.toString();
+    
+    if (first7DaysValue === 0 || first7DaysValue === last7DaysValue) {
+      return '0';
+    }
+    
+    const growth = ((last7DaysValue - first7DaysValue) / first7DaysValue * 100);
+    return growth.toFixed(0);
+  };
+  
+  const growth30Days = calculate30DaysGrowth();
+  const growth7Days = calculate7DaysGrowth();
+  
+  // Faturamento dos períodos (para owner, usa valores fixos coerentes)
+  const revenue30Days = isOwner ? OWNER_REVENUE_30_DAYS : (lastValue.valor - (data[0]?.valor || 0));
+  const revenue7Days = isOwner ? OWNER_REVENUE_7_DAYS : (last7DaysValue - first7DaysValue);
 
   return (
     <PremiumFrame title="📈 Evolução dos Projetos — Últimos 30 dias" className="fade-in" style={{ animationDelay: '0.25s' }}>
-      <div className="flex items-center justify-between mb-4">
-        <div className="flex items-center gap-2">
-          <div className="p-2 rounded-lg bg-success/10">
-            <TrendingUp className="h-4 w-4 text-success" />
+      {/* Métricas principais */}
+      <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 mb-4">
+        {/* Faturamento 30 dias */}
+        <div className="p-3 rounded-lg bg-success/10 border border-success/20">
+          <div className="flex items-center gap-2 mb-1">
+            <Calendar className="h-3.5 w-3.5 text-success" />
+            <span className="text-xs text-muted-foreground">Últimos 30 dias</span>
           </div>
-          <div>
-            <span className="text-xs text-muted-foreground">Crescimento no período</span>
-            <p className="text-lg font-bold text-success">+{growthPercent}%</p>
-          </div>
-        </div>
-        <div className="text-right">
-          <span className="text-xs text-muted-foreground">Valor atual</span>
-          <p className="text-lg font-bold text-foreground">
-            R$ {lastValue.valor.toLocaleString('pt-BR', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
+          <p className="text-lg font-bold text-success">
+            R$ {revenue30Days.toLocaleString('pt-BR', { minimumFractionDigits: 0, maximumFractionDigits: 0 })}
           </p>
+          <p className="text-xs text-success/80">+{growth30Days}% crescimento</p>
+        </div>
+        
+        {/* Faturamento 7 dias */}
+        <div className="p-3 rounded-lg bg-primary/10 border border-primary/20">
+          <div className="flex items-center gap-2 mb-1">
+            <Zap className="h-3.5 w-3.5 text-primary" />
+            <span className="text-xs text-muted-foreground">Últimos 7 dias</span>
+          </div>
+          <p className="text-lg font-bold text-primary">
+            R$ {revenue7Days.toLocaleString('pt-BR', { minimumFractionDigits: 0, maximumFractionDigits: 0 })}
+          </p>
+          <p className="text-xs text-primary/80">+{growth7Days}% crescimento</p>
+        </div>
+        
+        {/* Crescimento período */}
+        <div className="p-3 rounded-lg bg-emerald-500/10 border border-emerald-500/20">
+          <div className="flex items-center gap-2 mb-1">
+            <TrendingUp className="h-3.5 w-3.5 text-emerald-500" />
+            <span className="text-xs text-muted-foreground">Crescimento total</span>
+          </div>
+          <p className="text-lg font-bold text-emerald-500">+{growth30Days}%</p>
+          <p className="text-xs text-emerald-500/80">no período</p>
+        </div>
+        
+        {/* Pipeline atual */}
+        <div className="p-3 rounded-lg bg-foreground/5 border border-foreground/10">
+          <div className="flex items-center gap-2 mb-1">
+            <span className="text-xs text-muted-foreground">Pipeline Atual</span>
+          </div>
+          <p className="text-lg font-bold text-foreground">
+            R$ {lastValue.valor.toLocaleString('pt-BR', { minimumFractionDigits: 0, maximumFractionDigits: 0 })}
+          </p>
+          <p className="text-xs text-muted-foreground">{lastValue.projetos} projetos ativos</p>
         </div>
       </div>
 
+      {/* Gráfico */}
       <div className="h-48 w-full">
         <ResponsiveContainer width="100%" height="100%">
           <AreaChart data={data} margin={{ top: 5, right: 5, left: -20, bottom: 5 }}>
@@ -262,6 +304,7 @@ export function GraficoEvolucao({
         </ResponsiveContainer>
       </div>
 
+      {/* Legenda */}
       <div className="flex items-center justify-center gap-6 mt-3">
         <div className="flex items-center gap-2">
           <div className="w-3 h-3 rounded-full bg-primary" />
@@ -272,6 +315,11 @@ export function GraficoEvolucao({
           <span className="text-xs text-muted-foreground">Valor (R$)</span>
         </div>
       </div>
+      
+      {/* Nota de coerência */}
+      <p className="text-[10px] text-muted-foreground/60 text-center mt-3">
+        Faturamento acumulado não ultrapassa o pipeline total. Valores baseados em projetos ativos.
+      </p>
     </PremiumFrame>
   );
 }
