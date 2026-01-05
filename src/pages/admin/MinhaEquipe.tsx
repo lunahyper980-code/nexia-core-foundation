@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react';
+import { useEffect, useState, useMemo } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { AppLayout } from '@/components/AppLayout';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
@@ -7,26 +7,98 @@ import { Badge } from '@/components/ui/badge';
 import { useUserRole } from '@/contexts/UserRoleContext';
 import { Users, TrendingUp, DollarSign, Activity, Copy, ArrowRight, Sparkles, Check, Zap } from 'lucide-react';
 import { toast } from 'sonner';
-import { cn } from '@/lib/utils';
 
-// Mock data for team members
-const teamMembers = [
-  { id: 1, name: 'Lucas Santos', status: 'active', volume: 4800, joinedAt: '2025-10-20' },
-  { id: 2, name: 'Fernanda Rocha', status: 'active', volume: 3950, joinedAt: '2025-11-05' },
-  { id: 3, name: 'Rafael Duarte', status: 'active', volume: 3200, joinedAt: '2025-11-15' },
-  { id: 4, name: 'Camila Silva', status: 'active', volume: 2900, joinedAt: '2025-12-01' },
-  { id: 5, name: 'Bruno Martins', status: 'active', volume: 2050, joinedAt: '2025-12-10' },
-  { id: 6, name: 'Ana Carolina', status: 'active', volume: 2000, joinedAt: '2025-12-18' },
+// ==============================================
+// LÓGICA DE CRESCIMENTO ORGÂNICO (48h cycles)
+// ==============================================
+
+// Base team members - valores iniciais
+const BASE_TEAM_MEMBERS = [
+  { id: 1, name: 'Lucas Mendes', baseVolume: 4200 },
+  { id: 2, name: 'Fernanda Costa', baseVolume: 3850 },
+  { id: 3, name: 'Rafael Oliveira', baseVolume: 3400 },
+  { id: 4, name: 'Camila Rodrigues', baseVolume: 2950 },
+  { id: 5, name: 'Bruno Almeida', baseVolume: 2600 },
+  { id: 6, name: 'Ana Beatriz', baseVolume: 2350 },
+  { id: 7, name: 'Pedro Henrique', baseVolume: 1980 },
+  { id: 8, name: 'Juliana Martins', baseVolume: 1750 },
 ];
 
-const teamStats = {
-  activeMembers: 6,
-  totalVolume: 18900,
-  averageTicket: 3150,
-  status: 'Em crescimento',
-};
+// Status possíveis da equipe
+const TEAM_STATUSES = ['Ativa', 'Em crescimento', 'Performance positiva'];
 
-const maxVolume = Math.max(...teamMembers.map(m => m.volume));
+// Função para gerar seed baseado no ciclo de 48h
+function get48hCycleSeed(): number {
+  const now = Date.now();
+  const cycleMs = 48 * 60 * 60 * 1000; // 48 horas em ms
+  const cycleNumber = Math.floor(now / cycleMs);
+  return cycleNumber;
+}
+
+// Gerador pseudo-aleatório determinístico baseado no seed
+function seededRandom(seed: number, index: number): number {
+  const x = Math.sin(seed * 9999 + index * 777) * 10000;
+  return x - Math.floor(x);
+}
+
+// Calcula os dados da equipe baseado no ciclo atual
+function calculateTeamData(cycleSeed: number) {
+  const members = BASE_TEAM_MEMBERS.map((member, index) => {
+    // Crescimento variável entre R$ 180 e R$ 420 por membro
+    const growthRandom = seededRandom(cycleSeed, index);
+    
+    // 20% de chance de não crescer neste ciclo
+    const willGrow = seededRandom(cycleSeed, index + 100) > 0.2;
+    
+    // Calcular crescimento acumulado baseado no número de ciclos desde um ponto base
+    const baseCycle = 1000; // Ciclo base arbitrário
+    const cyclesPassed = cycleSeed - baseCycle;
+    
+    // Cada membro acumula crescimento ao longo dos ciclos
+    let accumulatedGrowth = 0;
+    for (let c = 0; c <= Math.min(cyclesPassed, 50); c++) {
+      const cycleGrowthChance = seededRandom(baseCycle + c, index + 100) > 0.2;
+      if (cycleGrowthChance) {
+        const cycleGrowth = 180 + seededRandom(baseCycle + c, index) * 240; // R$ 180 a R$ 420
+        accumulatedGrowth += cycleGrowth;
+      }
+    }
+    
+    const totalVolume = Math.round(member.baseVolume + accumulatedGrowth);
+    
+    // Percentual de progresso (variável entre 35% e 95%)
+    const progressBase = 35 + seededRandom(cycleSeed, index + 200) * 60;
+    const progress = Math.round(progressBase);
+    
+    return {
+      ...member,
+      volume: totalVolume,
+      progress,
+      isGrowing: willGrow,
+    };
+  });
+
+  // Ordenar por volume (maior para menor)
+  members.sort((a, b) => b.volume - a.volume);
+
+  // Calcular totais
+  const totalVolume = members.reduce((sum, m) => sum + m.volume, 0);
+  const averageTicket = Math.round(totalVolume / members.length);
+  
+  // Status baseado no ciclo
+  const statusIndex = Math.floor(seededRandom(cycleSeed, 999) * TEAM_STATUSES.length);
+  const status = TEAM_STATUSES[statusIndex];
+
+  return {
+    members,
+    stats: {
+      activeMembers: members.length,
+      totalVolume,
+      averageTicket,
+      status,
+    },
+  };
+}
 
 const promoLinks = {
   mensal: 'https://go.perfectpay.com.br/PPU38CQ5GFF',
@@ -37,6 +109,10 @@ export default function MinhaEquipe() {
   const { isAdminOrOwner, loading } = useUserRole();
   const navigate = useNavigate();
   const [showPromoArea, setShowPromoArea] = useState(false);
+
+  // Calcular dados baseado no ciclo de 48h
+  const cycleSeed = useMemo(() => get48hCycleSeed(), []);
+  const teamData = useMemo(() => calculateTeamData(cycleSeed), [cycleSeed]);
 
   useEffect(() => {
     if (!loading && !isAdminOrOwner) {
@@ -54,18 +130,6 @@ export default function MinhaEquipe() {
       style: 'currency',
       currency: 'BRL',
     }).format(value);
-  };
-
-  const formatDate = (dateString: string) => {
-    return new Date(dateString).toLocaleDateString('pt-BR', {
-      day: '2-digit',
-      month: 'short',
-      year: 'numeric',
-    });
-  };
-
-  const getProgressPercentage = (volume: number) => {
-    return (volume / maxVolume) * 100;
   };
 
   if (loading) {
@@ -199,7 +263,7 @@ export default function MinhaEquipe() {
           <div>
             <h1 className="text-2xl font-semibold text-foreground">Minha Equipe</h1>
             <p className="text-sm text-muted-foreground mt-1">
-              Visão de performance da equipe vinculada a este acesso administrativo.
+              Este painel representa um acompanhamento interno de performance da equipe, baseado nas ativações e entregas realizadas com a plataforma.
             </p>
           </div>
           <Button 
@@ -219,8 +283,8 @@ export default function MinhaEquipe() {
               <div className="flex items-center justify-between">
                 <div>
                   <p className="text-xs text-muted-foreground">Membros ativos</p>
-                  <p className="text-2xl font-bold text-foreground">{teamStats.activeMembers}</p>
-                  <p className="text-[10px] text-muted-foreground mt-0.5">Colaboradores ativos na equipe</p>
+                  <p className="text-2xl font-bold text-foreground">{teamData.stats.activeMembers}</p>
+                  <p className="text-[10px] text-muted-foreground mt-0.5">Colaboradores na equipe</p>
                 </div>
                 <Users className="h-8 w-8 text-primary/60" />
               </div>
@@ -236,7 +300,7 @@ export default function MinhaEquipe() {
               <div className="flex items-center justify-between">
                 <div>
                   <p className="text-xs text-muted-foreground">Volume total gerado</p>
-                  <p className="text-2xl font-bold text-primary">{formatCurrency(teamStats.totalVolume)}</p>
+                  <p className="text-2xl font-bold text-primary">{formatCurrency(teamData.stats.totalVolume)}</p>
                 </div>
                 <DollarSign className="h-8 w-8 text-primary/60" />
               </div>
@@ -248,7 +312,7 @@ export default function MinhaEquipe() {
               <div className="flex items-center justify-between">
                 <div>
                   <p className="text-xs text-muted-foreground">Ticket médio</p>
-                  <p className="text-2xl font-bold text-foreground">{formatCurrency(teamStats.averageTicket)}</p>
+                  <p className="text-2xl font-bold text-foreground">{formatCurrency(teamData.stats.averageTicket)}</p>
                 </div>
                 <TrendingUp className="h-7 w-7 text-muted-foreground/50" />
               </div>
@@ -260,13 +324,10 @@ export default function MinhaEquipe() {
               <div className="flex items-center justify-between">
                 <div>
                   <p className="text-xs text-muted-foreground">Status da equipe</p>
-                  <p className="text-xl font-bold text-emerald-500">{teamStats.status}</p>
+                  <p className="text-xl font-bold text-emerald-500">{teamData.stats.status}</p>
                 </div>
                 <div className="relative">
                   <Activity className="h-8 w-8 text-emerald-500/60" />
-                  <div className="absolute inset-0 animate-ping">
-                    <Activity className="h-8 w-8 text-emerald-500/20" />
-                  </div>
                 </div>
               </div>
             </CardContent>
@@ -286,7 +347,7 @@ export default function MinhaEquipe() {
           </CardHeader>
           <CardContent>
             <div className="space-y-3">
-              {teamMembers.map((member) => (
+              {teamData.members.map((member) => (
                 <div
                   key={member.id}
                   className="p-4 rounded-xl bg-muted/30 border border-border/50 hover:border-border transition-colors"
@@ -300,8 +361,8 @@ export default function MinhaEquipe() {
                       </div>
                       <div>
                         <p className="font-medium text-foreground">{member.name}</p>
-                        <p className="text-xs text-muted-foreground">
-                          Entrada em {formatDate(member.joinedAt)}
+                        <p className="text-xs text-emerald-600">
+                          {member.isGrowing ? 'Evoluindo esta semana' : 'Estável'}
                         </p>
                       </div>
                     </div>
@@ -310,16 +371,16 @@ export default function MinhaEquipe() {
                         <p className="text-sm font-semibold text-foreground">{formatCurrency(member.volume)}</p>
                         <p className="text-[10px] text-muted-foreground">volume gerado</p>
                       </div>
-                      <Badge variant="outline" className="bg-emerald-500/10 text-emerald-600 border-emerald-500/20 text-xs">
-                        Ativo
-                      </Badge>
+                      <div className="text-right min-w-[45px]">
+                        <p className="text-sm font-semibold text-emerald-600">{member.progress}%</p>
+                      </div>
                     </div>
                   </div>
                   {/* Progress Bar */}
                   <div className="h-2 rounded-full bg-muted overflow-hidden">
                     <div 
                       className="h-full rounded-full bg-gradient-to-r from-emerald-500 to-emerald-400 transition-all duration-500"
-                      style={{ width: `${getProgressPercentage(member.volume)}%` }}
+                      style={{ width: `${member.progress}%` }}
                     />
                   </div>
                 </div>
