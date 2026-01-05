@@ -37,6 +37,10 @@ import templateStudioEstetica from '@/assets/template-studio-estetica.png';
 import templateCorretorImobiliaria from '@/assets/template-corretor-imobiliaria.png';
 import templateLojaCosmeticos from '@/assets/template-loja-cosmeticos.png';
 import templateEscolaCurso from '@/assets/template-escola-curso.png';
+import templateRestauranteBar from '@/assets/template-restaurante-bar.png';
+import templatePrestadorServicos from '@/assets/template-prestador-servicos.png';
+import templateEscritorioProfissional from '@/assets/template-escritorio-profissional.png';
+import templateEvento from '@/assets/template-evento.png';
 
 type SolutionType = 'app' | 'site' | null;
 
@@ -246,7 +250,7 @@ const templates: Template[] = [
     id: 'site-restaurante-bar',
     name: 'Site para Restaurante / Bar',
     description: 'Cardápio, localização e reservas para restaurantes e bares',
-    image: templateCafeteria,
+    image: templateRestauranteBar,
     type: 'site',
   },
   {
@@ -260,7 +264,7 @@ const templates: Template[] = [
     id: 'site-prestador-servicos',
     name: 'Site para Prestador de Serviços',
     description: 'Apresentação profissional para prestadores de serviços autônomos',
-    image: templateMecanica,
+    image: templatePrestadorServicos,
     type: 'site',
   },
   {
@@ -274,14 +278,14 @@ const templates: Template[] = [
     id: 'site-escritorio-profissional',
     name: 'Site para Escritório Profissional',
     description: 'Site institucional para escritórios de advocacia, contabilidade e afins',
-    image: templateSiteInstitucional,
+    image: templateEscritorioProfissional,
     type: 'site',
   },
   {
     id: 'site-evento',
     name: 'Site para Evento',
     description: 'Página para divulgação de eventos, conferências e workshops',
-    image: templatePaginaLancamento,
+    image: templateEvento,
     type: 'site',
   },
 ];
