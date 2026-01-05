@@ -6,6 +6,7 @@ import { useNavigate } from 'react-router-dom';
 import { AppLayout } from '@/components/AppLayout';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { ProjectsList } from '@/components/hyperbuild/ProjectsList';
+import { RequestCreditsSection } from '@/components/lovable-credits/RequestCreditsSection';
 import solutionTemplate from '@/assets/solution-template.png';
 import solutionScratch from '@/assets/solution-scratch.png';
 
@@ -158,6 +159,9 @@ export default function CriarSiteHub() {
                 Ver projetos criados
               </Button>
             </div>
+
+            {/* Request Credits Section */}
+            <RequestCreditsSection />
           </TabsContent>
 
           {/* Tab: Projetos Criados */}
