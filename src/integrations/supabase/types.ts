@@ -1314,6 +1314,8 @@ export type Database = {
           access_reason: string | null
           access_status: string
           access_updated_at: string | null
+          approved_at: string | null
+          approved_by: string | null
           avatar_url: string | null
           created_at: string
           device_id: string | null
@@ -1326,6 +1328,8 @@ export type Database = {
           access_reason?: string | null
           access_status?: string
           access_updated_at?: string | null
+          approved_at?: string | null
+          approved_by?: string | null
           avatar_url?: string | null
           created_at?: string
           device_id?: string | null
@@ -1338,6 +1342,8 @@ export type Database = {
           access_reason?: string | null
           access_status?: string
           access_updated_at?: string | null
+          approved_at?: string | null
+          approved_by?: string | null
           avatar_url?: string | null
           created_at?: string
           device_id?: string | null
