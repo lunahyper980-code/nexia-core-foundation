@@ -7,9 +7,10 @@ import { AuthProvider } from "@/contexts/AuthContext";
 import { WorkspaceProvider } from "@/contexts/WorkspaceContext";
 import { SidebarProvider } from "@/contexts/SidebarContext";
 import { UserRoleProvider } from "@/contexts/UserRoleContext";
+import { DemoModeProvider } from "@/contexts/DemoModeContext";
 import { ProtectedRoute } from "@/components/ProtectedRoute";
 import { PWAProvider } from "@/components/pwa";
-
+import { DemoModeBadge } from "@/components/DemoModeBadge";
 import Login from "./pages/Login";
 import Cadastro from "./pages/Cadastro";
 import Dashboard from "./pages/Dashboard";
@@ -97,8 +98,10 @@ const App = () => (
         <AuthProvider>
           <WorkspaceProvider>
             <UserRoleProvider>
+              <DemoModeProvider>
               <SidebarProvider>
                 <PWAProvider>
+                <DemoModeBadge />
                 <Routes>
                   <Route path="/" element={<Navigate to="/dashboard" replace />} />
                   <Route path="/login" element={<Login />} />
@@ -186,6 +189,7 @@ const App = () => (
                 </Routes>
                 </PWAProvider>
               </SidebarProvider>
+              </DemoModeProvider>
             </UserRoleProvider>
           </WorkspaceProvider>
         </AuthProvider>
