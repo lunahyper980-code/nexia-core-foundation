@@ -3,8 +3,69 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } f
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import { MessageSquare, DollarSign, CheckCircle, AlertTriangle, Target, Zap, Copy, Check, BookOpen, Wrench } from 'lucide-react';
+import { MessageSquare, DollarSign, CheckCircle, AlertTriangle, Target, Zap, Copy, Check, BookOpen, Wrench, Package, Layers, ArrowRight } from 'lucide-react';
 import { toast } from 'sonner';
+
+// ==============================================
+// PACOTES ESTRATÉGICOS
+// ==============================================
+
+interface StrategicPackage {
+  id: string;
+  name: string;
+  description: string;
+  includes: string[];
+  solutionIds: string[];
+  pricing: {
+    plan: { min: string; max: string };
+    execution: { min: string; max: string };
+  };
+}
+
+const strategicPackages: StrategicPackage[] = [
+  {
+    id: 'presenca-essencial',
+    name: 'Presença Digital Essencial',
+    description: 'Base profissional para começar no digital',
+    includes: ['Posicionamento Digital', 'Autoridade Digital'],
+    solutionIds: ['posicionamento', 'autoridade'],
+    pricing: {
+      plan: { min: 'R$ 1.200', max: 'R$ 1.800' },
+      execution: { min: 'R$ 3.000', max: 'R$ 4.500' },
+    },
+  },
+  {
+    id: 'presenca-conversao',
+    name: 'Presença + Conversão',
+    description: 'Atraia e converta clientes com estrutura',
+    includes: ['Posicionamento Digital', 'Autoridade Digital', 'Organização de Processos'],
+    solutionIds: ['posicionamento', 'autoridade', 'organizacao'],
+    pricing: {
+      plan: { min: 'R$ 2.000', max: 'R$ 2.800' },
+      execution: { min: 'R$ 4.500', max: 'R$ 6.500' },
+    },
+  },
+  {
+    id: 'negocio-completo',
+    name: 'Negócio Digital Completo',
+    description: 'Estrutura completa do zero',
+    includes: ['Posicionamento Digital', 'Autoridade Digital', 'Kit de Lançamento', 'Site ou App simples'],
+    solutionIds: ['posicionamento', 'autoridade', 'kit-lancamento', 'site'],
+    pricing: {
+      plan: { min: 'R$ 3.500', max: 'R$ 5.000' },
+      execution: { min: 'R$ 7.000', max: 'R$ 12.000' },
+    },
+  },
+];
+
+// Encontra pacotes que incluem uma solução específica
+const getPackagesForSolution = (solutionId: string): StrategicPackage[] => {
+  return strategicPackages.filter(pkg => pkg.solutionIds.includes(solutionId));
+};
+
+// ==============================================
+// COMMERCIAL DATA
+// ==============================================
 
 interface CommercialData {
   argument: {
@@ -236,6 +297,143 @@ const commercialContent: Record<string, CommercialData> = {
   }
 };
 
+// ==============================================
+// PACKAGES MODAL
+// ==============================================
+
+interface PackagesModalProps {
+  open: boolean;
+  onOpenChange: (open: boolean) => void;
+  highlightPackageId?: string;
+}
+
+export function PackagesModal({ open, onOpenChange, highlightPackageId }: PackagesModalProps) {
+  return (
+    <Dialog open={open} onOpenChange={onOpenChange}>
+      <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto">
+        <DialogHeader>
+          <DialogTitle className="flex items-center gap-2">
+            <Package className="h-5 w-5 text-primary" />
+            Pacotes Estratégicos
+          </DialogTitle>
+          <DialogDescription>
+            Combine soluções para acelerar resultados e aumentar o retorno do cliente
+          </DialogDescription>
+        </DialogHeader>
+
+        <p className="text-sm text-muted-foreground mt-2 p-3 rounded-lg bg-primary/5 border border-primary/10">
+          💡 Os pacotes combinam soluções estratégicas para acelerar resultados, reduzir retrabalho e aumentar o retorno do cliente.
+        </p>
+
+        <div className="space-y-4 mt-4">
+          {strategicPackages.map((pkg) => (
+            <div 
+              key={pkg.id} 
+              className={`p-4 rounded-xl border transition-all ${
+                highlightPackageId === pkg.id 
+                  ? 'border-primary bg-primary/5 ring-1 ring-primary/20' 
+                  : 'border-border hover:border-primary/30'
+              }`}
+            >
+              <div className="flex items-start justify-between mb-3">
+                <div>
+                  <h3 className="font-semibold text-foreground flex items-center gap-2">
+                    <Layers className="h-4 w-4 text-primary" />
+                    {pkg.name}
+                  </h3>
+                  <p className="text-sm text-muted-foreground mt-1">{pkg.description}</p>
+                </div>
+                {highlightPackageId === pkg.id && (
+                  <Badge className="bg-primary text-primary-foreground">Recomendado</Badge>
+                )}
+              </div>
+
+              <div className="mb-3">
+                <p className="text-xs font-medium text-muted-foreground mb-2">Inclui:</p>
+                <div className="flex flex-wrap gap-1.5">
+                  {pkg.includes.map((item, i) => (
+                    <Badge key={i} variant="secondary" className="text-xs">
+                      {item}
+                    </Badge>
+                  ))}
+                </div>
+              </div>
+
+              <div className="grid grid-cols-2 gap-3">
+                <div className="p-3 rounded-lg bg-muted/50 border">
+                  <p className="text-xs font-medium text-muted-foreground mb-1 flex items-center gap-1">
+                    <BookOpen className="h-3 w-3" />
+                    Entrega Instrucional
+                  </p>
+                  <p className="text-sm font-semibold text-foreground">
+                    {pkg.pricing.plan.min} <span className="text-muted-foreground font-normal">a</span> {pkg.pricing.plan.max}
+                  </p>
+                </div>
+                <div className="p-3 rounded-lg bg-primary/5 border border-primary/20">
+                  <p className="text-xs font-medium text-primary mb-1 flex items-center gap-1">
+                    <Wrench className="h-3 w-3" />
+                    Execução Nexia
+                  </p>
+                  <p className="text-sm font-semibold text-foreground">
+                    {pkg.pricing.execution.min} <span className="text-muted-foreground font-normal">a</span> {pkg.pricing.execution.max}
+                  </p>
+                </div>
+              </div>
+            </div>
+          ))}
+        </div>
+
+        <div className="p-3 rounded-lg bg-muted/30 border border-border/50 text-center mt-4">
+          <p className="text-xs text-muted-foreground">
+            ⚠️ Valores sugeridos para facilitar a venda. Ajuste conforme seu mercado.
+          </p>
+        </div>
+      </DialogContent>
+    </Dialog>
+  );
+}
+
+// ==============================================
+// PACKAGE SUGGESTION COMPONENT
+// ==============================================
+
+interface PackageSuggestionProps {
+  solutionId: string;
+  onOpenPackages: () => void;
+}
+
+function PackageSuggestion({ solutionId, onOpenPackages }: PackageSuggestionProps) {
+  const packages = getPackagesForSolution(solutionId);
+  
+  if (packages.length === 0) return null;
+
+  const bestPackage = packages[0];
+
+  return (
+    <div 
+      className="p-3 rounded-lg bg-gradient-to-r from-primary/10 to-primary/5 border border-primary/20 cursor-pointer hover:border-primary/40 transition-all"
+      onClick={onOpenPackages}
+    >
+      <div className="flex items-center justify-between">
+        <div className="flex items-center gap-2">
+          <Package className="h-4 w-4 text-primary" />
+          <div>
+            <p className="text-xs font-medium text-primary">Venda como pacote</p>
+            <p className="text-xs text-muted-foreground">
+              Inclua em "{bestPackage.name}" e aumente o valor
+            </p>
+          </div>
+        </div>
+        <ArrowRight className="h-4 w-4 text-primary" />
+      </div>
+    </div>
+  );
+}
+
+// ==============================================
+// ARGUMENT MODAL
+// ==============================================
+
 interface ArgumentModalProps {
   open: boolean;
   onOpenChange: (open: boolean) => void;
@@ -342,6 +540,10 @@ FRASE DE FECHAMENTO: ${content.closing}`;
   );
 }
 
+// ==============================================
+// PRICING MODAL
+// ==============================================
+
 interface PricingModalProps {
   open: boolean;
   onOpenChange: (open: boolean) => void;
@@ -350,7 +552,9 @@ interface PricingModalProps {
 }
 
 export function PricingModal({ open, onOpenChange, solutionId, solutionTitle }: PricingModalProps) {
+  const [packagesOpen, setPackagesOpen] = useState(false);
   const data = commercialContent[solutionId];
+  const packages = getPackagesForSolution(solutionId);
   
   if (!data) return null;
 
@@ -358,141 +562,168 @@ export function PricingModal({ open, onOpenChange, solutionId, solutionTitle }: 
   const pricing = data.pricing;
 
   return (
-    <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="max-w-lg max-h-[85vh] overflow-y-auto">
-        <DialogHeader>
-          <DialogTitle className="flex items-center gap-2">
-            <DollarSign className="h-5 w-5 text-emerald-500" />
-            Quanto cobrar
-          </DialogTitle>
-          <DialogDescription>
-            Precificação sugerida para {solutionTitle}
-          </DialogDescription>
-        </DialogHeader>
+    <>
+      <Dialog open={open} onOpenChange={onOpenChange}>
+        <DialogContent className="max-w-lg max-h-[85vh] overflow-y-auto">
+          <DialogHeader>
+            <DialogTitle className="flex items-center gap-2">
+              <DollarSign className="h-5 w-5 text-emerald-500" />
+              Quanto cobrar
+            </DialogTitle>
+            <DialogDescription>
+              Precificação sugerida para {solutionTitle}
+            </DialogDescription>
+          </DialogHeader>
 
-        <div className="space-y-4 mt-4">
-          {hasInstructionalExecution && 'instructional' in pricing ? (
-            <Tabs defaultValue="instructional" className="w-full">
-              <TabsList className="grid w-full grid-cols-2">
-                <TabsTrigger value="instructional" className="gap-1.5 text-xs">
-                  <BookOpen className="h-3.5 w-3.5" />
-                  Entrega Instrucional
-                </TabsTrigger>
-                <TabsTrigger value="execution" className="gap-1.5 text-xs">
-                  <Wrench className="h-3.5 w-3.5" />
-                  Execução Nexia
-                </TabsTrigger>
-              </TabsList>
+          <div className="space-y-4 mt-4">
+            {hasInstructionalExecution && 'instructional' in pricing ? (
+              <Tabs defaultValue="instructional" className="w-full">
+                <TabsList className="grid w-full grid-cols-2">
+                  <TabsTrigger value="instructional" className="gap-1.5 text-xs">
+                    <BookOpen className="h-3.5 w-3.5" />
+                    Entrega Instrucional
+                  </TabsTrigger>
+                  <TabsTrigger value="execution" className="gap-1.5 text-xs">
+                    <Wrench className="h-3.5 w-3.5" />
+                    Execução Nexia
+                  </TabsTrigger>
+                </TabsList>
 
-              <TabsContent value="instructional" className="space-y-4 mt-4">
-                <div className="p-4 rounded-lg bg-muted/50 border">
-                  <p className="text-sm text-muted-foreground mb-3">{pricing.instructional.description}</p>
-                  <ul className="space-y-2">
-                    {pricing.instructional.items.map((item, i) => (
-                      <li key={i} className="flex items-center gap-2 text-sm">
-                        <CheckCircle className="h-3.5 w-3.5 text-primary flex-shrink-0" />
-                        {item}
-                      </li>
-                    ))}
-                  </ul>
-                </div>
-
-                <div className="p-4 rounded-lg bg-emerald-500/10 border border-emerald-500/20">
-                  <div className="flex items-center justify-between">
-                    <span className="text-sm text-muted-foreground">Faixa de preço:</span>
-                    <div className="flex items-center gap-2">
-                      <Badge variant="outline" className="bg-background">
-                        {pricing.instructional.minPrice}
-                      </Badge>
-                      <span className="text-muted-foreground">até</span>
-                      <Badge className="bg-emerald-500 text-white">
-                        {pricing.instructional.maxPrice}
-                      </Badge>
-                    </div>
+                <TabsContent value="instructional" className="space-y-4 mt-4">
+                  <div className="p-4 rounded-lg bg-muted/50 border">
+                    <p className="text-sm text-muted-foreground mb-3">{pricing.instructional.description}</p>
+                    <ul className="space-y-2">
+                      {pricing.instructional.items.map((item, i) => (
+                        <li key={i} className="flex items-center gap-2 text-sm">
+                          <CheckCircle className="h-3.5 w-3.5 text-primary flex-shrink-0" />
+                          {item}
+                        </li>
+                      ))}
+                    </ul>
                   </div>
-                </div>
 
-                <p className="text-xs text-muted-foreground italic">
-                  💡 {pricing.instructional.note}
-                </p>
-              </TabsContent>
-
-              <TabsContent value="execution" className="space-y-4 mt-4">
-                <div className="p-4 rounded-lg bg-primary/5 border border-primary/20">
-                  <p className="text-sm text-muted-foreground mb-3">{pricing.execution.description}</p>
-                  <ul className="space-y-2">
-                    {pricing.execution.items.map((item, i) => (
-                      <li key={i} className="flex items-center gap-2 text-sm">
-                        <CheckCircle className="h-3.5 w-3.5 text-primary flex-shrink-0" />
-                        {item}
-                      </li>
-                    ))}
-                  </ul>
-                </div>
-
-                <div className="p-4 rounded-lg bg-primary/10 border border-primary/20">
-                  <div className="flex items-center justify-between">
-                    <span className="text-sm text-muted-foreground">Faixa de preço:</span>
-                    <div className="flex items-center gap-2">
-                      <Badge variant="outline" className="bg-background">
-                        {pricing.execution.minPrice}
-                      </Badge>
-                      <span className="text-muted-foreground">até</span>
-                      <Badge className="bg-primary text-primary-foreground">
-                        {pricing.execution.maxPrice}
-                      </Badge>
-                    </div>
-                  </div>
-                </div>
-
-                <p className="text-xs text-muted-foreground italic">
-                  💡 {pricing.execution.note}
-                </p>
-              </TabsContent>
-            </Tabs>
-          ) : 'tiers' in pricing ? (
-            <div className="space-y-4">
-              <div className="space-y-3">
-                {pricing.tiers.map((tier, i) => (
-                  <div key={i} className="p-4 rounded-lg bg-muted/50 border">
+                  <div className="p-4 rounded-lg bg-emerald-500/10 border border-emerald-500/20">
                     <div className="flex items-center justify-between">
-                      <span className="text-sm font-medium">{tier.name}</span>
+                      <span className="text-sm text-muted-foreground">Faixa de preço:</span>
                       <div className="flex items-center gap-2">
-                        <Badge variant="outline" className="bg-background text-xs">
-                          {tier.minPrice}
+                        <Badge variant="outline" className="bg-background">
+                          {pricing.instructional.minPrice}
                         </Badge>
-                        <span className="text-xs text-muted-foreground">a</span>
-                        <Badge className="bg-emerald-500 text-white text-xs">
-                          {tier.maxPrice}
+                        <span className="text-muted-foreground">até</span>
+                        <Badge className="bg-emerald-500 text-white">
+                          {pricing.instructional.maxPrice}
                         </Badge>
                       </div>
                     </div>
                   </div>
-                ))}
-              </div>
 
-              <div className="p-3 rounded-lg bg-amber-500/10 border border-amber-500/20">
-                <p className="text-xs font-medium text-amber-600 mb-1">Quando cobrar mais:</p>
-                <p className="text-sm text-foreground">{pricing.whenChargeMore}</p>
-              </div>
+                  <p className="text-xs text-muted-foreground italic">
+                    💡 {pricing.instructional.note}
+                  </p>
 
-              <div className="p-3 rounded-lg bg-primary/10 border border-primary/20">
-                <p className="text-xs font-medium text-primary mb-1">Como justificar o valor:</p>
-                <p className="text-sm text-foreground">{pricing.howToJustify}</p>
+                  {/* Package Suggestion */}
+                  {packages.length > 0 && (
+                    <PackageSuggestion solutionId={solutionId} onOpenPackages={() => setPackagesOpen(true)} />
+                  )}
+                </TabsContent>
+
+                <TabsContent value="execution" className="space-y-4 mt-4">
+                  <div className="p-4 rounded-lg bg-primary/5 border border-primary/20">
+                    <p className="text-sm text-muted-foreground mb-3">{pricing.execution.description}</p>
+                    <ul className="space-y-2">
+                      {pricing.execution.items.map((item, i) => (
+                        <li key={i} className="flex items-center gap-2 text-sm">
+                          <CheckCircle className="h-3.5 w-3.5 text-primary flex-shrink-0" />
+                          {item}
+                        </li>
+                      ))}
+                    </ul>
+                  </div>
+
+                  <div className="p-4 rounded-lg bg-primary/10 border border-primary/20">
+                    <div className="flex items-center justify-between">
+                      <span className="text-sm text-muted-foreground">Faixa de preço:</span>
+                      <div className="flex items-center gap-2">
+                        <Badge variant="outline" className="bg-background">
+                          {pricing.execution.minPrice}
+                        </Badge>
+                        <span className="text-muted-foreground">até</span>
+                        <Badge className="bg-primary text-primary-foreground">
+                          {pricing.execution.maxPrice}
+                        </Badge>
+                      </div>
+                    </div>
+                  </div>
+
+                  <p className="text-xs text-muted-foreground italic">
+                    💡 {pricing.execution.note}
+                  </p>
+
+                  {/* Package Suggestion */}
+                  {packages.length > 0 && (
+                    <PackageSuggestion solutionId={solutionId} onOpenPackages={() => setPackagesOpen(true)} />
+                  )}
+                </TabsContent>
+              </Tabs>
+            ) : 'tiers' in pricing ? (
+              <div className="space-y-4">
+                <div className="space-y-3">
+                  {pricing.tiers.map((tier, i) => (
+                    <div key={i} className="p-4 rounded-lg bg-muted/50 border">
+                      <div className="flex items-center justify-between">
+                        <span className="text-sm font-medium">{tier.name}</span>
+                        <div className="flex items-center gap-2">
+                          <Badge variant="outline" className="bg-background text-xs">
+                            {tier.minPrice}
+                          </Badge>
+                          <span className="text-xs text-muted-foreground">a</span>
+                          <Badge className="bg-emerald-500 text-white text-xs">
+                            {tier.maxPrice}
+                          </Badge>
+                        </div>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+
+                <div className="p-3 rounded-lg bg-amber-500/10 border border-amber-500/20">
+                  <p className="text-xs font-medium text-amber-600 mb-1">Quando cobrar mais:</p>
+                  <p className="text-sm text-foreground">{pricing.whenChargeMore}</p>
+                </div>
+
+                <div className="p-3 rounded-lg bg-primary/10 border border-primary/20">
+                  <p className="text-xs font-medium text-primary mb-1">Como justificar o valor:</p>
+                  <p className="text-sm text-foreground">{pricing.howToJustify}</p>
+                </div>
+
+                {/* Package Suggestion for site/app */}
+                {packages.length > 0 && (
+                  <PackageSuggestion solutionId={solutionId} onOpenPackages={() => setPackagesOpen(true)} />
+                )}
               </div>
+            ) : null}
+
+            <div className="p-3 rounded-lg bg-muted/30 border border-border/50 text-center">
+              <p className="text-xs text-muted-foreground">
+                ⚠️ Valores sugeridos para facilitar a venda. Ajuste conforme seu mercado.
+              </p>
             </div>
-          ) : null}
-
-          <div className="p-3 rounded-lg bg-muted/30 border border-border/50 text-center">
-            <p className="text-xs text-muted-foreground">
-              ⚠️ Valores sugeridos para facilitar a venda. Ajuste conforme seu mercado.
-            </p>
           </div>
-        </div>
-      </DialogContent>
-    </Dialog>
+        </DialogContent>
+      </Dialog>
+
+      <PackagesModal 
+        open={packagesOpen} 
+        onOpenChange={setPackagesOpen}
+        highlightPackageId={packages[0]?.id}
+      />
+    </>
   );
 }
+
+// ==============================================
+// COMMERCIAL BUTTONS
+// ==============================================
 
 interface CommercialButtonsProps {
   solutionId: string;
@@ -502,8 +733,10 @@ interface CommercialButtonsProps {
 export function CommercialButtons({ solutionId, solutionTitle }: CommercialButtonsProps) {
   const [argumentOpen, setArgumentOpen] = useState(false);
   const [pricingOpen, setPricingOpen] = useState(false);
+  const [packagesOpen, setPackagesOpen] = useState(false);
 
   const hasContent = commercialContent[solutionId];
+  const packages = getPackagesForSolution(solutionId);
 
   if (!hasContent) return null;
 
@@ -520,7 +753,7 @@ export function CommercialButtons({ solutionId, solutionTitle }: CommercialButto
           }}
         >
           <MessageSquare className="h-3.5 w-3.5" />
-          Argumento Comercial
+          Argumento
         </Button>
         <Button 
           variant="ghost" 
@@ -532,8 +765,21 @@ export function CommercialButtons({ solutionId, solutionTitle }: CommercialButto
           }}
         >
           <DollarSign className="h-3.5 w-3.5" />
-          Quanto Cobrar
+          Preço
         </Button>
+        {packages.length > 0 && (
+          <Button 
+            variant="ghost" 
+            size="sm" 
+            className="text-xs gap-1.5 h-8 px-2"
+            onClick={(e) => {
+              e.stopPropagation();
+              setPackagesOpen(true);
+            }}
+          >
+            <Package className="h-3.5 w-3.5" />
+          </Button>
+        )}
       </div>
 
       <ArgumentModal 
@@ -548,6 +794,14 @@ export function CommercialButtons({ solutionId, solutionTitle }: CommercialButto
         solutionId={solutionId}
         solutionTitle={solutionTitle}
       />
+      <PackagesModal 
+        open={packagesOpen} 
+        onOpenChange={setPackagesOpen}
+        highlightPackageId={packages[0]?.id}
+      />
     </>
   );
 }
+
+// Export packages for use elsewhere
+export { strategicPackages, getPackagesForSolution };
