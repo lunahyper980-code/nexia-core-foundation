@@ -1311,24 +1311,36 @@ export type Database = {
       }
       profiles: {
         Row: {
+          access_reason: string | null
+          access_status: string
+          access_updated_at: string | null
           avatar_url: string | null
           created_at: string
+          device_id: string | null
           email: string
           full_name: string
           id: string
           updated_at: string
         }
         Insert: {
+          access_reason?: string | null
+          access_status?: string
+          access_updated_at?: string | null
           avatar_url?: string | null
           created_at?: string
+          device_id?: string | null
           email: string
           full_name: string
           id: string
           updated_at?: string
         }
         Update: {
+          access_reason?: string | null
+          access_status?: string
+          access_updated_at?: string | null
           avatar_url?: string | null
           created_at?: string
+          device_id?: string | null
           email?: string
           full_name?: string
           id?: string
@@ -1845,6 +1857,7 @@ export type Database = {
       [_ in never]: never
     }
     Functions: {
+      get_user_access_status: { Args: { _user_id: string }; Returns: string }
       get_user_role: {
         Args: { _user_id: string }
         Returns: Database["public"]["Enums"]["app_role"]
@@ -1861,6 +1874,7 @@ export type Database = {
         Returns: boolean
       }
       is_admin_or_owner: { Args: { _user_id: string }; Returns: boolean }
+      is_device_blocked: { Args: { _device_id: string }; Returns: boolean }
     }
     Enums: {
       app_role: "user" | "admin" | "owner"

@@ -83,6 +83,7 @@ import Historico from "./pages/Historico";
 import Configuracoes from "./pages/Configuracoes";
 import AdminPanel from "./pages/admin/AdminPanel";
 import MinhaEquipe from "./pages/admin/MinhaEquipe";
+import GerenciarUsuarios from "./pages/admin/GerenciarUsuarios";
 import InstalarApp from "./pages/InstalarApp";
 import RedefinirSenha from "./pages/RedefinirSenha";
 import Academy from "./pages/Academy";
@@ -188,6 +189,7 @@ const App = () => (
                   <Route path="/historico" element={<ProtectedRoute><Historico /></ProtectedRoute>} />
                   <Route path="/configuracoes" element={<ProtectedRoute><Configuracoes /></ProtectedRoute>} />
                   <Route path="/admin/equipe" element={<ProtectedRoute><MinhaEquipe /></ProtectedRoute>} />
+                  <Route path="/admin/usuarios" element={<ProtectedRoute><GerenciarUsuarios /></ProtectedRoute>} />
                   <Route path="/admin/*" element={<ProtectedRoute><AdminPanel /></ProtectedRoute>} />
                   <Route path="/academy" element={<ProtectedRoute><Academy /></ProtectedRoute>} />
                   <Route path="/academy/guia-iniciante" element={<ProtectedRoute><GuiaIniciante /></ProtectedRoute>} />
