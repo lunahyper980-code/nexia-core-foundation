@@ -6,11 +6,13 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/com
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Badge } from '@/components/ui/badge';
+import { Switch } from '@/components/ui/switch';
 import { useAuth } from '@/contexts/AuthContext';
 import { useUserRole } from '@/contexts/UserRoleContext';
+import { useDemoMode } from '@/contexts/DemoModeContext';
 import { supabase } from '@/integrations/supabase/client';
 import { toast } from 'sonner';
-import { User, Shield, CreditCard, Save, Loader2, Settings2 } from 'lucide-react';
+import { User, Shield, CreditCard, Save, Loader2, Settings2, Cog, MonitorPlay } from 'lucide-react';
 
 interface Profile {
   id: string;
@@ -26,7 +28,8 @@ interface Subscription {
 
 export default function Configuracoes() {
   const { user } = useAuth();
-  const { isAdminOrOwner, loading: roleLoading } = useUserRole();
+  const { isAdminOrOwner, isAdmin, loading: roleLoading } = useUserRole();
+  const { isDemoMode, setDemoMode } = useDemoMode();
   const navigate = useNavigate();
   const [profile, setProfile] = useState<Profile | null>(null);
   const [subscription, setSubscription] = useState<Subscription | null>(null);
@@ -90,6 +93,19 @@ export default function Configuracoes() {
       toast.error('Erro ao atualizar perfil');
     } finally {
       setSaving(false);
+    }
+  };
+
+  const handleDemoModeToggle = (checked: boolean) => {
+    setDemoMode(checked);
+    if (checked) {
+      toast.success('Modo Demonstração ativado', {
+        description: 'Comportamento especial para apresentações está ativo.'
+      });
+    } else {
+      toast.info('Modo Demonstração desativado', {
+        description: 'Sistema voltou ao comportamento normal.'
+      });
     }
   };
 
@@ -235,6 +251,57 @@ export default function Configuracoes() {
                 <Settings2 className="h-4 w-4" />
                 Acessar Painel Admin
               </Button>
+            </CardContent>
+          </Card>
+        )}
+
+        {/* Advanced Controls - Only visible to ADMIN (not owner) */}
+        {isAdmin && (
+          <Card className="border-amber-500/30 bg-gradient-to-br from-amber-500/5 to-transparent">
+            <CardHeader>
+              <div className="flex items-center gap-3">
+                <div className="p-2 rounded-lg bg-amber-500/10">
+                  <Cog className="h-5 w-5 text-amber-500" />
+                </div>
+                <div>
+                  <div className="flex items-center gap-2">
+                    <CardTitle className="text-lg">Controles Avançados</CardTitle>
+                    <Badge variant="outline" className="border-amber-500/50 text-amber-500 bg-amber-500/10 text-[10px]">
+                      ADMIN
+                    </Badge>
+                  </div>
+                  <CardDescription>Configurações exclusivas para administradores</CardDescription>
+                </div>
+              </div>
+            </CardHeader>
+            <CardContent className="space-y-4">
+              {/* Demo Mode Toggle */}
+              <div className="flex items-center justify-between p-4 rounded-lg bg-background/50 border border-foreground/5">
+                <div className="flex items-center gap-3">
+                  <div className="p-2 rounded-lg bg-primary/10">
+                    <MonitorPlay className="h-4 w-4 text-primary" />
+                  </div>
+                  <div>
+                    <p className="font-medium text-foreground">Modo Demonstração (Admin)</p>
+                    <p className="text-sm text-muted-foreground">
+                      Ativa comportamento especial para apresentações e demonstrações. Não afeta usuários finais.
+                    </p>
+                  </div>
+                </div>
+                <Switch
+                  checked={isDemoMode}
+                  onCheckedChange={handleDemoModeToggle}
+                />
+              </div>
+
+              {isDemoMode && (
+                <div className="flex items-center gap-2 p-3 rounded-lg bg-amber-500/10 border border-amber-500/20">
+                  <MonitorPlay className="h-4 w-4 text-amber-500 flex-shrink-0" />
+                  <p className="text-sm text-amber-600">
+                    O modo demonstração está ativo. Validações simplificadas e fluxos especiais estão habilitados.
+                  </p>
+                </div>
+              )}
             </CardContent>
           </Card>
         )}
