@@ -6,7 +6,8 @@ import { useActivityLogs } from '@/hooks/useActivityLogs';
 import { useOwnerMetrics } from '@/hooks/useOwnerMetrics';
 import { useRealMetrics } from '@/hooks/useRealMetrics';
 import { useUserRole } from '@/contexts/UserRoleContext';
-import { Layers, Users, ShoppingCart, Package, ArrowRight, Loader2 } from 'lucide-react';
+import { Layers, Users, ShoppingCart, Package, ArrowRight } from 'lucide-react';
+import { NexiaLoader } from '@/components/ui/nexia-loader';
 import { formatDistanceToNow } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
 import { StatusOperacao } from '@/components/dashboard/StatusOperacao';
@@ -40,7 +41,7 @@ export default function Dashboard() {
     return (
       <AppLayout title="Carregando...">
         <div className="flex items-center justify-center min-h-[60vh]">
-          <Loader2 className="h-8 w-8 animate-spin text-primary" />
+          <NexiaLoader size="lg" />
         </div>
       </AppLayout>
     );

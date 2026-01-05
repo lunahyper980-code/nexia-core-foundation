@@ -32,6 +32,7 @@ import { Badge } from '@/components/ui/badge';
 import { useClients, ClientInput } from '@/hooks/useClients';
 import { toast } from 'sonner';
 import { Plus, Search, MoreHorizontal, Pencil, Trash2, Users, Loader2 } from 'lucide-react';
+import { NexiaLoader } from '@/components/ui/nexia-loader';
 import { formatDistanceToNow } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
 
@@ -257,7 +258,7 @@ export default function Clientes() {
         <PremiumFrame title="Clientes — Nexia Suite" className="fade-in">
           {loading ? (
             <div className="flex items-center justify-center py-12">
-              <Loader2 className="h-6 w-6 animate-spin text-primary" />
+              <NexiaLoader size="lg" />
             </div>
           ) : filteredClients.length === 0 ? (
             <div className="flex flex-col items-center justify-center py-12 text-center">

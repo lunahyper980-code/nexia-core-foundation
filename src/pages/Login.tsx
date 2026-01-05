@@ -4,7 +4,8 @@ import { useAuth } from '@/contexts/AuthContext';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { toast } from 'sonner';
-import { Loader2, Eye, EyeOff, ArrowRight, Sparkles } from 'lucide-react';
+import { Eye, EyeOff, ArrowRight, Sparkles } from 'lucide-react';
+import { NexiaLoaderInline } from '@/components/ui/nexia-loader';
 import logoNexia from '@/assets/logo-nexia.png';
 import { z } from 'zod';
 import { ForgotPasswordModal } from '@/components/auth/ForgotPasswordModal';
@@ -223,7 +224,7 @@ export default function Login() {
                 >
                   {loading ? (
                     <>
-                      <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                      <NexiaLoaderInline className="mr-2" />
                       Entrando...
                     </>
                   ) : (

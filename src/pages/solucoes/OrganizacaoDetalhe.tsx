@@ -24,6 +24,7 @@ import {
   Sun,
   Sunset
 } from 'lucide-react';
+import { NexiaLoader } from '@/components/ui/nexia-loader';
 import { useNavigate, useParams } from 'react-router-dom';
 import { useWorkspace } from '@/contexts/WorkspaceContext';
 import { supabase } from '@/integrations/supabase/client';
@@ -296,7 +297,7 @@ export default function OrganizacaoDetalhe() {
     return (
       <AppLayout title="Carregando...">
         <div className="flex items-center justify-center min-h-[400px]">
-          <Loader2 className="h-8 w-8 animate-spin text-muted-foreground" />
+          <NexiaLoader size="lg" />
         </div>
       </AppLayout>
     );

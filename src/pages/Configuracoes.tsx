@@ -12,7 +12,8 @@ import { useUserRole } from '@/contexts/UserRoleContext';
 import { useDemoMode } from '@/contexts/DemoModeContext';
 import { supabase } from '@/integrations/supabase/client';
 import { toast } from 'sonner';
-import { User, Shield, CreditCard, Save, Loader2, Settings2, Cog, MonitorPlay } from 'lucide-react';
+import { User, Shield, Save, Loader2, Settings2, Cog, MonitorPlay } from 'lucide-react';
+import { NexiaLoader } from '@/components/ui/nexia-loader';
 
 interface Profile {
   id: string;
@@ -113,7 +114,7 @@ export default function Configuracoes() {
     return (
       <AppLayout title="Configurações">
         <div className="flex items-center justify-center py-12">
-          <Loader2 className="h-6 w-6 animate-spin text-primary" />
+          <NexiaLoader size="lg" />
         </div>
       </AppLayout>
     );
