@@ -56,7 +56,7 @@ const STEPS: Step[] = [
     howTo: 'Após o cliente responder com interesse, gere um Briefing Rápido. Preencha com dados reais do negócio (segmento, público, objetivo, situação).',
     alertMessage: 'Isso alimenta o diagnóstico e o planejamento. Demora menos de 3 minutos.',
     buttonText: 'Ir para Briefing →',
-    path: '/nexia-ai/briefing-rapido',
+    path: '/nexia-ai/briefings',
     icon: FileText,
     tips: [
       'Isso alimenta o diagnóstico e o planejamento',
@@ -71,7 +71,7 @@ const STEPS: Step[] = [
     howTo: "Use o Nexia (Diagnóstico/Planejamento) para gerar o plano estratégico e tarefas. Esse é o 'cérebro' da entrega: ele organiza o que fazer.",
     alertMessage: 'Você pode editar antes de enviar. O plano vira tarefas automaticamente.',
     buttonText: 'Ir para Diagnóstico/Planejamento →',
-    path: '/nexia-ai/escolha-planejamento',
+    path: '/nexia-ai',
     icon: Brain,
     tips: [
       'Você pode editar antes de enviar',
