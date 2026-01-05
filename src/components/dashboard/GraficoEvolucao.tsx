@@ -18,65 +18,62 @@ interface GraficoEvolucaoProps {
 }
 
 // ==============================================
-// VALORES REALISTAS E COERENTES
+// CÁLCULO MATEMÁTICO BASEADO NO INCREMENTO DE 48H
 // ==============================================
-// Pipeline atual: R$ 38.743
-// Valor inicial 30 dias atrás: R$ 29.057 (75% do atual)
-// Crescimento 30 dias: +33% (~R$ 9.686)
-// Últimos 7 dias: ~R$ 2.900
-// Crescimento 7 dias: +8%
+// Pipeline base: R$ 38.743
+// Incremento: +R$ 2.350 a cada 48h
+// Projetos base: 32, +1 a cada 48h
+// 
+// Em 30 dias = 15 períodos de 48h
+// Crescimento total 30 dias: 15 × R$ 2.350 = R$ 35.250
+// Em 7 dias = 3.5 períodos ≈ 3 períodos = R$ 7.050
 // ==============================================
 
-const OWNER_GROWTH_30_DAYS = 33;
-const OWNER_GROWTH_7_DAYS = 8;
-const OWNER_REVENUE_30_DAYS = 9686;
-const OWNER_REVENUE_7_DAYS = 2900;
+const PIPELINE_INCREMENT = 2350; // R$ 2.350 a cada 48h
+const PROJECTS_INCREMENT = 1;    // +1 projeto a cada 48h
+const INCREMENT_HOURS = 48;
 
-// Gera dados do owner - COMEÇA DE BAIXO E CRESCE PROGRESSIVAMENTE
+// Calcula métricas baseadas em períodos de 48h retroativos
+const calculateMetricsForDaysAgo = (
+  currentPipeline: number,
+  currentProjects: number,
+  daysAgo: number
+) => {
+  // Quantos períodos de 48h cabem em "daysAgo" dias
+  const periodsAgo = Math.floor((daysAgo * 24) / INCREMENT_HOURS);
+  
+  // Valores anteriores (subtraindo o crescimento)
+  const pipelineValue = Math.max(0, currentPipeline - (periodsAgo * PIPELINE_INCREMENT));
+  const projectsCount = Math.max(1, currentProjects - (periodsAgo * PROJECTS_INCREMENT));
+  
+  return { pipelineValue, projectsCount };
+};
+
+// Gera dados do owner - CÁLCULO MATEMÁTICO REAL
 const generateOwnerData = (currentProjects = 32, currentPipelineValue = 38743) => {
   const data = [];
   const today = new Date();
-
-  // IMPORTANTE: Valor inicial BAIXO - começa em ~56.000 (75% do atual)
-  // Isso garante que o gráfico visualmente começa de baixo
-  const startValue = currentPipelineValue * 0.75; // 75% do valor final = começa baixo
-  const endValue = currentPipelineValue;
-  const totalGrowth = endValue - startValue;
-  
-  // Projetos: começa com menos da metade e cresce
-  const startProjects = Math.max(8, Math.floor(currentProjects * 0.5)); // 50% = começa bem baixo
-  const projectGrowth = currentProjects - startProjects;
-  
-  // Seed para variação natural
-  const seed = 42;
 
   for (let i = 29; i >= 0; i--) {
     const date = new Date(today);
     date.setDate(date.getDate() - i);
 
-    // Dia 0 = primeiro dia (29 dias atrás), Dia 29 = hoje
+    // Calcula valores para esse dia baseado nos períodos de 48h
+    const { pipelineValue, projectsCount } = calculateMetricsForDaysAgo(
+      currentPipelineValue,
+      currentProjects,
+      i
+    );
+
+    // Pequena variação natural (±2%) para suavizar o gráfico
     const dayIndex = 29 - i;
-    const progress = dayIndex / 29; // 0 a 1
-    
-    // Curva que COMEÇA DEVAGAR e ACELERA - garantindo início baixo
-    // Usando função quadrática para crescimento suave
-    const baseProgress = Math.pow(progress, 1.3);
-    
-    // Variações diárias naturais (pequenas oscilações)
-    const noise = Math.sin(dayIndex * 0.9 + seed) * 0.025;
-    const weekendEffect = (dayIndex % 7 === 0 || dayIndex % 7 === 6) ? -0.015 : 0.01;
-    
-    // Progresso final com variações (nunca ultrapassa 1)
-    const finalProgress = Math.min(1, Math.max(0, baseProgress + noise + weekendEffect));
-    
-    // Valores do dia
-    const dayValue = startValue + (totalGrowth * finalProgress);
-    const dayProjects = Math.round(startProjects + (projectGrowth * baseProgress));
+    const noise = Math.sin(dayIndex * 0.7) * 0.015;
+    const adjustedValue = Math.round(pipelineValue * (1 + noise));
 
     data.push({
       date: date.toLocaleDateString('pt-BR', { day: '2-digit', month: '2-digit' }),
-      projetos: Math.max(startProjects, dayProjects),
-      valor: Math.round(dayValue),
+      projetos: projectsCount,
+      valor: adjustedValue,
     });
   }
 
@@ -166,44 +163,58 @@ export function GraficoEvolucao({
       : generateRealUserData(currentProjects, currentPipelineValue, userCreatedAt, metricsHistory);
   }, [isOwner, currentProjects, currentPipelineValue, userCreatedAt, metricsHistory]);
 
-  const firstValue = data[0];
-  const lastValue = data[data.length - 1];
-  
-  // Calcula métricas dos últimos 7 dias
-  const last7DaysData = data.slice(-7);
-  const first7DaysValue = last7DaysData[0]?.valor || 0;
-  const last7DaysValue = last7DaysData[last7DaysData.length - 1]?.valor || 0;
-  
-  // Crescimento 30 dias
-  const calculate30DaysGrowth = () => {
-    if (isOwner) return OWNER_GROWTH_30_DAYS.toString();
-    
-    if (firstValue.valor === 0 || firstValue === lastValue) {
-      return '0';
+  // Cálculos matemáticos para métricas de crescimento
+  const growthMetrics = useMemo(() => {
+    if (!isOwner) {
+      // Usuário real - calcula baseado nos dados
+      const firstValue = data[0];
+      const lastValue = data[data.length - 1];
+      const last7DaysData = data.slice(-7);
+      const first7DaysValue = last7DaysData[0]?.valor || 0;
+      const last7DaysValue = last7DaysData[last7DaysData.length - 1]?.valor || 0;
+
+      const growth30 = firstValue?.valor > 0 
+        ? ((lastValue.valor - firstValue.valor) / firstValue.valor * 100).toFixed(0)
+        : '0';
+      const growth7 = first7DaysValue > 0
+        ? ((last7DaysValue - first7DaysValue) / first7DaysValue * 100).toFixed(0)
+        : '0';
+      
+      return {
+        revenue30Days: Math.max(0, lastValue.valor - firstValue.valor),
+        revenue7Days: Math.max(0, last7DaysValue - first7DaysValue),
+        growth30Days: growth30,
+        growth7Days: growth7,
+      };
     }
-    
-    const growth = ((lastValue.valor - firstValue.valor) / firstValue.valor * 100);
-    return growth.toFixed(0);
-  };
-  
-  // Crescimento 7 dias
-  const calculate7DaysGrowth = () => {
-    if (isOwner) return OWNER_GROWTH_7_DAYS.toString();
-    
-    if (first7DaysValue === 0 || first7DaysValue === last7DaysValue) {
-      return '0';
-    }
-    
-    const growth = ((last7DaysValue - first7DaysValue) / first7DaysValue * 100);
-    return growth.toFixed(0);
-  };
-  
-  const growth30Days = calculate30DaysGrowth();
-  const growth7Days = calculate7DaysGrowth();
-  
-  // Faturamento dos períodos
-  const revenue30Days = isOwner ? OWNER_REVENUE_30_DAYS : Math.max(0, lastValue.valor - firstValue.valor);
-  const revenue7Days = isOwner ? OWNER_REVENUE_7_DAYS : Math.max(0, last7DaysValue - first7DaysValue);
+
+    // Admin/Owner - cálculo matemático baseado em períodos de 48h
+    // 30 dias = 15 períodos de 48h
+    const periods30Days = Math.floor((30 * 24) / INCREMENT_HOURS); // 15 períodos
+    const periods7Days = Math.floor((7 * 24) / INCREMENT_HOURS);   // 3 períodos
+
+    const revenue30Days = periods30Days * PIPELINE_INCREMENT; // 15 × 2350 = 35.250
+    const revenue7Days = periods7Days * PIPELINE_INCREMENT;   // 3 × 2350 = 7.050
+
+    // Valor inicial 30 dias atrás
+    const pipeline30DaysAgo = currentPipelineValue - revenue30Days;
+    const pipeline7DaysAgo = currentPipelineValue - revenue7Days;
+
+    // Porcentagem de crescimento
+    const growth30Days = pipeline30DaysAgo > 0 
+      ? Math.round((revenue30Days / pipeline30DaysAgo) * 100)
+      : 0;
+    const growth7Days = pipeline7DaysAgo > 0
+      ? Math.round((revenue7Days / pipeline7DaysAgo) * 100)
+      : 0;
+
+    return {
+      revenue30Days,
+      revenue7Days,
+      growth30Days: growth30Days.toString(),
+      growth7Days: growth7Days.toString(),
+    };
+  }, [isOwner, data, currentPipelineValue]);
 
   return (
     <PremiumFrame title="📈 Evolução dos Projetos — Últimos 30 dias" className="fade-in" style={{ animationDelay: '0.25s' }}>
@@ -216,9 +227,9 @@ export function GraficoEvolucao({
             <span className="text-xs text-muted-foreground">Últimos 30 dias</span>
           </div>
           <p className="text-lg font-bold text-success">
-            R$ {revenue30Days.toLocaleString('pt-BR', { minimumFractionDigits: 0, maximumFractionDigits: 0 })}
+            R$ {growthMetrics.revenue30Days.toLocaleString('pt-BR', { minimumFractionDigits: 0, maximumFractionDigits: 0 })}
           </p>
-          <p className="text-xs text-success/80">+{growth30Days}% crescimento</p>
+          <p className="text-xs text-success/80">+{growthMetrics.growth30Days}% crescimento</p>
         </div>
         
         {/* Faturamento 7 dias */}
@@ -228,9 +239,9 @@ export function GraficoEvolucao({
             <span className="text-xs text-muted-foreground">Últimos 7 dias</span>
           </div>
           <p className="text-lg font-bold text-primary">
-            R$ {revenue7Days.toLocaleString('pt-BR', { minimumFractionDigits: 0, maximumFractionDigits: 0 })}
+            R$ {growthMetrics.revenue7Days.toLocaleString('pt-BR', { minimumFractionDigits: 0, maximumFractionDigits: 0 })}
           </p>
-          <p className="text-xs text-primary/80">+{growth7Days}% crescimento</p>
+          <p className="text-xs text-primary/80">+{growthMetrics.growth7Days}% crescimento</p>
         </div>
         
         {/* Crescimento período */}
@@ -239,7 +250,7 @@ export function GraficoEvolucao({
             <TrendingUp className="h-3.5 w-3.5 text-emerald-500" />
             <span className="text-xs text-muted-foreground">Crescimento total</span>
           </div>
-          <p className="text-lg font-bold text-emerald-500">+{growth30Days}%</p>
+          <p className="text-lg font-bold text-emerald-500">+{growthMetrics.growth30Days}%</p>
           <p className="text-xs text-emerald-500/80">no período</p>
         </div>
       </div>
