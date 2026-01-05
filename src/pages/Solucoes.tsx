@@ -170,11 +170,13 @@ export default function Solucoes() {
               style={{ animationDelay: `${index * 0.05}s` }}
             >
               <div 
-                className={`group cursor-pointer bg-gradient-to-br ${sol.bgGradient} h-full`}
-                onClick={() => navigate(sol.path)}
+                className={`group bg-gradient-to-br ${sol.bgGradient} h-full`}
               >
-                {/* Image */}
-                <div className="relative h-40 overflow-hidden border-b border-primary/10">
+                {/* Clickable Image */}
+                <div 
+                  className="relative h-40 overflow-hidden border-b border-primary/10 cursor-pointer"
+                  onClick={() => navigate(sol.path)}
+                >
                   <img 
                     src={sol.image} 
                     alt={sol.title} 
@@ -189,8 +191,11 @@ export default function Solucoes() {
 
                 {/* Content */}
                 <div className="p-5 space-y-4">
-                  {/* Title and Description */}
-                  <div className="flex items-start gap-3">
+                  {/* Title and Description - Clickable */}
+                  <div 
+                    className="flex items-start gap-3 cursor-pointer"
+                    onClick={() => navigate(sol.path)}
+                  >
                     <div className={`w-10 h-10 rounded-lg bg-primary/10 flex items-center justify-center flex-shrink-0 border border-primary/15`}>
                       <sol.icon className={`h-5 w-5 ${sol.color} icon-glow-subtle`} />
                     </div>
@@ -200,8 +205,11 @@ export default function Solucoes() {
                     </div>
                   </div>
 
-                  {/* Features */}
-                  <ul className="grid grid-cols-2 gap-x-3 gap-y-1.5 text-xs text-muted-foreground">
+                  {/* Features - Clickable */}
+                  <ul 
+                    className="grid grid-cols-2 gap-x-3 gap-y-1.5 text-xs text-muted-foreground cursor-pointer"
+                    onClick={() => navigate(sol.path)}
+                  >
                     {sol.features.map((feature) => (
                       <li key={feature} className="flex items-center gap-2">
                         <div className={`w-1.5 h-1.5 rounded-full ${sol.color.replace('text-', 'bg-')}`} />
@@ -210,13 +218,14 @@ export default function Solucoes() {
                     ))}
                   </ul>
 
-                  {/* Commercial Buttons */}
+                  {/* Commercial Buttons - NOT inside card onClick */}
                   <CommercialButtons solutionId={sol.id} solutionTitle={sol.title} />
 
-                  {/* Button */}
+                  {/* Main Action Button */}
                   <Button 
                     size="default" 
                     className={`gap-2 w-full text-sm ${sol.buttonClass || ''}`}
+                    onClick={() => navigate(sol.path)}
                   >
                     {sol.buttonText}
                     <ArrowRight className="h-4 w-4 group-hover:translate-x-1 transition-transform" />
