@@ -44,6 +44,11 @@ export function useLovableCreditRequests() {
   const [requests, setRequests] = useState<LovableCreditRequest[]>([]);
   const [loading, setLoading] = useState(true);
 
+  // Check if user has an active request (pending, reviewing, or approved)
+  const hasActiveRequest = requests.some(r => 
+    r.status === 'pending' || r.status === 'reviewing' || r.status === 'approved'
+  );
+
   const fetchRequests = async () => {
     if (!user || !workspace) return;
     
@@ -102,6 +107,7 @@ export function useLovableCreditRequests() {
   return {
     requests,
     loading,
+    hasActiveRequest,
     createRequest,
     updateRequest,
     refetch: fetchRequests,
