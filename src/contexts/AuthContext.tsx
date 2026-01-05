@@ -63,6 +63,12 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   };
 
   const signOut = async () => {
+    // Clear all navigation states on logout
+    Object.keys(sessionStorage).forEach(key => {
+      if (key.startsWith('nexia_nav_') || key.startsWith('nexia_demo_')) {
+        sessionStorage.removeItem(key);
+      }
+    });
     await supabase.auth.signOut();
   };
 
