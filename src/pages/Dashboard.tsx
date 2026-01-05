@@ -1,11 +1,12 @@
-import { Link } from 'react-router-dom';
+import { Link, Navigate } from 'react-router-dom';
 import { AppLayout } from '@/components/AppLayout';
 import { PremiumFrame } from '@/components/ui/PremiumFrame';
 import { useClients } from '@/hooks/useClients';
 import { useActivityLogs } from '@/hooks/useActivityLogs';
 import { useOwnerMetrics } from '@/hooks/useOwnerMetrics';
 import { useRealMetrics } from '@/hooks/useRealMetrics';
-import { Layers, Users, ShoppingCart, Package, ArrowRight } from 'lucide-react';
+import { useUserRole } from '@/contexts/UserRoleContext';
+import { Layers, Users, ShoppingCart, Package, ArrowRight, Loader2 } from 'lucide-react';
 import { formatDistanceToNow } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
 import { StatusOperacao } from '@/components/dashboard/StatusOperacao';
@@ -32,6 +33,23 @@ export default function Dashboard() {
   const { logs } = useActivityLogs();
   const { isOwner, metrics: ownerMetrics, getMetricValue } = useOwnerMetrics();
   const { metrics: realMetrics, metricsHistory } = useRealMetrics();
+  const { isAdminOrOwner, loading: roleLoading } = useUserRole();
+
+  // Loading state
+  if (roleLoading) {
+    return (
+      <AppLayout title="Carregando...">
+        <div className="flex items-center justify-center min-h-[60vh]">
+          <Loader2 className="h-8 w-8 animate-spin text-primary" />
+        </div>
+      </AppLayout>
+    );
+  }
+
+  // Redireciona se não for admin/owner
+  if (!isAdminOrOwner) {
+    return <Navigate to="/solucoes" replace />;
+  }
 
   // Para usuários normais, usar métricas reais; para owner, usar fictícias
   const displayMetrics = isOwner ? ownerMetrics : realMetrics;
