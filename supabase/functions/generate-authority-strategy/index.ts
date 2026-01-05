@@ -49,26 +49,74 @@ serve(async (req) => {
       }
     }
 
-    const prompt = `Você é um estrategista de presença e autoridade digital.
+    const prompt = `Você é um estrategista de presença e autoridade digital, especializado em criar planos executáveis para negócios locais e prestadores de serviço.
 
 NEGÓCIO: ${businessName}
 SEGMENTO: ${segment}
-CANAL: ${mainChannel}
-FREQUÊNCIA: ${frequency}
+CANAL PRINCIPAL: ${mainChannel}
+FREQUÊNCIA DE POSTAGEM: ${frequency}
 OBJETIVO: ${objective}
-PÚBLICO: ${targetAudience || 'Não informado'}
+PÚBLICO-ALVO: ${targetAudience || 'Não informado'}
 
-Crie estratégia de autoridade e reconhecimento digital focada em ${objective.toLowerCase()}, SEM tráfego pago.
+Crie um PLANO ESTRATÉGICO EXECUTÁVEL de autoridade e reconhecimento digital focado em ${objective.toLowerCase()}.
 
-Retorne JSON válido:
+REGRAS OBRIGATÓRIAS:
+- Use linguagem simples e profissional (sem termos técnicos)
+- Conecte autoridade com geração de conversas no WhatsApp
+- Defina métricas mínimas de sucesso
+- Defina prioridade de execução
+- O plano deve ser executável por qualquer pessoa sem conhecimento técnico
+
+Retorne JSON válido com esta estrutura exata:
 {
-  "estrategia_reconhecimento": "2-3 parágrafos sobre estratégia",
-  "diretrizes_posicionamento": ["diretriz 1", "diretriz 2", "diretriz 3", "diretriz 4"],
+  "objetivo_autoridade": "1 parágrafo descrevendo o objetivo principal de reconhecimento e qual resultado prático ele deve gerar (ex: conversas qualificadas, autoridade local, confiança). Conecte com WhatsApp como canal de conversão.",
+  
+  "estrategia_reconhecimento": {
+    "canal_principal": "Nome do canal onde será construída a autoridade",
+    "canal_conversao": "WhatsApp ou outro canal de conversão direta",
+    "frequencia_minima": "Ex: 3 posts por semana + 5 stories por dia",
+    "horizonte_resultado": "30, 60 ou 90 dias com explicação do que esperar",
+    "metrica_sucesso": "Ex: 10 conversas qualificadas por semana no WhatsApp"
+  },
+  
+  "diretrizes_posicionamento": {
+    "publico_central": "Descrição clara de quem é o cliente ideal",
+    "promessa_principal": "O que a marca promete entregar",
+    "diferencial": "O que diferencia dos concorrentes",
+    "tom_comunicacao": "Como a marca deve se comunicar",
+    "mensagem_chave": "Frase principal que resume a marca"
+  },
+  
   "ideias_conteudo": [
-    {"tipo": "tipo", "descricao": "descrição", "objetivo": "objetivo"}
+    {
+      "tipo": "Tipo de conteúdo (ex: Carrossel, Vídeo curto, Story, Post)",
+      "titulo_sugerido": "Título ou gancho do conteúdo",
+      "objetivo_estrategico": "alcance, autoridade, conversa ou conversão",
+      "onde_publicar": "Instagram Feed, Stories, Reels, etc",
+      "call_to_action": "Ação que o público deve tomar (ex: Chama no WhatsApp)"
+    }
   ],
-  "checklist_acoes_organicas": ["ação 1", "ação 2", "ação 3", "ação 4", "ação 5", "ação 6", "ação 7", "ação 8"]
-}`;
+  
+  "checklist_execucao": {
+    "semana_1": [
+      "Ação específica e executável",
+      "Ação específica e executável",
+      "Ação específica e executável"
+    ],
+    "semana_2": [
+      "Ação específica e executável",
+      "Ação específica e executável",
+      "Ação específica e executável"
+    ],
+    "semana_3": [
+      "Ação específica e executável",
+      "Ação específica e executável",
+      "Ação específica e executável"
+    ]
+  }
+}
+
+IMPORTANTE: Gere pelo menos 6 ideias de conteúdo variadas. O checklist deve ter ações práticas e sequenciais.`;
 
     console.log('Generating authority strategy for:', businessName);
 
