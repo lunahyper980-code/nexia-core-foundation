@@ -1,130 +1,13 @@
-import { useEffect, useState, useMemo } from 'react';
+import { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { AppLayout } from '@/components/AppLayout';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { useUserRole } from '@/contexts/UserRoleContext';
+import { useTeamMetrics } from '@/hooks/useTeamMetrics';
 import { Users, TrendingUp, DollarSign, Activity, Copy, ArrowRight, Sparkles, Check, Zap } from 'lucide-react';
 import { toast } from 'sonner';
-
-// ==============================================
-// LÓGICA DE CRESCIMENTO PROGRESSIVO (48h cycles)
-// Início: 05/01/2026 - Crescimento apenas a partir desta data
-// ==============================================
-
-// Data de início do crescimento (timestamp fixo)
-// O crescimento SÓ começa a partir desta data
-const GROWTH_START_TIMESTAMP = new Date('2026-01-05T00:00:00').getTime();
-
-// Membros da equipe com valores base FIXOS (nunca alterados retroativamente)
-const BASE_TEAM_MEMBERS = [
-  { id: 1, name: 'Lucas Mendes', baseVolume: 4200 },
-  { id: 2, name: 'Fernanda Costa', baseVolume: 3850 },
-  { id: 3, name: 'Rafael Oliveira', baseVolume: 3400 },
-  { id: 4, name: 'Camila Rodrigues', baseVolume: 2950 },
-  { id: 5, name: 'Bruno Almeida', baseVolume: 2600 },
-  { id: 6, name: 'Ana Beatriz', baseVolume: 2350 },
-  { id: 7, name: 'Pedro Henrique', baseVolume: 1980 },
-  { id: 8, name: 'Juliana Martins', baseVolume: 1750 },
-];
-
-// Status possíveis da equipe (alternância natural)
-const TEAM_STATUSES = ['Estável', 'Em crescimento', 'Performance positiva'];
-
-// Calcula quantos ciclos completos de 48h se passaram DESDE o início
-function getCompletedCycles(): number {
-  const now = Date.now();
-  if (now < GROWTH_START_TIMESTAMP) return 0;
-  
-  const elapsedMs = now - GROWTH_START_TIMESTAMP;
-  const cycleMs = 48 * 60 * 60 * 1000; // 48 horas em ms
-  return Math.floor(elapsedMs / cycleMs);
-}
-
-// Gerador pseudo-aleatório determinístico baseado no ciclo
-function seededRandom(cycle: number, memberId: number): number {
-  const x = Math.sin((cycle + 1) * 9973 + memberId * 7919) * 10000;
-  return x - Math.floor(x);
-}
-
-// Calcula incremento para um membro em um ciclo específico
-function getMemberCycleIncrement(cycle: number, memberId: number): number {
-  // Variação entre R$250 e R$400 (nunca números redondos repetidos)
-  const rand = seededRandom(cycle, memberId);
-  const baseIncrement = 250 + rand * 150; // R$250 a R$400
-  
-  // Pequena variação para evitar valores muito redondos
-  const variation = (seededRandom(cycle, memberId + 1000) - 0.5) * 30;
-  
-  return Math.round(baseIncrement + variation);
-}
-
-// Determina se membro cresce neste ciclo (alguns não crescem)
-function memberGrowsInCycle(cycle: number, memberId: number): boolean {
-  // ~15% de chance de não crescer neste ciclo
-  return seededRandom(cycle, memberId + 500) > 0.15;
-}
-
-// Calcula os dados da equipe baseado nos ciclos completados
-function calculateTeamData() {
-  const completedCycles = getCompletedCycles();
-  const currentCycle = completedCycles; // Ciclo atual para status e progresso
-  
-  const members = BASE_TEAM_MEMBERS.map((member) => {
-    // Calcular crescimento acumulado APENAS dos ciclos já completados
-    let accumulatedGrowth = 0;
-    let isGrowingThisCycle = false;
-    
-    for (let c = 0; c < completedCycles; c++) {
-      if (memberGrowsInCycle(c, member.id)) {
-        accumulatedGrowth += getMemberCycleIncrement(c, member.id);
-      }
-    }
-    
-    // Verificar se está crescendo no ciclo atual (para texto visual)
-    if (completedCycles > 0) {
-      isGrowingThisCycle = memberGrowsInCycle(completedCycles - 1, member.id);
-    }
-    
-    const totalVolume = member.baseVolume + accumulatedGrowth;
-    
-    // Percentual de progresso: evolui lentamente, nunca completa
-    // Base entre 35-55%, cresce ~2-4% por ciclo, max 92%
-    const baseProgress = 35 + (seededRandom(0, member.id) * 20);
-    const progressGrowth = completedCycles * (2 + seededRandom(currentCycle, member.id) * 2);
-    const progress = Math.min(92, Math.round(baseProgress + progressGrowth));
-    
-    return {
-      ...member,
-      volume: totalVolume,
-      progress,
-      isGrowing: isGrowingThisCycle,
-    };
-  });
-
-  // Ordenar por volume (maior para menor)
-  members.sort((a, b) => b.volume - a.volume);
-
-  // Calcular totais
-  const totalVolume = members.reduce((sum, m) => sum + m.volume, 0);
-  const averageTicket = Math.round(totalVolume / members.length);
-  
-  // Status baseado no ciclo atual (alternância natural)
-  const statusIndex = currentCycle % TEAM_STATUSES.length;
-  const status = TEAM_STATUSES[statusIndex];
-
-  return {
-    members,
-    stats: {
-      activeMembers: members.length,
-      totalVolume,
-      averageTicket,
-      status,
-    },
-    completedCycles,
-  };
-}
 
 const promoLinks = {
   mensal: 'https://go.perfectpay.com.br/PPU38CQ5GFF',
@@ -132,12 +15,12 @@ const promoLinks = {
 };
 
 export default function MinhaEquipe() {
-  const { isAdminOrOwner, loading } = useUserRole();
+  const { isAdminOrOwner, loading: roleLoading } = useUserRole();
+  const { teamData, loading: metricsLoading } = useTeamMetrics();
   const navigate = useNavigate();
   const [showPromoArea, setShowPromoArea] = useState(false);
-
-  // Calcular dados baseado nos ciclos completados desde o início
-  const teamData = useMemo(() => calculateTeamData(), []);
+  
+  const loading = roleLoading || metricsLoading;
 
   useEffect(() => {
     if (!loading && !isAdminOrOwner) {
@@ -157,7 +40,7 @@ export default function MinhaEquipe() {
     }).format(value);
   };
 
-  if (loading) {
+  if (loading || !teamData) {
     return (
       <AppLayout title="Minha Equipe">
         <div className="flex items-center justify-center min-h-[60vh]">

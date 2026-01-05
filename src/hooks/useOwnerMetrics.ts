@@ -1,50 +1,27 @@
 import { useState, useEffect, useCallback, useMemo } from 'react';
-import { useAuth } from '@/contexts/AuthContext';
 import { useUserRole } from '@/contexts/UserRoleContext';
+import { useWorkspace } from '@/contexts/WorkspaceContext';
+import { supabase } from '@/integrations/supabase/client';
 
 // ==============================================
 // VALORES BASE REALISTAS E COERENTES
 // ==============================================
-// Referência de preços:
-// - Autoridade Digital (mensal): R$ 2.500
-// - Kit de Lançamento (projeto): R$ 3.000
-// - Posicionamento Digital (projeto): R$ 2.000
-// - Organização de Processos (projeto): R$ 2.500
-// Ticket médio esperado: ~R$ 2.200
-// ==============================================
-
 const BASE_METRICS = {
-  projects: 32,           // Soluções criadas
-  proposals: 38,          // Propostas em aberto
-  clients: 29,            // Clientes cadastrados
-  plannings: 27,          // Planejamentos
-  pendingTasks: 12,       // Tarefas pendentes
-  completedTasks: 41,     // Tarefas concluídas
-  deliveries: 26,         // Entregas em andamento
-  contracts: 24,          // Contratos
-  averageTicket: 0,       // Será calculado: pipeline ÷ projetos
-  totalPipelineValue: 38743, // Pipeline: R$ 38.743,00
+  projects: 32,
+  proposals: 38,
+  clients: 29,
+  plannings: 27,
+  pendingTasks: 12,
+  completedTasks: 41,
+  deliveries: 26,
+  contracts: 24,
+  averageTicket: 0,
+  totalPipelineValue: 38743,
   totalProposalValue: 38743,
 };
 
 // Incremento a cada 48 horas
 const INCREMENT_INTERVAL_MS = 48 * 60 * 60 * 1000;
-
-// Guarda uma data de referência fixa no navegador
-const OWNER_METRICS_REFERENCE_STORAGE_KEY = 'nexia_owner_metrics_reference_date_v4';
-
-const getReferenceDateMs = (): number => {
-  if (typeof window === 'undefined') return Date.now();
-
-  const stored = window.localStorage.getItem(OWNER_METRICS_REFERENCE_STORAGE_KEY);
-  const parsed = stored ? Number(stored) : NaN;
-
-  if (Number.isFinite(parsed) && parsed > 0) return parsed;
-
-  const now = Date.now();
-  window.localStorage.setItem(OWNER_METRICS_REFERENCE_STORAGE_KEY, String(now));
-  return now;
-};
 
 export interface OwnerMetrics {
   projects: number;
@@ -60,18 +37,12 @@ export interface OwnerMetrics {
   totalProposalValue: number;
 }
 
-// Calcula quantos períodos de 48h passaram desde a data de referência
-const calculateIncrements = (atMs: number = Date.now()): number => {
-  const reference = getReferenceDateMs();
-  const elapsed = atMs - reference;
-  return Math.max(0, Math.floor(elapsed / INCREMENT_INTERVAL_MS));
-};
+// Calcula métricas baseado na data de referência armazenada no backend
+const calculateMetricsFromReference = (referenceDate: Date, basePipeline: number): OwnerMetrics => {
+  const now = Date.now();
+  const elapsed = now - referenceDate.getTime();
+  const increments = Math.max(0, Math.floor(elapsed / INCREMENT_INTERVAL_MS));
 
-// Gera as métricas do admin com base no tempo decorrido
-const generateOwnerMetrics = (): OwnerMetrics => {
-  const increments = calculateIncrements();
-
-  // Crescimento pequeno a cada 48h (entre 1-2 unidades)
   const projects = BASE_METRICS.projects + increments * 1;
   const proposals = BASE_METRICS.proposals + increments * 1;
   const clients = BASE_METRICS.clients + increments * 1;
@@ -81,13 +52,8 @@ const generateOwnerMetrics = (): OwnerMetrics => {
   const deliveries = BASE_METRICS.deliveries + increments * 1;
   const contracts = BASE_METRICS.contracts + increments * 1;
 
-  // Pipeline: +R$ 2.350 a cada 48h
-  const totalPipelineValue = BASE_METRICS.totalPipelineValue + increments * 2350;
-
-  // Mantém vendas alinhado ao pipeline
+  const totalPipelineValue = basePipeline + increments * 2350;
   const totalProposalValue = totalPipelineValue;
-
-  // Ticket médio: pipeline ÷ projetos
   const averageTicket = Math.round(totalPipelineValue / Math.max(1, projects));
 
   return {
@@ -107,36 +73,106 @@ const generateOwnerMetrics = (): OwnerMetrics => {
 
 export function useOwnerMetrics() {
   const { isAdmin, isOwner: isOwnerRole } = useUserRole();
-  const [metrics, setMetrics] = useState<OwnerMetrics>(generateOwnerMetrics);
+  const { workspace } = useWorkspace();
+  const [metrics, setMetrics] = useState<OwnerMetrics>(BASE_METRICS as OwnerMetrics);
+  const [loading, setLoading] = useState(true);
 
-  // Verifica se o usuário atual é admin ou owner (para métricas fictícias)
   const isOwner = useMemo(() => {
     return isAdmin || isOwnerRole;
   }, [isAdmin, isOwnerRole]);
 
-  // Atualiza métricas periodicamente (a cada minuto para detectar mudanças de período)
+  // Busca ou cria métricas no backend
   useEffect(() => {
-    if (!isOwner) return;
+    if (!isOwner || !workspace) {
+      setLoading(false);
+      return;
+    }
 
-    const updateMetrics = () => {
-      setMetrics(generateOwnerMetrics());
+    const fetchOrCreateMetrics = async () => {
+      try {
+        // Buscar métricas existentes do backend
+        const { data: existingMetrics, error: fetchError } = await supabase
+          .from('owner_metrics')
+          .select('*')
+          .eq('workspace_id', workspace.id)
+          .maybeSingle();
+
+        if (fetchError) {
+          console.error('Error fetching owner metrics:', fetchError);
+          setLoading(false);
+          return;
+        }
+
+        let referenceDate: Date;
+        let basePipeline = BASE_METRICS.totalPipelineValue;
+
+        if (existingMetrics) {
+          // Usar data de referência do backend
+          referenceDate = new Date(existingMetrics.reference_date);
+          basePipeline = Number(existingMetrics.total_pipeline_value) || BASE_METRICS.totalPipelineValue;
+        } else {
+          // Criar novo registro no backend com data atual
+          referenceDate = new Date();
+          
+          const { error: insertError } = await supabase
+            .from('owner_metrics')
+            .insert({
+              workspace_id: workspace.id,
+              reference_date: referenceDate.toISOString(),
+              completed_cycles: 0,
+              projects: BASE_METRICS.projects,
+              proposals: BASE_METRICS.proposals,
+              clients: BASE_METRICS.clients,
+              plannings: BASE_METRICS.plannings,
+              pending_tasks: BASE_METRICS.pendingTasks,
+              completed_tasks: BASE_METRICS.completedTasks,
+              deliveries: BASE_METRICS.deliveries,
+              contracts: BASE_METRICS.contracts,
+              total_pipeline_value: BASE_METRICS.totalPipelineValue,
+            });
+
+          if (insertError) {
+            console.error('Error creating owner metrics:', insertError);
+          }
+        }
+
+        // Calcular métricas com base na data de referência do backend
+        const calculatedMetrics = calculateMetricsFromReference(referenceDate, basePipeline);
+        setMetrics(calculatedMetrics);
+
+      } catch (error) {
+        console.error('Error in owner metrics:', error);
+      } finally {
+        setLoading(false);
+      }
     };
 
-    // Atualiza imediatamente
-    updateMetrics();
+    fetchOrCreateMetrics();
 
     // Atualiza a cada minuto para detectar mudanças de período
-    const interval = setInterval(updateMetrics, 60000);
+    const interval = setInterval(async () => {
+      const { data } = await supabase
+        .from('owner_metrics')
+        .select('reference_date, total_pipeline_value')
+        .eq('workspace_id', workspace.id)
+        .maybeSingle();
+
+      if (data) {
+        const calculatedMetrics = calculateMetricsFromReference(
+          new Date(data.reference_date),
+          Number(data.total_pipeline_value) || BASE_METRICS.totalPipelineValue
+        );
+        setMetrics(calculatedMetrics);
+      }
+    }, 60000);
 
     return () => clearInterval(interval);
-  }, [isOwner]);
+  }, [isOwner, workspace]);
 
-  // Função para obter valor real ou fictício baseado no admin
   const getMetricValue = useCallback(<T extends number>(ownerValue: T, realValue: T): T => {
     return isOwner ? ownerValue : realValue;
   }, [isOwner]);
 
-  // Função para obter métricas de stats completas
   const getOwnerStats = useCallback((realStats: Partial<OwnerMetrics>): OwnerMetrics => {
     if (!isOwner) {
       return {
@@ -159,12 +195,12 @@ export function useOwnerMetrics() {
   return {
     isOwner,
     metrics,
+    loading,
     getMetricValue,
     getOwnerStats,
   };
 }
 
-// Hook simplificado para apenas verificar se é admin
 export function useIsOwner(): boolean {
   const { isAdmin, isOwner } = useUserRole();
   return isAdmin || isOwner;
