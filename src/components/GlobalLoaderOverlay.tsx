@@ -1,13 +1,13 @@
 import { useGlobalLoader } from '@/contexts/GlobalLoaderContext';
 
 export function GlobalLoaderOverlay() {
-  const { isLoading, loadingMessage } = useGlobalLoader();
+  const { isVisible, loadingMessage } = useGlobalLoader();
 
-  if (!isLoading) return null;
+  if (!isVisible) return null;
 
   return (
     <div 
-      className="fixed inset-0 z-[9999] flex items-center justify-center bg-background/80 backdrop-blur-sm"
+      className="fixed inset-0 z-[9999] flex items-center justify-center bg-background/80 backdrop-blur-sm animate-fade-in"
       style={{ pointerEvents: 'all' }}
     >
       <div className="flex flex-col items-center gap-4">
