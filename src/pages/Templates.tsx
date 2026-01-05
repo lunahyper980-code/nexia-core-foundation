@@ -31,6 +31,12 @@ import templatePaginaCaptura from '@/assets/template-pagina-captura.png';
 import templateEcommerceSimples from '@/assets/template-ecommerce-simples.png';
 import templateNegocioLocal from '@/assets/template-negocio-local.png';
 import templatePortfolio from '@/assets/template-portfolio.png';
+// New template images
+import templateClinicaConsultorio from '@/assets/template-clinica-consultorio.png';
+import templateStudioEstetica from '@/assets/template-studio-estetica.png';
+import templateCorretorImobiliaria from '@/assets/template-corretor-imobiliaria.png';
+import templateLojaCosmeticos from '@/assets/template-loja-cosmeticos.png';
+import templateEscolaCurso from '@/assets/template-escola-curso.png';
 
 type SolutionType = 'app' | 'site' | null;
 
@@ -119,6 +125,42 @@ const templates: Template[] = [
     name: 'Agendamento',
     description: 'Sistema de reservas e gestão de horários',
     image: templateAgendamento,
+    type: 'app',
+  },
+  // New App Templates
+  {
+    id: 'clinica-consultorio',
+    name: 'Clínica & Consultório',
+    description: 'Agendamento e gestão profissional para clínicas e consultórios',
+    image: templateClinicaConsultorio,
+    type: 'app',
+  },
+  {
+    id: 'studio-estetica',
+    name: 'Studio de Estética & Spa',
+    description: 'Agenda, catálogo e fidelidade para studios de estética',
+    image: templateStudioEstetica,
+    type: 'app',
+  },
+  {
+    id: 'corretor-imobiliaria',
+    name: 'Imobiliária & Corretor',
+    description: 'Portfólio de imóveis e agendamento de visitas',
+    image: templateCorretorImobiliaria,
+    type: 'app',
+  },
+  {
+    id: 'loja-cosmeticos',
+    name: 'Loja de Cosméticos & Perfumaria',
+    description: 'Vitrine digital para lojas de cosméticos e perfumaria',
+    image: templateLojaCosmeticos,
+    type: 'app',
+  },
+  {
+    id: 'escola-curso-local',
+    name: 'Escola & Curso Local',
+    description: 'Gestão de alunos, aulas e comunicação para escolas locais',
+    image: templateEscolaCurso,
     type: 'app',
   },
   // Site Templates
