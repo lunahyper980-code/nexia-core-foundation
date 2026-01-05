@@ -155,12 +155,31 @@ export default function GerenciarUsuarios() {
 
   const updateAccessStatus = async (userId: string, newStatus: AccessStatus, reason?: string) => {
     try {
-      const updateData: any = { access_status: newStatus };
-      if (reason !== undefined) {
+      // Get current admin user id
+      const { data: { user: currentUser } } = await supabase.auth.getUser();
+      
+      const updateData: any = { 
+        access_status: newStatus,
+        access_updated_at: new Date().toISOString()
+      };
+      
+      // Set approved_at and approved_by when activating
+      if (newStatus === 'active') {
+        updateData.approved_at = new Date().toISOString();
+        updateData.approved_by = currentUser?.id || null;
+        updateData.access_reason = null;
+      }
+      
+      // Set reason for blocked status
+      if (newStatus === 'blocked' && reason) {
         updateData.access_reason = reason;
       }
-      if (newStatus !== 'blocked') {
+      
+      // Clear reason for pending status
+      if (newStatus === 'pending') {
         updateData.access_reason = null;
+        updateData.approved_at = null;
+        updateData.approved_by = null;
       }
 
       const { error } = await supabase
