@@ -32,15 +32,30 @@ interface PositioningData {
   observations: string;
 }
 
+function getDemoModePrompt(demoMode: boolean): string {
+  if (!demoMode) return '';
+  
+  return `
+IMPORTANTE - MODO DEMONSTRAÇÃO:
+Os dados podem estar incompletos ou genéricos. Gere uma resposta COMPLETA e PROFISSIONAL.
+- Mantenha 100% da estrutura
+- Use tom profissional
+- Inclua avisos sutis como "Com base nas informações disponíveis..."
+- NUNCA gere erros ou interrompa
+- Gere conteúdo plausível e profissional
+`;
+}
+
 serve(async (req) => {
   if (req.method === 'OPTIONS') {
     return new Response(null, { headers: corsHeaders });
   }
 
   try {
-    const { positioningData, forceRegenerate } = await req.json() as { 
+    const { positioningData, forceRegenerate, demoMode = false } = await req.json() as { 
       positioningData: PositioningData;
       forceRegenerate?: boolean;
+      demoMode?: boolean;
     };
     
     const GEMINI_API_KEY = Deno.env.get('GEMINI_API_KEY');
@@ -48,9 +63,9 @@ serve(async (req) => {
       throw new Error('GEMINI_API_KEY is not configured');
     }
 
-    // Check cache
+    // Check cache (skip in demo mode)
     const cacheKey = getCacheKey(positioningData);
-    if (!forceRegenerate) {
+    if (!forceRegenerate && !demoMode) {
       const cached = cache.get(cacheKey);
       if (cached && (Date.now() - cached.timestamp) < CACHE_TTL_MS) {
         console.log('Returning cached positioning');
@@ -60,18 +75,21 @@ serve(async (req) => {
       }
     }
 
-    const objectivesText = positioningData.objectives.length > 0 
+    const objectivesText = positioningData.objectives?.length > 0 
       ? positioningData.objectives.join(', ') 
       : 'Não especificado';
 
-    const prompt = `Você é um especialista em posicionamento de marca.
+    const demoPrompt = getDemoModePrompt(demoMode);
 
-EMPRESA: ${positioningData.companyName}
+    const prompt = `Você é um especialista em posicionamento de marca.
+${demoPrompt}
+
+EMPRESA: ${positioningData.companyName || 'Empresa demonstração'}
 SEGMENTO: ${positioningData.segment || 'Não informado'}
-LOCAL: ${positioningData.cityState || 'Não informada'}
-PÚBLICO: ${positioningData.targetAudience || 'Não informado'}
-PRODUTO: ${positioningData.mainProductService || 'Não informado'}
-DIFERENCIAL: ${positioningData.businessDifferential || 'Não informado'}
+LOCAL: ${positioningData.cityState || 'Brasil'}
+PÚBLICO: ${positioningData.targetAudience || 'Público geral'}
+PRODUTO: ${positioningData.mainProductService || 'Serviços gerais'}
+DIFERENCIAL: ${positioningData.businessDifferential || 'Qualidade e atendimento'}
 OBJETIVOS: ${objectivesText}
 OBS: ${positioningData.observations || 'Nenhuma'}
 
@@ -87,7 +105,7 @@ Retorne JSON (sem markdown):
 
 REGRAS: Sem bullets, hashtags ou marcadores. Parágrafos naturais.`;
 
-    console.log('Generating positioning for:', positioningData.companyName);
+    console.log('Generating positioning for:', positioningData.companyName, 'Demo mode:', demoMode);
 
     const response = await fetch(`${GEMINI_API_URL}?key=${GEMINI_API_KEY}`, {
       method: 'POST',

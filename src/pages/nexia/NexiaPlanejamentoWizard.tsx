@@ -24,6 +24,7 @@ import { ScrollArea } from "@/components/ui/scroll-area";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetDescription } from "@/components/ui/sheet";
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/components/ui/collapsible";
+import { useDemoModeForForms } from "@/hooks/useDemoModeForForms";
 
 interface Client {
   id: string;
@@ -194,6 +195,7 @@ export default function NexiaPlanejamentoWizard() {
   const { id } = useParams();
   const { workspace } = useWorkspace();
   const { user } = useAuth();
+  const { isDemoMode, getDemoModeFlag } = useDemoModeForForms();
   
   const [preparationConfirmed, setPreparationConfirmed] = useState(false);
   const [planningMode, setPlanningMode] = useState<'simple' | 'advanced' | null>(null);
@@ -549,7 +551,11 @@ export default function NexiaPlanejamentoWizard() {
     setIsGeneratingDiagnosis(true);
     try {
       const { data, error } = await supabase.functions.invoke("nexia-diagnosis", {
-        body: { planningData, mode: planningMode }
+        body: { 
+          planningData, 
+          mode: planningMode,
+          demoMode: getDemoModeFlag()
+        }
       });
 
       if (error) throw error;

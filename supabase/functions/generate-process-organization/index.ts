@@ -28,16 +28,16 @@ serve(async (req) => {
   }
 
   try {
-    const { organizationData, forceRegenerate } = await req.json();
+    const { organizationData, forceRegenerate, demoMode = false } = await req.json();
     const GEMINI_API_KEY = Deno.env.get('GEMINI_API_KEY');
     
     if (!GEMINI_API_KEY) {
       throw new Error('GEMINI_API_KEY is not configured');
     }
 
-    // Check cache
+    // Check cache (skip in demo mode)
     const cacheKey = getCacheKey(organizationData);
-    if (!forceRegenerate) {
+    if (!forceRegenerate && !demoMode) {
       const cached = cache.get(cacheKey);
       if (cached && (Date.now() - cached.timestamp) < CACHE_TTL_MS) {
         console.log('Returning cached process organization');
@@ -47,16 +47,27 @@ serve(async (req) => {
       }
     }
 
-    console.log('Generating process organization for:', organizationData.businessType);
+    console.log('Generating process organization for:', organizationData.businessType, 'Demo mode:', demoMode);
+
+    const demoModePrompt = demoMode ? `
+IMPORTANTE - MODO DEMONSTRAÇÃO:
+Os dados podem estar incompletos ou genéricos. Gere uma resposta COMPLETA e PROFISSIONAL.
+- Mantenha 100% da estrutura
+- Use tom profissional
+- Inclua avisos sutis como "Com base nas informações disponíveis..."
+- NUNCA gere erros ou interrompa
+- Gere conteúdo plausível e profissional
+` : '';
 
     const prompt = `Você é um consultor de processos para pequenos negócios brasileiros, especializado em criar planos práticos e executáveis.
+${demoModePrompt}
 
-NEGÓCIO: ${organizationData.businessType}
-EQUIPE: ${organizationData.teamSize}
-CANAIS DE ATENDIMENTO: ${organizationData.contactChannels}
-ONDE PERDE TEMPO: ${organizationData.timeWasteAreas}
-PRINCIPAL PROBLEMA: ${organizationData.mainInternalProblem}
-OBJETIVO: ${organizationData.organizationGoal}
+NEGÓCIO: ${organizationData.businessType || 'Empresa demonstração'}
+EQUIPE: ${organizationData.teamSize || 'Pequena'}
+CANAIS DE ATENDIMENTO: ${organizationData.contactChannels || 'WhatsApp'}
+ONDE PERDE TEMPO: ${organizationData.timeWasteAreas || 'Processos manuais'}
+PRINCIPAL PROBLEMA: ${organizationData.mainInternalProblem || 'Falta de organização'}
+OBJETIVO: ${organizationData.organizationGoal || 'Organizar operação'}
 
 Crie um PLANO PRÁTICO DE ORGANIZAÇÃO usando linguagem simples e frases curtas.
 Conecte processos com melhoria no atendimento e vendas.

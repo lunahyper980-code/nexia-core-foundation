@@ -28,7 +28,7 @@ serve(async (req) => {
   }
 
   try {
-    const { businessName, segment, mainChannel, frequency, objective, targetAudience, forceRegenerate } = await req.json();
+    const { businessName, segment, mainChannel, frequency, objective, targetAudience, forceRegenerate, demoMode = false } = await req.json();
 
     const GEMINI_API_KEY = Deno.env.get('GEMINI_API_KEY');
     if (!GEMINI_API_KEY) {
@@ -37,9 +37,9 @@ serve(async (req) => {
 
     const payload = { businessName, segment, mainChannel, frequency, objective, targetAudience };
     
-    // Check cache
+    // Check cache (skip in demo mode)
     const cacheKey = getCacheKey(payload);
-    if (!forceRegenerate) {
+    if (!forceRegenerate && !demoMode) {
       const cached = cache.get(cacheKey);
       if (cached && (Date.now() - cached.timestamp) < CACHE_TTL_MS) {
         console.log('Returning cached authority strategy');
@@ -49,16 +49,27 @@ serve(async (req) => {
       }
     }
 
+    const demoModePrompt = demoMode ? `
+IMPORTANTE - MODO DEMONSTRAÇÃO:
+Os dados podem estar incompletos ou genéricos. Gere uma resposta COMPLETA e PROFISSIONAL.
+- Mantenha 100% da estrutura
+- Use tom profissional
+- Inclua avisos sutis como "Com base nas informações disponíveis..."
+- NUNCA gere erros ou interrompa
+- Gere conteúdo plausível e profissional
+` : '';
+
     const prompt = `Você é um estrategista de presença e autoridade digital, especializado em criar planos executáveis para negócios locais e prestadores de serviço.
+${demoModePrompt}
 
-NEGÓCIO: ${businessName}
-SEGMENTO: ${segment}
-CANAL PRINCIPAL: ${mainChannel}
-FREQUÊNCIA DE POSTAGEM: ${frequency}
-OBJETIVO: ${objective}
-PÚBLICO-ALVO: ${targetAudience || 'Não informado'}
+NEGÓCIO: ${businessName || 'Empresa demonstração'}
+SEGMENTO: ${segment || 'Serviços'}
+CANAL PRINCIPAL: ${mainChannel || 'Instagram'}
+FREQUÊNCIA DE POSTAGEM: ${frequency || '3x por semana'}
+OBJETIVO: ${objective || 'Aumentar autoridade'}
+PÚBLICO-ALVO: ${targetAudience || 'Público local'}
 
-Crie um PLANO ESTRATÉGICO EXECUTÁVEL de autoridade e reconhecimento digital focado em ${objective.toLowerCase()}.
+Crie um PLANO ESTRATÉGICO EXECUTÁVEL de autoridade e reconhecimento digital focado em ${(objective || 'aumentar autoridade').toLowerCase()}.
 
 REGRAS OBRIGATÓRIAS:
 - Use linguagem simples e profissional (sem termos técnicos)

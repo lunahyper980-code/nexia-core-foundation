@@ -111,10 +111,11 @@ serve(async (req) => {
   }
 
   try {
-    const { planningData, mode, forceRegenerate } = await req.json() as { 
+    const { planningData, mode, forceRegenerate, demoMode = false } = await req.json() as { 
       planningData: PlanningData; 
       mode?: 'simple' | 'advanced';
       forceRegenerate?: boolean;
+      demoMode?: boolean;
     };
     
     const GEMINI_API_KEY = Deno.env.get('GEMINI_API_KEY');
@@ -122,9 +123,9 @@ serve(async (req) => {
       throw new Error('GEMINI_API_KEY is not configured');
     }
 
-    // Check cache unless force regenerate
+    // Check cache unless force regenerate or demo mode
     const cacheKey = getCacheKey({ planningData, mode });
-    if (!forceRegenerate) {
+    if (!forceRegenerate && !demoMode) {
       const cached = cache.get(cacheKey);
       if (cached && (Date.now() - cached.timestamp) < CACHE_TTL_MS) {
         console.log('Returning cached diagnosis');
@@ -134,15 +135,26 @@ serve(async (req) => {
       }
     }
 
-    console.log('Generating diagnosis for:', planningData.company_name, 'Mode:', mode || 'advanced');
+    console.log('Generating diagnosis for:', planningData.company_name, 'Mode:', mode || 'advanced', 'Demo:', demoMode);
 
     const isSimpleMode = mode === 'simple';
+
+    const demoModePrompt = demoMode ? `
+IMPORTANTE - MODO DEMONSTRAÇÃO:
+Os dados podem estar incompletos ou genéricos. Gere uma resposta COMPLETA e PROFISSIONAL.
+- Mantenha 100% da estrutura
+- Use tom profissional
+- Inclua avisos sutis como "Com base nas informações disponíveis..."
+- NUNCA gere erros ou interrompa
+- Gere conteúdo plausível e profissional
+` : '';
 
     let contextPrompt = "";
 
     if (isSimpleMode) {
       contextPrompt = `
 Você é um consultor de negócios experiente. Analise os dados e gere um DIAGNÓSTICO DE VENDA profissional.
+${demoModePrompt}
 
 ## DADOS DO NEGÓCIO
 
@@ -194,6 +206,7 @@ REGRAS: Seja DECIDIDO, máximo 150 palavras, bullets curtos.`;
 
       contextPrompt = `
 Você é um estrategista de marketing e vendas. Analise e gere um DIAGNÓSTICO ESTRATÉGICO:
+${demoModePrompt}
 
 ## DADOS DA EMPRESA
 **Empresa:** ${planningData.company_name}
