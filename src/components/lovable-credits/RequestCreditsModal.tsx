@@ -23,7 +23,7 @@ interface RequestCreditsModalProps {
 }
 
 export function RequestCreditsModal({ open, onOpenChange }: RequestCreditsModalProps) {
-  const { requests, loading, createRequest, updateRequest, refetch } = useLovableCreditRequests();
+  const { requests, loading, createRequest, updateRequest, refetch, hasActiveRequest } = useLovableCreditRequests();
   const [inviteLink, setInviteLink] = useState('');
   const [userNote, setUserNote] = useState('');
   const [submitting, setSubmitting] = useState(false);
@@ -42,12 +42,23 @@ export function RequestCreditsModal({ open, onOpenChange }: RequestCreditsModalP
       return;
     }
 
+    // Check for active request before submitting
+    if (hasActiveRequest) {
+      toast.error('Você já possui uma solicitação de créditos em andamento. Aguarde a análise do administrador.');
+      return;
+    }
+
     setSubmitting(true);
     const { error } = await createRequest(inviteLink, userNote);
     setSubmitting(false);
 
     if (error) {
-      toast.error('Erro ao enviar solicitação');
+      // Check if it's the duplicate request error from backend
+      if (error.includes('active credit request') || error.includes('already has')) {
+        toast.error('Você já possui uma solicitação de créditos em andamento. Aguarde a análise do administrador.');
+      } else {
+        toast.error('Erro ao enviar solicitação');
+      }
       return;
     }
 
@@ -127,6 +138,19 @@ export function RequestCreditsModal({ open, onOpenChange }: RequestCreditsModalP
         </DialogHeader>
 
         <div className="space-y-6">
+          {/* Warning for active request */}
+          {hasActiveRequest && (
+            <div className="p-4 rounded-lg bg-warning/10 border border-warning/20 flex items-start gap-3">
+              <AlertCircle className="h-5 w-5 text-warning shrink-0 mt-0.5" />
+              <div>
+                <p className="text-sm font-medium text-warning">Solicitação em andamento</p>
+                <p className="text-xs text-muted-foreground mt-1">
+                  Você já possui uma solicitação de créditos ativa. Aguarde a análise do administrador antes de enviar uma nova.
+                </p>
+              </div>
+            </div>
+          )}
+
           {/* Instructions */}
           <div className="p-4 rounded-lg bg-muted/50 border border-border/50 space-y-3">
             <p className="text-sm font-medium text-foreground">Como obter seu Invite Link:</p>
@@ -147,6 +171,7 @@ export function RequestCreditsModal({ open, onOpenChange }: RequestCreditsModalP
                 value={inviteLink}
                 onChange={(e) => setInviteLink(e.target.value)}
                 placeholder="https://lovable.dev/invite/..."
+                disabled={hasActiveRequest}
               />
             </div>
 
@@ -158,16 +183,17 @@ export function RequestCreditsModal({ open, onOpenChange }: RequestCreditsModalP
                 onChange={(e) => setUserNote(e.target.value)}
                 placeholder="Ex: Vou criar um app para restaurante"
                 rows={2}
+                disabled={hasActiveRequest}
               />
             </div>
 
             <Button 
               onClick={handleSubmit} 
-              disabled={submitting || !inviteLink.trim()}
+              disabled={submitting || !inviteLink.trim() || hasActiveRequest}
               className="w-full gap-2"
             >
               {submitting ? <Loader2 className="h-4 w-4 animate-spin" /> : <Gift className="h-4 w-4" />}
-              Enviar para análise
+              {hasActiveRequest ? 'Aguardando análise' : 'Enviar para análise'}
             </Button>
 
             <p className="text-xs text-muted-foreground text-center">
