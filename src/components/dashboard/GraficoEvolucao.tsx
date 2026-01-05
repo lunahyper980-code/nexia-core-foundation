@@ -20,56 +20,64 @@ interface GraficoEvolucaoProps {
 // ==============================================
 // VALORES REALISTAS E COERENTES
 // ==============================================
-// Pipeline total: R$ 74.500 (32 projetos x ~R$ 2.328)
-// Últimos 30 dias: R$ 18.500 (crescimento real)
-// Últimos 7 dias: R$ 5.200
-// Crescimento 30 dias: +28%
+// Pipeline atual: R$ 74.500 (32 projetos)
+// Valor inicial 30 dias atrás: R$ 56.000 (crescimento de +33%)
+// Últimos 30 dias faturamento: R$ 18.500
+// Últimos 7 dias faturamento: R$ 5.200
+// Crescimento 30 dias: +33%
 // Crescimento 7 dias: +8%
 // ==============================================
 
-const OWNER_GROWTH_30_DAYS = 28;
+const OWNER_GROWTH_30_DAYS = 33;
 const OWNER_GROWTH_7_DAYS = 8;
 const OWNER_REVENUE_30_DAYS = 18500;
 const OWNER_REVENUE_7_DAYS = 5200;
 
-// Gera dados do owner com curva de crescimento progressiva e realista
+// Gera dados do owner - COMEÇA DE BAIXO E CRESCE PROGRESSIVAMENTE
 const generateOwnerData = (currentProjects = 32, currentPipelineValue = 74500) => {
   const data = [];
   const today = new Date();
 
-  // Valor inicial do período (para calcular crescimento de 26%)
-  const startValue = currentPipelineValue / (1 + OWNER_GROWTH_30_DAYS / 100);
-  const totalGrowth = currentPipelineValue - startValue;
+  // IMPORTANTE: Valor inicial BAIXO - começa em ~56.000 (75% do atual)
+  // Isso garante que o gráfico visualmente começa de baixo
+  const startValue = currentPipelineValue * 0.75; // 75% do valor final = começa baixo
+  const endValue = currentPipelineValue;
+  const totalGrowth = endValue - startValue;
   
-  // Projetos: começar BAIXO e crescer progressivamente (nunca no máximo)
-  const startProjects = Math.max(1, Math.floor(currentProjects * 0.55)); // Começa em 55% do total
+  // Projetos: começa com menos da metade e cresce
+  const startProjects = Math.max(8, Math.floor(currentProjects * 0.5)); // 50% = começa bem baixo
   const projectGrowth = currentProjects - startProjects;
   
-  // Seed para variação natural baseado no pipeline
-  const seed = Math.floor(currentPipelineValue) % 1000;
+  // Seed para variação natural
+  const seed = 42;
 
   for (let i = 29; i >= 0; i--) {
     const date = new Date(today);
     date.setDate(date.getDate() - i);
 
-    // Progresso não-linear: começa LENTO, acelera gradualmente, estabiliza no fim
-    const progress = (29 - i) / 29;
-    // Curva exponencial suave - começa bem baixo e cresce progressivamente
-    const smoothProgress = Math.pow(progress, 1.6);
+    // Dia 0 = primeiro dia (29 dias atrás), Dia 29 = hoje
+    const dayIndex = 29 - i;
+    const progress = dayIndex / 29; // 0 a 1
     
-    // Variação natural diária (pequenas oscilações realistas - nunca reto)
-    const dayVariation = Math.sin((i + seed) * 0.8) * 0.04;
-    const midWeekBoost = (i % 7 >= 2 && i % 7 <= 4) ? 0.02 : 0; // Leve boost no meio da semana
-    const weekendDip = (i % 7 === 0 || i % 7 === 6) ? -0.025 : 0;
+    // Curva que COMEÇA DEVAGAR e ACELERA - garantindo início baixo
+    // Usando função quadrática para crescimento suave
+    const baseProgress = Math.pow(progress, 1.3);
     
-    const adjustedProgress = Math.max(0, Math.min(1, smoothProgress + dayVariation + midWeekBoost + weekendDip));
-    const dayValue = startValue + (totalGrowth * adjustedProgress);
-    const dayProjects = Math.round(startProjects + (projectGrowth * smoothProgress));
+    // Variações diárias naturais (pequenas oscilações)
+    const noise = Math.sin(dayIndex * 0.9 + seed) * 0.025;
+    const weekendEffect = (dayIndex % 7 === 0 || dayIndex % 7 === 6) ? -0.015 : 0.01;
+    
+    // Progresso final com variações (nunca ultrapassa 1)
+    const finalProgress = Math.min(1, Math.max(0, baseProgress + noise + weekendEffect));
+    
+    // Valores do dia
+    const dayValue = startValue + (totalGrowth * finalProgress);
+    const dayProjects = Math.round(startProjects + (projectGrowth * baseProgress));
 
     data.push({
       date: date.toLocaleDateString('pt-BR', { day: '2-digit', month: '2-digit' }),
-      projetos: Math.max(1, dayProjects),
-      valor: Math.round(dayValue * 100) / 100,
+      projetos: Math.max(startProjects, dayProjects),
+      valor: Math.round(dayValue),
     });
   }
 
@@ -138,7 +146,7 @@ const CustomTooltip = ({ active, payload, label }: any) => {
           {payload[0].value} projetos
         </p>
         <p className="text-sm font-semibold text-success">
-          R$ {(payload[1]?.value ?? 0).toLocaleString('pt-BR', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
+          R$ {(payload[1]?.value ?? 0).toLocaleString('pt-BR', { minimumFractionDigits: 0, maximumFractionDigits: 0 })}
         </p>
       </div>
     );
@@ -159,6 +167,7 @@ export function GraficoEvolucao({
       : generateRealUserData(currentProjects, currentPipelineValue, userCreatedAt, metricsHistory);
   }, [isOwner, currentProjects, currentPipelineValue, userCreatedAt, metricsHistory]);
 
+  const firstValue = data[0];
   const lastValue = data[data.length - 1];
   
   // Calcula métricas dos últimos 7 dias
@@ -170,12 +179,11 @@ export function GraficoEvolucao({
   const calculate30DaysGrowth = () => {
     if (isOwner) return OWNER_GROWTH_30_DAYS.toString();
     
-    const firstNonZero = data.find(d => d.valor > 0);
-    if (!firstNonZero || firstNonZero.valor === 0 || firstNonZero === lastValue) {
+    if (firstValue.valor === 0 || firstValue === lastValue) {
       return '0';
     }
     
-    const growth = ((lastValue.valor - firstNonZero.valor) / firstNonZero.valor * 100);
+    const growth = ((lastValue.valor - firstValue.valor) / firstValue.valor * 100);
     return growth.toFixed(0);
   };
   
@@ -194,14 +202,14 @@ export function GraficoEvolucao({
   const growth30Days = calculate30DaysGrowth();
   const growth7Days = calculate7DaysGrowth();
   
-  // Faturamento dos períodos (para owner, usa valores fixos coerentes)
-  const revenue30Days = isOwner ? OWNER_REVENUE_30_DAYS : (lastValue.valor - (data[0]?.valor || 0));
-  const revenue7Days = isOwner ? OWNER_REVENUE_7_DAYS : (last7DaysValue - first7DaysValue);
+  // Faturamento dos períodos
+  const revenue30Days = isOwner ? OWNER_REVENUE_30_DAYS : Math.max(0, lastValue.valor - firstValue.valor);
+  const revenue7Days = isOwner ? OWNER_REVENUE_7_DAYS : Math.max(0, last7DaysValue - first7DaysValue);
 
   return (
     <PremiumFrame title="📈 Evolução dos Projetos — Últimos 30 dias" className="fade-in" style={{ animationDelay: '0.25s' }}>
-      {/* Métricas principais */}
-      <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 mb-4">
+      {/* Métricas - SEM Pipeline Atual */}
+      <div className="grid grid-cols-3 gap-3 mb-4">
         {/* Faturamento 30 dias */}
         <div className="p-3 rounded-lg bg-success/10 border border-success/20">
           <div className="flex items-center gap-2 mb-1">
@@ -235,15 +243,6 @@ export function GraficoEvolucao({
           <p className="text-lg font-bold text-emerald-500">+{growth30Days}%</p>
           <p className="text-xs text-emerald-500/80">no período</p>
         </div>
-        
-        {/* Pipeline atual - SEM ÍCONE */}
-        <div className="p-3 rounded-lg bg-foreground/5 border border-foreground/10">
-          <span className="text-xs text-muted-foreground">Pipeline Atual</span>
-          <p className="text-lg font-bold text-foreground mt-1">
-            R$ {lastValue.valor.toLocaleString('pt-BR', { minimumFractionDigits: 0, maximumFractionDigits: 0 })}
-          </p>
-          <p className="text-xs text-muted-foreground">{lastValue.projetos} projetos ativos</p>
-        </div>
       </div>
 
       {/* Gráfico */}
@@ -273,6 +272,7 @@ export function GraficoEvolucao({
               tickLine={false}
               axisLine={false}
               tickFormatter={(value) => `${value}`}
+              domain={['dataMin - 2', 'dataMax + 2']}
             />
             <YAxis 
               yAxisId="right"
@@ -281,6 +281,7 @@ export function GraficoEvolucao({
               tickLine={false}
               axisLine={false}
               tickFormatter={(value) => `${(value / 1000).toFixed(0)}k`}
+              domain={['dataMin * 0.9', 'dataMax * 1.05']}
               hide
             />
             <Tooltip content={<CustomTooltip />} />
@@ -315,11 +316,6 @@ export function GraficoEvolucao({
           <span className="text-xs text-muted-foreground">Valor (R$)</span>
         </div>
       </div>
-      
-      {/* Nota de coerência */}
-      <p className="text-[10px] text-muted-foreground/60 text-center mt-3">
-        Faturamento acumulado não ultrapassa o pipeline total. Valores baseados em projetos ativos.
-      </p>
     </PremiumFrame>
   );
 }
