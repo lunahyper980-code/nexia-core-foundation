@@ -31,6 +31,10 @@ import {
   Download,
   Loader2,
   AlertTriangle,
+  CreditCard,
+  Circle,
+  Settings,
+  Landmark,
 } from 'lucide-react';
 import { useWorkspace } from '@/contexts/WorkspaceContext';
 import { useAuth } from '@/contexts/AuthContext';
@@ -149,10 +153,10 @@ const SOLUTIONS: SolutionConfig[] = [
 const STEPS = [
   { id: 1, label: 'Contratado', icon: User },
   { id: 2, label: 'Contratante', icon: Building2 },
-  { id: 3, label: 'Projeto', icon: Layers },
-  { id: 4, label: 'Valores', icon: DollarSign },
-  { id: 5, label: 'Cláusulas', icon: Shield },
-  { id: 6, label: 'Gerar', icon: Sparkles },
+  { id: 3, label: 'Projeto', icon: Landmark },
+  { id: 4, label: 'Valores', icon: CreditCard },
+  { id: 5, label: 'Cláusulas', icon: Circle },
+  { id: 6, label: 'Gerar', icon: Settings },
 ];
 
 // ==============================================
@@ -239,22 +243,8 @@ export default function ContratoNexiaWizard() {
     });
   };
 
-  const canProceed = () => {
-    switch (currentStep) {
-      case 1:
-        return formData.contractedName && formData.contractedDocument && formData.contractedCity;
-      case 2:
-        return formData.contractorName && formData.contractorDocument && formData.contractorCity;
-      case 3:
-        return formData.solutionType && formData.projectName && formData.deliverables;
-      case 4:
-        return formData.serviceValue && formData.deadline && formData.paymentTerms;
-      case 5:
-        return true;
-      default:
-        return true;
-    }
-  };
+  // Permitir pular etapas livremente
+  const canProceed = () => true;
 
   const generateContractText = () => {
     const solution = SOLUTIONS.find(s => s.id === formData.solutionType);
@@ -950,17 +940,21 @@ ${formData.contractorDocument}
     }
   };
 
+  // Determinar se veio de soluções digitais
+  const fromSolucoes = !!solutionParam;
+  const backPath = fromSolucoes ? '/solucoes' : '/vendas/contratos';
+
   return (
     <AppLayout title="Gerar Contrato">
       <div className="max-w-2xl mx-auto space-y-6">
         {/* Header */}
         <div className="flex items-center gap-4">
-          <Button variant="ghost" size="icon" onClick={() => navigate('/vendas/contratos')}>
+          <Button variant="ghost" size="icon" onClick={() => navigate(backPath)}>
             <ArrowLeft className="h-5 w-5" />
           </Button>
           <div>
             <div className="text-xs text-muted-foreground mb-1">
-              Soluções Digitais › Projeto › Contrato
+              {fromSolucoes ? 'Soluções Digitais › Projeto › Contrato' : 'Vendas › Contratos › Novo Contrato'}
             </div>
             <h1 className="text-xl font-bold text-foreground">Gerar Contrato</h1>
             {formData.projectName && (
@@ -982,7 +976,7 @@ ${formData.contractorDocument}
           </div>
         </div>
 
-        {/* Steps Navigation */}
+        {/* Steps Navigation - clickable to jump to any step */}
         <div className="flex items-center justify-between overflow-x-auto pb-2">
           {STEPS.map((step) => {
             const Icon = step.icon;
@@ -992,14 +986,13 @@ ${formData.contractorDocument}
             return (
               <button
                 key={step.id}
-                onClick={() => step.id <= currentStep && setCurrentStep(step.id)}
-                disabled={step.id > currentStep}
-                className={`flex flex-col items-center gap-1 px-3 py-2 rounded-lg transition-all min-w-[70px] ${
+                onClick={() => setCurrentStep(step.id)}
+                className={`flex flex-col items-center gap-1 px-3 py-2 rounded-lg transition-all min-w-[70px] cursor-pointer hover:bg-muted ${
                   isActive
                     ? 'bg-primary/10 text-primary'
                     : isCompleted
-                      ? 'text-foreground hover:bg-muted cursor-pointer'
-                      : 'text-muted-foreground cursor-not-allowed'
+                      ? 'text-foreground'
+                      : 'text-muted-foreground'
                 }`}
               >
                 <div className={`w-8 h-8 rounded-full flex items-center justify-center ${
@@ -1015,6 +1008,11 @@ ${formData.contractorDocument}
               </button>
             );
           })}
+        </div>
+
+        {/* Step label on right side */}
+        <div className="flex justify-end">
+          <span className="text-sm font-medium text-primary">{STEPS.find(s => s.id === currentStep)?.label}</span>
         </div>
 
         {/* Current Step Content */}

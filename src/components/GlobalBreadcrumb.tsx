@@ -152,10 +152,10 @@ const BREADCRUMB_CONFIG: Record<string, BreadcrumbItem[]> = {
     { label: 'Vendas', href: '/vendas' },
     { label: 'Contratos' },
   ],
-  '/vendas/contratos/novo': [
+  '/vendas/contratos/nexia': [
     { label: 'Vendas', href: '/vendas' },
     { label: 'Contratos', href: '/vendas/contratos' },
-    { label: 'Criar' },
+    { label: 'Novo Contrato' },
   ],
   '/vendas/whatsapp': [
     { label: 'Vendas', href: '/vendas' },
