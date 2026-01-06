@@ -6,10 +6,10 @@ interface NexiaLoaderProps {
 }
 
 export function NexiaLoader({ className, size = 'md' }: NexiaLoaderProps) {
-  const sizeClasses = {
-    sm: 'w-6 h-6',
-    md: 'w-10 h-10',
-    lg: 'w-16 h-16',
+  const sizes = {
+    sm: 24,
+    md: 40,
+    lg: 64,
   };
 
   const textSizes = {
@@ -18,13 +18,20 @@ export function NexiaLoader({ className, size = 'md' }: NexiaLoaderProps) {
     lg: 'text-[16px]',
   };
 
+  const dimension = sizes[size];
+
   return (
-    <div className={cn('relative flex items-center justify-center', sizeClasses[size], className)}>
-      {/* Pentagon SVG with animated stroke */}
+    <div 
+      className={cn('relative flex items-center justify-center', className)}
+      style={{ width: dimension, height: dimension }}
+    >
+      {/* Octagon SVG with animated stroke - perfect aspect ratio */}
       <svg
+        width={dimension}
+        height={dimension}
         viewBox="0 0 100 100"
-        className="absolute inset-0 w-full h-full"
-        style={{ transform: 'rotate(-90deg)' }}
+        preserveAspectRatio="xMidYMid meet"
+        className="absolute inset-0"
       >
         <defs>
           <linearGradient id="nexiaGradient" x1="0%" y1="0%" x2="100%" y2="100%">
@@ -33,18 +40,18 @@ export function NexiaLoader({ className, size = 'md' }: NexiaLoaderProps) {
           </linearGradient>
         </defs>
         
-        {/* Background pentagon (subtle) */}
+        {/* Background octagon (subtle) */}
         <polygon
-          points="50,5 95,35 80,90 20,90 5,35"
+          points="30,5 70,5 95,30 95,70 70,95 30,95 5,70 5,30"
           fill="none"
           stroke="hsl(var(--primary) / 0.15)"
           strokeWidth="3"
           strokeLinejoin="round"
         />
         
-        {/* Animated pentagon stroke */}
+        {/* Animated octagon stroke */}
         <polygon
-          points="50,5 95,35 80,90 20,90 5,35"
+          points="30,5 70,5 95,30 95,70 70,95 30,95 5,70 5,30"
           fill="none"
           stroke="url(#nexiaGradient)"
           strokeWidth="3"
@@ -52,8 +59,8 @@ export function NexiaLoader({ className, size = 'md' }: NexiaLoaderProps) {
           strokeLinecap="round"
           className="nexia-loader-stroke"
           style={{
-            strokeDasharray: '300',
-            strokeDashoffset: '300',
+            strokeDasharray: '340',
+            strokeDashoffset: '340',
           }}
         />
       </svg>
@@ -61,10 +68,9 @@ export function NexiaLoader({ className, size = 'md' }: NexiaLoaderProps) {
       {/* NS Text in center */}
       <span 
         className={cn(
-          'font-bold tracking-tight text-primary animate-pulse',
+          'font-bold tracking-tight text-primary animate-pulse relative z-10',
           textSizes[size]
         )}
-        style={{ transform: 'translateY(1px)' }}
       >
         NS
       </span>
@@ -72,13 +78,13 @@ export function NexiaLoader({ className, size = 'md' }: NexiaLoaderProps) {
       <style>{`
         @keyframes nexia-stroke {
           0% {
-            stroke-dashoffset: 300;
+            stroke-dashoffset: 340;
           }
           50% {
             stroke-dashoffset: 0;
           }
           100% {
-            stroke-dashoffset: -300;
+            stroke-dashoffset: -340;
           }
         }
         
