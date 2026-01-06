@@ -36,6 +36,8 @@ import {
 } from "lucide-react";
 import { AppLayout } from "@/components/AppLayout";
 import { NexiaUpsellBanner, NexiaUpsellModal, NexiaPostBriefingCTA } from "@/components/nexia";
+import { useModuleState } from '@/hooks/useModuleState';
+import { ResumeSessionBanner } from '@/components/ResumeSessionBanner';
 
 interface Client {
   id: string;
@@ -108,6 +110,9 @@ export default function NexiaModoSimples() {
   const [planningId, setPlanningId] = useState<string | null>(existingPlanningId || briefingIdParam);
   const [showUpsellModal, setShowUpsellModal] = useState(false);
   const [dataLoadedFromBriefing, setDataLoadedFromBriefing] = useState(false);
+  const [showResumeBanner, setShowResumeBanner] = useState(false);
+  
+  const { getSavedState, saveStep, saveFormData, clearState } = useModuleState('modo-simples');
   
   const [formData, setFormData] = useState<SimplePlanningData>({
     clientId: "",
@@ -124,6 +129,29 @@ export default function NexiaModoSimples() {
     simpleSummary: "",
     diagnosis: null,
   });
+
+  // Check for saved state on mount (only if not loading from existing planning/briefing)
+  useEffect(() => {
+    if (existingPlanningId || briefingIdParam || fromBriefing) return;
+    const saved = getSavedState();
+    if (saved && (saved.currentStep && saved.currentStep > 1 || (saved.formData && Object.keys(saved.formData).length > 0))) {
+      setShowResumeBanner(true);
+    }
+  }, [existingPlanningId, briefingIdParam, fromBriefing]);
+
+  const handleResumeSession = () => {
+    const saved = getSavedState();
+    if (saved) {
+      if (saved.currentStep) setCurrentStep(saved.currentStep);
+      if (saved.formData) setFormData(prev => ({ ...prev, ...saved.formData }));
+    }
+    setShowResumeBanner(false);
+  };
+
+  const handleStartFresh = () => {
+    clearState();
+    setShowResumeBanner(false);
+  };
 
   // Load existing planning if planningId is present
   useEffect(() => {
@@ -233,7 +261,13 @@ export default function NexiaModoSimples() {
   };
 
   const handleInputChange = (field: keyof SimplePlanningData, value: string) => {
-    setFormData(prev => ({ ...prev, [field]: value }));
+    setFormData(prev => {
+      const updated = { ...prev, [field]: value };
+      if (!existingPlanningId && !briefingIdParam) {
+        saveFormData(updated);
+      }
+      return updated;
+    });
   };
 
   // Validação EXCLUSIVA do modo Simples - NÃO usa campos do modo Completo
@@ -392,7 +426,11 @@ export default function NexiaModoSimples() {
       await savePlanning();
     }
 
-    setCurrentStep(prev => Math.min(prev + 1, STEPS.length));
+    const newStep = Math.min(currentStep + 1, STEPS.length);
+    setCurrentStep(newStep);
+    if (!existingPlanningId && !briefingIdParam) {
+      saveStep(newStep);
+    }
   };
 
   const handlePrev = () => {
@@ -447,6 +485,7 @@ export default function NexiaModoSimples() {
       .update({ status: "active" })
       .eq("id", savedId);
 
+    clearState();
     toast.success("Briefing concluído!");
   };
 
@@ -506,7 +545,15 @@ export default function NexiaModoSimples() {
         {/* Upsell Banner */}
         <NexiaUpsellBanner onLearnMore={() => setShowUpsellModal(true)} />
 
-        {/* Header */}
+        {/* Resume Session Banner */}
+        {showResumeBanner && (
+          <ResumeSessionBanner
+            title="Continuar de onde parou?"
+            description={`Você estava na etapa ${getSavedState()?.currentStep || 1} de ${STEPS.length}`}
+            onResume={handleResumeSession}
+            onStartFresh={handleStartFresh}
+          />
+        )}
         <div className="flex items-center gap-4">
           <Button variant="ghost" size="icon" onClick={() => navigate("/nexia-ai")}>
             <ArrowLeft className="h-5 w-5" />

@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { ClipboardList, ArrowLeft, ArrowRight, Loader2, Building2, Globe, AlertTriangle, Target, Sparkles } from 'lucide-react';
 import { toast } from 'sonner';
@@ -14,6 +14,8 @@ import { Textarea } from '@/components/ui/textarea';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Checkbox } from '@/components/ui/checkbox';
 import { validateShortInput, validateBusinessInput, sanitizeInput } from '@/lib/inputValidation';
+import { useModuleState } from '@/hooks/useModuleState';
+import { ResumeSessionBanner } from '@/components/ResumeSessionBanner';
 
 interface FormData {
   // Bloco 1
@@ -64,6 +66,9 @@ export default function BriefingWizard() {
   const [step, setStep] = useState(1);
   const [isGenerating, setIsGenerating] = useState(false);
   const [errors, setErrors] = useState<Record<string, string>>({});
+  const [showResumeBanner, setShowResumeBanner] = useState(false);
+  
+  const { getSavedState, saveStep, saveFormData, clearState } = useModuleState('briefing');
   
   const [formData, setFormData] = useState<FormData>({
     companyName: '',
@@ -83,8 +88,34 @@ export default function BriefingWizard() {
     interests: [],
   });
 
+  // Check for saved state on mount
+  useEffect(() => {
+    const saved = getSavedState();
+    if (saved && (saved.currentStep && saved.currentStep > 1 || (saved.formData && Object.keys(saved.formData).length > 0))) {
+      setShowResumeBanner(true);
+    }
+  }, []);
+
+  const handleResumeSession = () => {
+    const saved = getSavedState();
+    if (saved) {
+      if (saved.currentStep) setStep(saved.currentStep);
+      if (saved.formData) setFormData(prev => ({ ...prev, ...saved.formData }));
+    }
+    setShowResumeBanner(false);
+  };
+
+  const handleStartFresh = () => {
+    clearState();
+    setShowResumeBanner(false);
+  };
+
   const updateField = (field: keyof FormData, value: any) => {
-    setFormData(prev => ({ ...prev, [field]: value }));
+    setFormData(prev => {
+      const updated = { ...prev, [field]: value };
+      saveFormData(updated);
+      return updated;
+    });
     setErrors(prev => ({ ...prev, [field]: '' }));
   };
 
@@ -94,7 +125,9 @@ export default function BriefingWizard() {
       const updated = current.includes(value)
         ? current.filter(v => v !== value)
         : [...current, value];
-      return { ...prev, [field]: updated };
+      const newFormData = { ...prev, [field]: updated };
+      saveFormData(newFormData);
+      return newFormData;
     });
   };
 
@@ -118,7 +151,9 @@ export default function BriefingWizard() {
   const handleAdvanceStep = () => {
     if (step === 1 && !validateStep1()) return;
     if (step === 3 && !validateStep3()) return;
-    setStep(step + 1);
+    const newStep = step + 1;
+    setStep(newStep);
+    saveStep(newStep);
   };
 
   const handleFinish = async () => {
@@ -193,6 +228,7 @@ export default function BriefingWizard() {
       });
 
       toast.success('Briefing criado com sucesso!');
+      clearState();
       navigate(`/nexia-ai/briefing/${briefing.id}`);
 
     } catch (error: any) {
@@ -229,7 +265,15 @@ export default function BriefingWizard() {
           </div>
         </div>
 
-        {/* Progress */}
+        {/* Resume Session Banner */}
+        {showResumeBanner && (
+          <ResumeSessionBanner
+            title="Continuar de onde parou?"
+            description={`Você estava na etapa ${getSavedState()?.currentStep || 1} de ${TOTAL_STEPS}`}
+            onResume={handleResumeSession}
+            onStartFresh={handleStartFresh}
+          />
+        )}
         <div className="flex gap-2">
           {stepTitles.map((s, i) => (
             <div key={i} className="flex-1">
