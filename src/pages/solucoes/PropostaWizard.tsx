@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { AppLayout } from '@/components/AppLayout';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
@@ -22,6 +22,8 @@ import { useWorkspace } from '@/contexts/WorkspaceContext';
 import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '@/hooks/use-toast';
 import { useQuery } from '@tanstack/react-query';
+import { useModuleState } from '@/hooks/useModuleState';
+import { ResumeSessionBanner } from '@/components/ResumeSessionBanner';
 
 interface ProposalFormData {
   companyName: string;
@@ -60,10 +62,12 @@ export default function PropostaWizard() {
   const { id } = useParams();
   const { workspace } = useWorkspace();
   const { toast } = useToast();
+  const { getSavedState, saveStep, saveFormData, clearState } = useModuleState('proposta-wizard');
   
   const [step, setStep] = useState(1);
   const [isLoading, setIsLoading] = useState(false);
   const [isGenerating, setIsGenerating] = useState(false);
+  const [showResumeBanner, setShowResumeBanner] = useState(false);
   
   const [formData, setFormData] = useState<ProposalFormData>({
     companyName: '',
@@ -75,6 +79,34 @@ export default function PropostaWizard() {
     scopeItems: [],
     observations: ''
   });
+
+  // Check for saved state on mount (only for new proposals)
+  useEffect(() => {
+    if (id) return;
+    const saved = getSavedState();
+    if (saved && (saved.currentStep && saved.currentStep > 1 || saved.formData?.companyName)) {
+      setShowResumeBanner(true);
+    }
+  }, [id, getSavedState]);
+
+  const handleResumeSession = () => {
+    const saved = getSavedState();
+    if (saved) {
+      if (saved.currentStep) setStep(saved.currentStep);
+      if (saved.formData) setFormData(prev => ({ ...prev, ...saved.formData }));
+    }
+    setShowResumeBanner(false);
+  };
+
+  const handleStartFresh = () => {
+    clearState();
+    setShowResumeBanner(false);
+  };
+
+  const handleStepChange = (newStep: number) => {
+    setStep(newStep);
+    if (!id) saveStep(newStep);
+  };
 
   useQuery({
     queryKey: ['solution-proposal', id],
@@ -109,16 +141,24 @@ export default function PropostaWizard() {
   });
 
   const updateFormData = (field: keyof ProposalFormData, value: any) => {
-    setFormData(prev => ({ ...prev, [field]: value }));
+    setFormData(prev => {
+      const updated = { ...prev, [field]: value };
+      if (!id) saveFormData(updated);
+      return updated;
+    });
   };
 
   const toggleScopeItem = (item: string) => {
-    setFormData(prev => ({
-      ...prev,
-      scopeItems: prev.scopeItems.includes(item)
-        ? prev.scopeItems.filter(i => i !== item)
-        : [...prev.scopeItems, item]
-    }));
+    setFormData(prev => {
+      const updated = {
+        ...prev,
+        scopeItems: prev.scopeItems.includes(item)
+          ? prev.scopeItems.filter(i => i !== item)
+          : [...prev.scopeItems, item]
+      };
+      if (!id) saveFormData(updated);
+      return updated;
+    });
   };
 
   const saveDraft = async () => {
@@ -203,6 +243,8 @@ export default function PropostaWizard() {
         status: 'completed'
       }).eq('id', proposalId);
 
+      clearState();
+
       await supabase.from('activity_logs').insert({
         workspace_id: workspace.id,
         type: 'PROPOSAL_GENERATED',
@@ -235,6 +277,15 @@ export default function PropostaWizard() {
           <ArrowLeft className="h-4 w-4" />
           Voltar
         </Button>
+
+        {showResumeBanner && (
+          <ResumeSessionBanner
+            title="Continuar proposta?"
+            description={`Você estava na etapa ${getSavedState()?.currentStep || 1} de 2`}
+            onResume={handleResumeSession}
+            onStartFresh={handleStartFresh}
+          />
+        )}
 
         <div className="space-y-2">
           <div className="flex justify-between text-sm">
@@ -334,7 +385,7 @@ export default function PropostaWizard() {
                   Salvar rascunho
                 </Button>
                 <Button
-                  onClick={() => setStep(2)}
+                  onClick={() => handleStepChange(2)}
                   disabled={!formData.companyName || !formData.serviceOffered || !formData.serviceValue}
                   className="flex-1 gap-2"
                 >
@@ -385,7 +436,7 @@ export default function PropostaWizard() {
               <div className="flex gap-3 pt-4">
                 <Button
                   variant="outline"
-                  onClick={() => setStep(1)}
+                  onClick={() => handleStepChange(1)}
                   className="gap-2"
                 >
                   <ArrowLeft className="h-4 w-4" />

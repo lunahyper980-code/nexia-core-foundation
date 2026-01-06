@@ -8,6 +8,7 @@ import { toast } from 'sonner';
 import { ApproachLoadingAnimation } from './ApproachLoadingAnimation';
 import { TranslateApproachModal } from './TranslateApproachModal';
 import { SendBriefingModal } from './SendBriefingModal';
+import { useModuleState } from '@/hooks/useModuleState';
 import type { Lead } from './LeadCard';
 
 // Templates prontos - substituem {nome}, {segmento}, {localizacao}
@@ -111,6 +112,8 @@ interface IntelligentApproachScreenProps {
 
 export function IntelligentApproachScreen({ open, onClose, lead }: IntelligentApproachScreenProps) {
   const navigate = useNavigate();
+  const { getSavedState, saveSubScreen, saveExtras, clearState } = useModuleState('abordagem');
+  
   const [isLoading, setIsLoading] = useState(false);
   const [showContent, setShowContent] = useState(false);
   const [activeSection, setActiveSection] = useState('preparacao');
@@ -129,8 +132,24 @@ export function IntelligentApproachScreen({ open, onClose, lead }: IntelligentAp
 
   const currentIndex = sections.findIndex(s => s.id === activeSection);
 
+  // Restore saved section on open
+  useEffect(() => {
+    if (open && lead) {
+      const saved = getSavedState();
+      if (saved?.subScreen && saved?.extras?.leadId === lead.nome) {
+        setActiveSection(saved.subScreen);
+        setShowContent(true);
+      }
+    }
+  }, [open, lead, getSavedState]);
+
   useEffect(() => {
     if (open && lead && !showContent) {
+      const saved = getSavedState();
+      // Skip loading if we have saved state for this lead
+      if (saved?.subScreen && saved?.extras?.leadId === lead.nome) {
+        return;
+      }
       setIsLoading(true);
       const timer = setTimeout(() => {
         setIsLoading(false);
@@ -138,7 +157,7 @@ export function IntelligentApproachScreen({ open, onClose, lead }: IntelligentAp
       }, 5000);
       return () => clearTimeout(timer);
     }
-  }, [open, lead]);
+  }, [open, lead, getSavedState, showContent]);
 
   // Reset apenas quando fechar completamente
   useEffect(() => {
@@ -152,6 +171,15 @@ export function IntelligentApproachScreen({ open, onClose, lead }: IntelligentAp
       return () => clearTimeout(timer);
     }
   }, [open]);
+
+  // Save section when it changes
+  const handleSectionChange = (sectionId: string) => {
+    setActiveSection(sectionId);
+    if (lead) {
+      saveSubScreen(sectionId);
+      saveExtras({ leadId: lead.nome });
+    }
+  };
 
   const copyToClipboard = (text: string) => {
     navigator.clipboard.writeText(text);
@@ -176,7 +204,7 @@ export function IntelligentApproachScreen({ open, onClose, lead }: IntelligentAp
   const goToSection = (direction: 'prev' | 'next') => {
     const newIndex = direction === 'next' ? currentIndex + 1 : currentIndex - 1;
     if (newIndex >= 0 && newIndex < sections.length) {
-      setActiveSection(sections[newIndex].id);
+      handleSectionChange(sections[newIndex].id);
       // Scroll to top of main content
       mainRef.current?.scrollTo({ top: 0, behavior: 'smooth' });
     }
@@ -270,7 +298,7 @@ export function IntelligentApproachScreen({ open, onClose, lead }: IntelligentAp
                 return (
                   <button
                     key={section.id}
-                    onClick={() => setActiveSection(section.id)}
+                    onClick={() => handleSectionChange(section.id)}
                     className="flex flex-col items-center gap-1.5 group touch-manipulation py-1 px-2 sm:px-3 sm:flex-1"
                   >
                     {/* Ícone */}
