@@ -8,6 +8,8 @@ import { toast } from 'sonner';
 import { ApproachLoadingAnimation } from './ApproachLoadingAnimation';
 import { TranslateApproachModal } from './TranslateApproachModal';
 import { SendBriefingModal } from './SendBriefingModal';
+import { useModuleState } from '@/hooks/useModuleState';
+import { ResumeSessionBanner } from '@/components/ResumeSessionBanner';
 import type { Lead } from './LeadCard';
 
 // Templates prontos - substituem {nome}, {segmento}, {localizacao}
@@ -118,8 +120,11 @@ export function IntelligentApproachScreen({ open, onClose, lead }: IntelligentAp
   const [translateModalOpen, setTranslateModalOpen] = useState(false);
   const [messageToTranslate, setMessageToTranslate] = useState('');
   const [sendBriefingModalOpen, setSendBriefingModalOpen] = useState(false);
+  const [showResumeBanner, setShowResumeBanner] = useState(false);
   const mainRef = useRef<HTMLElement>(null);
   const touchStartX = useRef<number | null>(null);
+  
+  const { getSavedState, saveSubScreen, saveExtras, clearState } = useModuleState('prospeccao');
 
   // Gera o template com os dados do lead
   const approach = useMemo(() => {
@@ -128,6 +133,40 @@ export function IntelligentApproachScreen({ open, onClose, lead }: IntelligentAp
   }, [lead]);
 
   const currentIndex = sections.findIndex(s => s.id === activeSection);
+
+  // Check for saved state on mount
+  useEffect(() => {
+    if (open && lead) {
+      const saved = getSavedState();
+      // Only show resume banner if saved for this specific lead
+      if (saved?.extras?.leadId === lead.nome && saved?.subScreen) {
+        setShowResumeBanner(true);
+      }
+    }
+  }, [open, lead]);
+
+  const handleResumeSession = () => {
+    const saved = getSavedState();
+    if (saved) {
+      if (saved.subScreen) setActiveSection(saved.subScreen);
+      if (saved.extras?.selectedObjecao !== undefined) setSelectedObjecao(saved.extras.selectedObjecao);
+    }
+    setShowResumeBanner(false);
+    setShowContent(true);
+  };
+
+  const handleStartFresh = () => {
+    clearState();
+    setShowResumeBanner(false);
+  };
+
+  const handleSectionChange = (sectionId: string) => {
+    setActiveSection(sectionId);
+    saveSubScreen(sectionId);
+    if (lead) {
+      saveExtras({ leadId: lead.nome, selectedObjecao });
+    }
+  };
 
   useEffect(() => {
     if (open && lead && !showContent) {
@@ -176,7 +215,8 @@ export function IntelligentApproachScreen({ open, onClose, lead }: IntelligentAp
   const goToSection = (direction: 'prev' | 'next') => {
     const newIndex = direction === 'next' ? currentIndex + 1 : currentIndex - 1;
     if (newIndex >= 0 && newIndex < sections.length) {
-      setActiveSection(sections[newIndex].id);
+      const newSectionId = sections[newIndex].id;
+      handleSectionChange(newSectionId);
       // Scroll to top of main content
       mainRef.current?.scrollTo({ top: 0, behavior: 'smooth' });
     }
@@ -211,6 +251,45 @@ export function IntelligentApproachScreen({ open, onClose, lead }: IntelligentAp
   };
 
   if (!open) return null;
+
+  // Show resume banner before loading
+  if (showResumeBanner && !isLoading && !showContent) {
+    return (
+      <div className="fixed inset-0 z-50 bg-background flex flex-col animate-fade-in">
+        <header className="shrink-0 border-b border-border/50 bg-background z-20">
+          <div className="flex items-center gap-3 px-4 py-3 max-w-[1200px] mx-auto w-full">
+            <Button 
+              variant="ghost" 
+              size="sm" 
+              className="gap-2 text-muted-foreground hover:text-foreground -ml-2 shrink-0"
+              onClick={onClose}
+            >
+              <ArrowLeft className="h-4 w-4" />
+              <span className="hidden sm:inline">Voltar</span>
+            </Button>
+            <div className="flex-1 min-w-0 text-center">
+              <h1 className="text-base sm:text-lg font-semibold text-foreground">
+                Abordagem Inteligente
+              </h1>
+              <p className="text-xs text-muted-foreground truncate opacity-70">
+                {lead?.nome}
+              </p>
+            </div>
+          </div>
+        </header>
+        <div className="flex-1 flex items-center justify-center p-4">
+          <div className="max-w-md w-full">
+            <ResumeSessionBanner
+              title="Continuar de onde parou?"
+              description={`Você estava na seção "${sections.find(s => s.id === getSavedState()?.subScreen)?.label || 'Preparação'}"`}
+              onResume={handleResumeSession}
+              onStartFresh={handleStartFresh}
+            />
+          </div>
+        </div>
+      </div>
+    );
+  }
 
   if (isLoading) {
     return <ApproachLoadingAnimation open={isLoading} />;
@@ -270,7 +349,7 @@ export function IntelligentApproachScreen({ open, onClose, lead }: IntelligentAp
                 return (
                   <button
                     key={section.id}
-                    onClick={() => setActiveSection(section.id)}
+                    onClick={() => handleSectionChange(section.id)}
                     className="flex flex-col items-center gap-1.5 group touch-manipulation py-1 px-2 sm:px-3 sm:flex-1"
                   >
                     {/* Ícone */}
