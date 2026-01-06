@@ -156,25 +156,6 @@ export default function HyperBuildApp() {
     }));
   };
 
-  const canProceed = () => {
-    switch (currentStep) {
-      case 1:
-        return data.appName && data.businessType && data.targetAudience && data.mainProblem;
-      case 2:
-        return data.mainAction && data.actionFrequency;
-      case 3:
-        return data.endUser;
-      case 4:
-        return data.selectedScreens.length > 0;
-      case 5:
-        return data.onEnterAction && data.afterMainAction;
-      case 6:
-        return data.primaryColor && data.fontFamily;
-      default:
-        return true;
-    }
-  };
-
   const handleNext = () => {
     if (currentStep < TOTAL_STEPS) {
       setCurrentStep(prev => prev + 1);
@@ -186,6 +167,12 @@ export default function HyperBuildApp() {
       setCurrentStep(prev => prev - 1);
     } else {
       navigate('/solucoes/criar/app');
+    }
+  };
+
+  const goToStep = (step: number) => {
+    if (step >= 1 && step <= TOTAL_STEPS) {
+      setCurrentStep(step);
     }
   };
 
@@ -941,7 +928,7 @@ O app deve estar pronto para uso real.
           </div>
           <Progress value={progress} className="h-2" />
           
-          {/* Step Indicators */}
+          {/* Step Indicators - Clickable */}
           <div className="flex justify-between">
             {stepIcons.map((Icon, index) => {
               const stepNum = index + 1;
@@ -949,24 +936,26 @@ O app deve estar pronto para uso real.
               const isCurrent = currentStep === stepNum;
               
               return (
-                <div 
+                <button 
                   key={index}
+                  onClick={() => goToStep(stepNum)}
                   className={`
-                    w-8 h-8 rounded-full flex items-center justify-center transition-all
+                    w-8 h-8 rounded-full flex items-center justify-center transition-all cursor-pointer hover:scale-110
                     ${isCompleted 
                       ? 'bg-success text-success-foreground' 
                       : isCurrent 
                         ? 'bg-primary text-primary-foreground' 
-                        : 'bg-muted text-muted-foreground'
+                        : 'bg-muted text-muted-foreground hover:bg-muted/80'
                     }
                   `}
+                  title={stepTitles[index]}
                 >
                   {isCompleted ? (
                     <Check className="h-4 w-4" />
                   ) : (
                     <Icon className="h-4 w-4" />
                   )}
-                </div>
+                </button>
               );
             })}
           </div>
@@ -991,7 +980,7 @@ O app deve estar pronto para uso real.
               <Button 
                 onClick={generatePrompt} 
                 className="flex-1 gap-2"
-                disabled={!canProceed() || isGenerating}
+                disabled={isGenerating}
               >
                 {isGenerating ? (
                   <>Gerando...</>
@@ -1006,7 +995,6 @@ O app deve estar pronto para uso real.
               <Button 
                 onClick={handleNext} 
                 className="flex-1 gap-2"
-                disabled={!canProceed()}
               >
                 Avançar
                 <ArrowRight className="h-4 w-4" />
