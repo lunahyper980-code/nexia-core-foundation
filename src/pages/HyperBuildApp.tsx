@@ -29,6 +29,8 @@ import { supabase } from '@/integrations/supabase/client';
 import { useWorkspace } from '@/contexts/WorkspaceContext';
 import { useAuth } from '@/contexts/AuthContext';
 import { NexiaOriginBanner, parseNexiaParams } from '@/components/nexia';
+import { useModuleState } from '@/hooks/useModuleState';
+import { ResumeSessionBanner } from '@/components/ResumeSessionBanner';
 
 // Platform logos
 import platformLovable from '@/assets/platform-lovable.png';
@@ -113,6 +115,8 @@ const platformUrls: Record<string, string> = {
   other: 'https://lovable.dev/projects/create',
 };
 
+const TOTAL_STEPS = 5;
+
 export default function HyperBuildApp() {
   const navigate = useNavigate();
   const [searchParams] = useSearchParams();
@@ -125,9 +129,35 @@ export default function HyperBuildApp() {
   const [saving, setSaving] = useState(false);
   const [generatedPrompt, setGeneratedPrompt] = useState('');
   const [projectId, setProjectId] = useState<string | null>(null);
+  const [showResumeBanner, setShowResumeBanner] = useState(false);
+  
+  const { getSavedState, saveStep, saveFormData, clearState } = useModuleState('criar-app');
 
   // Parse Nexia data from URL
   const nexiaData = parseNexiaParams(searchParams);
+
+  // Check for saved state on mount (only if not coming from Nexia)
+  useEffect(() => {
+    if (nexiaData) return;
+    const saved = getSavedState();
+    if (saved && (saved.currentStep && saved.currentStep > 1 || (saved.formData && Object.keys(saved.formData).length > 0))) {
+      setShowResumeBanner(true);
+    }
+  }, []);
+
+  const handleResumeSession = () => {
+    const saved = getSavedState();
+    if (saved) {
+      if (saved.currentStep) setCurrentStep(saved.currentStep);
+      if (saved.formData) setFormData(prev => ({ ...prev, ...saved.formData }));
+    }
+    setShowResumeBanner(false);
+  };
+
+  const handleStartFresh = () => {
+    clearState();
+    setShowResumeBanner(false);
+  };
 
   // Pre-fill form with Nexia data
   useEffect(() => {
@@ -141,11 +171,15 @@ export default function HyperBuildApp() {
     }
   }, []);
 
-  const totalSteps = 5;
+  const totalSteps = TOTAL_STEPS;
   const progress = (currentStep / totalSteps) * 100;
 
   const updateField = (field: keyof FormData, value: string) => {
-    setFormData({ ...formData, [field]: value });
+    setFormData(prev => {
+      const updated = { ...prev, [field]: value };
+      saveFormData(updated);
+      return updated;
+    });
     if (errors[field]) {
       setErrors({ ...errors, [field]: undefined });
     }
@@ -256,7 +290,9 @@ CRÍTICO: Gerar código COMPLETO e FUNCIONAL. NENHUMA página pode estar vazia, 
 
   const handleNext = () => {
     if (currentStep < totalSteps - 1) {
-      setCurrentStep(currentStep + 1);
+      const newStep = currentStep + 1;
+      setCurrentStep(newStep);
+      saveStep(newStep);
     } else if (currentStep === totalSteps - 1) {
       handleSubmit();
     }
@@ -264,7 +300,9 @@ CRÍTICO: Gerar código COMPLETO e FUNCIONAL. NENHUMA página pode estar vazia, 
 
   const handleBack = () => {
     if (currentStep > 1) {
-      setCurrentStep(currentStep - 1);
+      const newStep = currentStep - 1;
+      setCurrentStep(newStep);
+      saveStep(newStep);
       setErrors({});
     } else {
       navigate('/solucoes/criar/app');
@@ -274,6 +312,7 @@ CRÍTICO: Gerar código COMPLETO e FUNCIONAL. NENHUMA página pode estar vazia, 
   const goToStep = (step: number) => {
     if (step >= 1 && step < totalSteps) {
       setCurrentStep(step);
+      saveStep(step);
       setErrors({});
     }
   };
@@ -335,6 +374,7 @@ CRÍTICO: Gerar código COMPLETO e FUNCIONAL. NENHUMA página pode estar vazia, 
       setProjectId(data.id);
       setGeneratedPrompt(prompt);
       setCurrentStep(totalSteps);
+      clearState();
       toast.success('Projeto criado com sucesso!');
     } catch (error) {
       console.error('Error creating project:', error);
@@ -363,6 +403,16 @@ CRÍTICO: Gerar código COMPLETO e FUNCIONAL. NENHUMA página pode estar vazia, 
             </p>
           </div>
         </div>
+
+        {/* Resume Session Banner */}
+        {showResumeBanner && (
+          <ResumeSessionBanner
+            title="Continuar de onde parou?"
+            description={`Você estava na etapa ${getSavedState()?.currentStep || 1} de ${TOTAL_STEPS}`}
+            onResume={handleResumeSession}
+            onStartFresh={handleStartFresh}
+          />
+        )}
 
         {/* Nexia Origin Banner */}
         {nexiaData && (

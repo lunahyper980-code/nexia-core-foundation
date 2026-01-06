@@ -20,6 +20,8 @@ import { supabase } from '@/integrations/supabase/client';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { toast } from 'sonner';
 import { useAuth } from '@/contexts/AuthContext';
+import { useModuleState } from '@/hooks/useModuleState';
+import { ResumeSessionBanner } from '@/components/ResumeSessionBanner';
 
 const deliveryTypes = [
   { value: 'site', label: 'Site' },
@@ -55,6 +57,9 @@ export default function EntregaForm() {
   const queryClient = useQueryClient();
   const isEditing = !!id;
 
+  const { getSavedState, saveFormData, clearState } = useModuleState('entrega-form');
+  const [showResumeBanner, setShowResumeBanner] = useState(false);
+
   const [formData, setFormData] = useState<FormData>({
     client_id: searchParams.get('clientId') || '',
     proposal_id: searchParams.get('proposalId') || null,
@@ -71,6 +76,38 @@ export default function EntregaForm() {
   });
 
   const [origin, setOrigin] = useState<'manual' | 'proposal' | 'nexia' | 'project' | 'launch_kit' | 'positioning' | 'authority' | 'organization' | 'diagnosis'>('manual');
+
+  // Check for saved state on mount (only if not editing and no URL params)
+  useEffect(() => {
+    if (isEditing || searchParams.get('clientId') || searchParams.get('proposalId') || searchParams.get('planningId') || searchParams.get('projectId')) return;
+    const saved = getSavedState();
+    if (saved && saved.formData && Object.keys(saved.formData).length > 0) {
+      setShowResumeBanner(true);
+    }
+  }, [isEditing]);
+
+  const handleResumeSession = () => {
+    const saved = getSavedState();
+    if (saved && saved.formData) {
+      setFormData(prev => ({ ...prev, ...saved.formData }));
+    }
+    setShowResumeBanner(false);
+  };
+
+  const handleStartFresh = () => {
+    clearState();
+    setShowResumeBanner(false);
+  };
+
+  const updateFormData = (updates: Partial<FormData>) => {
+    setFormData(prev => {
+      const updated = { ...prev, ...updates };
+      if (!isEditing) {
+        saveFormData(updated);
+      }
+      return updated;
+    });
+  };
 
   // Fetch existing delivery if editing
   const { data: delivery, isLoading: loadingDelivery } = useQuery({
@@ -344,6 +381,7 @@ export default function EntregaForm() {
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['deliveries'] });
       queryClient.invalidateQueries({ queryKey: ['deliveries-stats'] });
+      clearState();
       toast.success(isEditing ? 'Entrega atualizada' : 'Entrega registrada');
       navigate('/entrega');
     },
@@ -431,6 +469,16 @@ ${formData.next_steps ? `Próximos passos:\n${formData.next_steps}` : ''}
           </div>
         </div>
 
+        {/* Resume Session Banner */}
+        {showResumeBanner && (
+          <ResumeSessionBanner
+            title="Continuar de onde parou?"
+            description="Você tem um rascunho de entrega salvo"
+            onResume={handleResumeSession}
+            onStartFresh={handleStartFresh}
+          />
+        )}
+
         {/* Origin indicator */}
         {getOriginLabel() && (
           <div className="flex items-center gap-2 p-3 rounded-lg bg-primary/5 border border-primary/20">
@@ -451,12 +499,11 @@ ${formData.next_steps ? `Próximos passos:\n${formData.next_steps}` : ''}
             </CardDescription>
           </CardHeader>
           <CardContent className="space-y-6">
-            {/* Client Selection */}
             <div className="space-y-2">
               <Label>Cliente *</Label>
               <Select
                 value={formData.client_id}
-                onValueChange={(value) => setFormData({ ...formData, client_id: value })}
+                onValueChange={(value) => updateFormData({ client_id: value })}
               >
                 <SelectTrigger>
                   <SelectValue placeholder="Selecione um cliente" />
@@ -738,7 +785,7 @@ ${formData.next_steps ? `Próximos passos:\n${formData.next_steps}` : ''}
               <Label>Tipo de Entrega *</Label>
               <Select
                 value={formData.delivery_type}
-                onValueChange={(value) => setFormData({ ...formData, delivery_type: value })}
+                onValueChange={(value) => updateFormData({ delivery_type: value })}
               >
                 <SelectTrigger>
                   <SelectValue />
@@ -758,7 +805,7 @@ ${formData.next_steps ? `Próximos passos:\n${formData.next_steps}` : ''}
               <Label>Título da Entrega *</Label>
               <Input
                 value={formData.title}
-                onChange={(e) => setFormData({ ...formData, title: e.target.value })}
+                onChange={(e) => updateFormData({ title: e.target.value })}
                 placeholder="Ex: Site institucional - Empresa ABC"
               />
             </div>
@@ -768,7 +815,7 @@ ${formData.next_steps ? `Próximos passos:\n${formData.next_steps}` : ''}
               <Label>Descrição do que foi entregue *</Label>
               <Textarea
                 value={formData.description}
-                onChange={(e) => setFormData({ ...formData, description: e.target.value })}
+                onChange={(e) => updateFormData({ description: e.target.value })}
                 placeholder="Descreva o que foi entregue ao cliente..."
                 rows={4}
               />
@@ -780,7 +827,7 @@ ${formData.next_steps ? `Próximos passos:\n${formData.next_steps}` : ''}
               <Input
                 type="date"
                 value={formData.delivery_date}
-                onChange={(e) => setFormData({ ...formData, delivery_date: e.target.value })}
+                onChange={(e) => updateFormData({ delivery_date: e.target.value })}
               />
             </div>
 
@@ -789,7 +836,7 @@ ${formData.next_steps ? `Próximos passos:\n${formData.next_steps}` : ''}
               <Label>Links</Label>
               <Textarea
                 value={formData.links}
-                onChange={(e) => setFormData({ ...formData, links: e.target.value })}
+                onChange={(e) => updateFormData({ links: e.target.value })}
                 placeholder="Cole aqui os links do site, app, Lovable, Drive, Figma, etc."
                 rows={3}
               />
@@ -800,7 +847,7 @@ ${formData.next_steps ? `Próximos passos:\n${formData.next_steps}` : ''}
               <Label>Observações finais</Label>
               <Textarea
                 value={formData.observations}
-                onChange={(e) => setFormData({ ...formData, observations: e.target.value })}
+                onChange={(e) => updateFormData({ observations: e.target.value })}
                 placeholder="Notas sobre a entrega..."
                 rows={3}
               />
@@ -811,7 +858,7 @@ ${formData.next_steps ? `Próximos passos:\n${formData.next_steps}` : ''}
               <Label>Próximos passos sugeridos</Label>
               <Textarea
                 value={formData.next_steps}
-                onChange={(e) => setFormData({ ...formData, next_steps: e.target.value })}
+                onChange={(e) => updateFormData({ next_steps: e.target.value })}
                 placeholder="Sugestões para o cliente após a entrega..."
                 rows={3}
               />
@@ -822,7 +869,7 @@ ${formData.next_steps ? `Próximos passos:\n${formData.next_steps}` : ''}
               <Label>Status</Label>
               <Select
                 value={formData.status}
-                onValueChange={(value) => setFormData({ ...formData, status: value })}
+                onValueChange={(value) => updateFormData({ status: value })}
               >
                 <SelectTrigger>
                   <SelectValue />
