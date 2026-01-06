@@ -17,12 +17,15 @@ export type ModuleKey =
   | 'criar-app'
   | 'criar-site'
   | 'proposta'
+  | 'proposta-wizard'
   | 'contrato'
+  | 'contrato-wizard'
   | 'entrega-form'
   | 'vendas'
   | 'entrega'
   | 'academy'
-  | 'clientes';
+  | 'clientes'
+  | 'abordagem';
 
 interface ModuleState {
   currentStep?: number;

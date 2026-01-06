@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { AppLayout } from '@/components/AppLayout';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
@@ -10,6 +10,8 @@ import { useNavigate, useSearchParams } from 'react-router-dom';
 import { useWorkspace } from '@/contexts/WorkspaceContext';
 import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '@/hooks/use-toast';
+import { useModuleState } from '@/hooks/useModuleState';
+import { ResumeSessionBanner } from '@/components/ResumeSessionBanner';
 
 export default function ContratoWizard() {
   const navigate = useNavigate();
@@ -17,7 +19,10 @@ export default function ContratoWizard() {
   const proposalId = searchParams.get('proposta');
   const { workspace } = useWorkspace();
   const { toast } = useToast();
+  const { getSavedState, saveFormData, clearState } = useModuleState('contrato-wizard');
+  
   const [isGenerating, setIsGenerating] = useState(false);
+  const [showResumeBanner, setShowResumeBanner] = useState(false);
   
   const [formData, setFormData] = useState({
     contractorName: '', contractorDocument: '', contractorAddress: '',
@@ -25,7 +30,34 @@ export default function ContratoWizard() {
     serviceDescription: '', serviceValue: '', paymentTerms: '', deadline: ''
   });
 
-  const updateFormData = (field: string, value: string) => setFormData(prev => ({ ...prev, [field]: value }));
+  // Check for saved state on mount
+  useEffect(() => {
+    const saved = getSavedState();
+    if (saved?.formData?.contractorName) {
+      setShowResumeBanner(true);
+    }
+  }, [getSavedState]);
+
+  const handleResumeSession = () => {
+    const saved = getSavedState();
+    if (saved?.formData) {
+      setFormData(prev => ({ ...prev, ...saved.formData }));
+    }
+    setShowResumeBanner(false);
+  };
+
+  const handleStartFresh = () => {
+    clearState();
+    setShowResumeBanner(false);
+  };
+
+  const updateFormData = (field: string, value: string) => {
+    setFormData(prev => {
+      const updated = { ...prev, [field]: value };
+      saveFormData(updated);
+      return updated;
+    });
+  };
 
   const generateContract = async () => {
     if (!workspace?.id) return;
@@ -49,6 +81,8 @@ export default function ContratoWizard() {
         contract_text: fnData.contractText, contract_generated_at: new Date().toISOString(), status: 'completed'
       }).eq('id', inserted?.id);
 
+      clearState();
+
       await supabase.from('activity_logs').insert({
         workspace_id: workspace.id, type: 'CONTRACT_GENERATED',
         message: `Contrato gerado para ${formData.contractorName}`, entity_type: 'solution_contract', entity_id: inserted?.id
@@ -68,6 +102,15 @@ export default function ContratoWizard() {
         <Button variant="ghost" size="sm" onClick={() => navigate('/solucoes/contrato')} className="gap-2">
           <ArrowLeft className="h-4 w-4" /> Voltar
         </Button>
+
+        {showResumeBanner && (
+          <ResumeSessionBanner
+            title="Continuar contrato?"
+            description="Você tem dados preenchidos anteriormente"
+            onResume={handleResumeSession}
+            onStartFresh={handleStartFresh}
+          />
+        )}
 
         <Card>
           <CardHeader>
