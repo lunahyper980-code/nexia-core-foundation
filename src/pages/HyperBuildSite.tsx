@@ -15,7 +15,6 @@ import {
   Lightbulb, 
   Target, 
   Layout, 
-  FileText, 
   Palette, 
   Sparkles,
   Check,
@@ -28,68 +27,29 @@ import { supabase } from '@/integrations/supabase/client';
 import { useWorkspace } from '@/contexts/WorkspaceContext';
 import { useAuth } from '@/contexts/AuthContext';
 import { NexiaOriginBanner, parseNexiaParams } from '@/components/nexia';
+import { 
+  siteTypeOptions, 
+  sectionsByType, 
+  fieldsByType, 
+  fontOptions, 
+  styleOptions 
+} from '@/data/siteTypeFields';
 
-
-const TOTAL_STEPS = 6;
-
-const fontOptions = [
-  'Inter',
-  'Poppins',
-  'Roboto',
-  'Montserrat',
-  'Open Sans',
-  'Lato',
-  'Nunito',
-  'Raleway',
-  'Space Grotesk',
-  'DM Sans',
-  'Playfair Display',
-  'Merriweather',
-];
-
-const siteTypeOptions = [
-  { id: 'landing-page', label: 'Landing Page', description: 'Página única de conversão' },
-  { id: 'pagina-vendas', label: 'Página de Vendas', description: 'Vender produto ou serviço' },
-  { id: 'captura-leads', label: 'Captura de Leads', description: 'Coletar emails e contatos' },
-  { id: 'institucional', label: 'Site Institucional', description: 'Apresentar empresa' },
-  { id: 'portfolio', label: 'Portfólio', description: 'Mostrar trabalhos' },
-  { id: 'lancamento', label: 'Página de Lançamento', description: 'Lançar produto novo' },
-];
-
-const suggestedSections = [
-  { id: 'hero', label: 'Hero / Cabeçalho', description: 'Título principal e CTA' },
-  { id: 'problema', label: 'Problema / Dor', description: 'O que o cliente sofre hoje' },
-  { id: 'solucao', label: 'Solução', description: 'Como você resolve' },
-  { id: 'beneficios', label: 'Benefícios', description: 'Vantagens do produto/serviço' },
-  { id: 'como-funciona', label: 'Como Funciona', description: 'Passo a passo' },
-  { id: 'depoimentos', label: 'Depoimentos', description: 'Prova social' },
-  { id: 'precos', label: 'Preços / Planos', description: 'Tabela de valores' },
-  { id: 'faq', label: 'Perguntas Frequentes', description: 'FAQ' },
-  { id: 'sobre', label: 'Sobre / Quem Somos', description: 'História e equipe' },
-  { id: 'contato', label: 'Contato', description: 'Formulário ou dados' },
-  { id: 'cta-final', label: 'CTA Final', description: 'Chamada para ação final' },
-  { id: 'garantia', label: 'Garantia', description: 'Política de devolução' },
-];
+const TOTAL_STEPS = 5;
 
 interface WizardData {
-  // Step 1 - Site Idea
+  // Step 1 - Site Info
   siteName: string;
   siteType: string;
+  customSiteType: string;
   businessDescription: string;
   targetAudience: string;
-  // Step 2 - Main Objective
-  mainObjective: string;
-  desiredAction: string;
-  uniqueValue: string;
+  // Step 2 - Dynamic fields based on type
+  dynamicFields: Record<string, string>;
   // Step 3 - Sections
   selectedSections: string[];
   customSections: string;
-  // Step 4 - Content
-  mainHeadline: string;
-  subHeadline: string;
-  mainOffer: string;
-  ctaText: string;
-  // Step 5 - Visual Identity
+  // Step 4 - Visual Identity
   primaryColor: string;
   secondaryColor: string;
   backgroundColor: string;
@@ -103,21 +63,16 @@ interface WizardData {
 const initialData: WizardData = {
   siteName: '',
   siteType: '',
+  customSiteType: '',
   businessDescription: '',
   targetAudience: '',
-  mainObjective: '',
-  desiredAction: '',
-  uniqueValue: '',
-  selectedSections: ['hero', 'beneficios', 'cta-final'],
+  dynamicFields: {},
+  selectedSections: [],
   customSections: '',
-  mainHeadline: '',
-  subHeadline: '',
-  mainOffer: '',
-  ctaText: '',
-  primaryColor: '#10B981',
-  secondaryColor: '#059669',
-  backgroundColor: '#FFFFFF',
-  textColor: '#1F2937',
+  primaryColor: '#8000FF',
+  secondaryColor: '#1F1F1F',
+  backgroundColor: '#171717',
+  textColor: '#FFFFFF',
   fontFamily: 'Inter',
   style: 'moderno',
   language: 'pt-BR',
@@ -145,18 +100,33 @@ export default function HyperBuildSite() {
         siteName: nexiaData.projectName || nexiaData.companyName || prev.siteName,
         businessDescription: nexiaData.sectorNiche ? `Negócio do setor de ${nexiaData.sectorNiche}` : prev.businessDescription,
         targetAudience: nexiaData.targetAudience || prev.targetAudience,
-        mainObjective: nexiaData.primaryGoal === 'vender_mais' ? 'vender' : 
-                       nexiaData.primaryGoal === 'captar_clientes' ? 'capturar-leads' : 
-                       nexiaData.primaryGoal === 'presenca_profissional' ? 'apresentar' : prev.mainObjective,
-        uniqueValue: nexiaData.mainProblem || prev.uniqueValue,
       }));
     }
   }, []);
 
+  // Reset sections when site type changes
+  useEffect(() => {
+    if (data.siteType) {
+      const suggestedSections = sectionsByType[data.siteType] || sectionsByType['outro'];
+      // Pre-select first 3 sections
+      setData(prev => ({
+        ...prev,
+        selectedSections: suggestedSections.slice(0, 3).map(s => s.id),
+      }));
+    }
+  }, [data.siteType]);
+
   const progress = (currentStep / TOTAL_STEPS) * 100;
 
-  const updateData = (field: keyof WizardData, value: string | string[]) => {
+  const updateData = (field: keyof WizardData, value: string | string[] | Record<string, string>) => {
     setData(prev => ({ ...prev, [field]: value }));
+  };
+
+  const updateDynamicField = (fieldId: string, value: string) => {
+    setData(prev => ({
+      ...prev,
+      dynamicFields: { ...prev.dynamicFields, [fieldId]: value }
+    }));
   };
 
   const toggleSection = (sectionId: string) => {
@@ -166,23 +136,6 @@ export default function HyperBuildSite() {
         ? prev.selectedSections.filter(id => id !== sectionId)
         : [...prev.selectedSections, sectionId]
     }));
-  };
-
-  const canProceed = () => {
-    switch (currentStep) {
-      case 1:
-        return data.siteName && data.siteType && data.businessDescription && data.targetAudience;
-      case 2:
-        return data.mainObjective && data.desiredAction;
-      case 3:
-        return data.selectedSections.length > 0;
-      case 4:
-        return data.mainHeadline;
-      case 5:
-        return data.primaryColor && data.fontFamily;
-      default:
-        return true;
-    }
   };
 
   const handleNext = () => {
@@ -199,20 +152,45 @@ export default function HyperBuildSite() {
     }
   };
 
+  const goToStep = (step: number) => {
+    if (step >= 1 && step <= TOTAL_STEPS) {
+      setCurrentStep(step);
+    }
+  };
+
   const getSiteTypeLabel = () => {
+    if (data.siteType === 'outro') {
+      return data.customSiteType || 'Site Personalizado';
+    }
     return siteTypeOptions.find(t => t.id === data.siteType)?.label || data.siteType;
+  };
+
+  const getCurrentSections = () => {
+    return sectionsByType[data.siteType] || sectionsByType['outro'];
+  };
+
+  const getCurrentFields = () => {
+    return fieldsByType[data.siteType] || fieldsByType['outro'];
   };
 
   const generatePrompt = async () => {
     setIsGenerating(true);
     
+    const sections = getCurrentSections();
     const selectedSectionLabels = data.selectedSections
-      .map(id => suggestedSections.find(s => s.id === id)?.label)
+      .map(id => sections.find(s => s.id === id)?.label)
       .filter(Boolean);
     
     if (data.customSections) {
       selectedSectionLabels.push(...data.customSections.split(',').map(s => s.trim()));
     }
+
+    // Build dynamic fields section
+    const currentFields = getCurrentFields();
+    const dynamicFieldsText = currentFields
+      .filter(f => data.dynamicFields[f.id])
+      .map(f => `**${f.label}:** ${data.dynamicFields[f.id]}`)
+      .join('\n');
 
     const prompt = `
 === PROMPT PARA CRIAÇÃO DE SITE NO LOVABLE ===
@@ -224,66 +202,45 @@ export default function HyperBuildSite() {
 
 ## 1. CONTEXTO DO PROJETO
 
-Você vai criar um site/página chamado "${data.siteName}".
+Você vai criar um site/página chamado "${data.siteName || 'Meu Site'}".
+
+${data.customSiteType ? `**Tipo personalizado:** ${data.customSiteType}` : ''}
 
 **Sobre o negócio:**
-${data.businessDescription}
+${data.businessDescription || 'A definir'}
 
 **Público-alvo:**
-${data.targetAudience}
+${data.targetAudience || 'A definir'}
 
 ---
 
-## 2. OBJETIVO PRINCIPAL
+## 2. INFORMAÇÕES ESPECÍFICAS DO ${getSiteTypeLabel().toUpperCase()}
 
-**O que este site precisa fazer:**
-${data.mainObjective}
-
-**Ação desejada do visitante:**
-${data.desiredAction}
-
-**Diferencial / Proposta de valor única:**
-${data.uniqueValue || 'Destacar os principais benefícios e resultados'}
+${dynamicFieldsText || 'Informações a serem definidas durante o desenvolvimento.'}
 
 ---
 
 ## 3. ESTRUTURA DE SEÇÕES
 
-O site deve conter as seguintes seções (nesta ordem):
+O site deve conter as seguintes seções:
 
-${selectedSectionLabels.map((section, i) => `${i + 1}. ${section}`).join('\n')}
-
----
-
-## 4. CONTEÚDO E COPY
-
-**Headline principal (H1):**
-"${data.mainHeadline}"
-
-${data.subHeadline ? `**Subheadline:**
-"${data.subHeadline}"` : ''}
-
-${data.mainOffer ? `**Oferta principal:**
-${data.mainOffer}` : ''}
-
-**Texto do botão CTA:**
-"${data.ctaText || 'Começar Agora'}"
+${selectedSectionLabels.length > 0 ? selectedSectionLabels.map((section, i) => `${i + 1}. ${section}`).join('\n') : 'Seções a serem definidas conforme o tipo de site.'}
 
 ---
 
-## 5. IDENTIDADE VISUAL
+## 4. IDENTIDADE VISUAL
 
 - **Cor primária:** ${data.primaryColor}
 - **Cor secundária:** ${data.secondaryColor}
 - **Cor de fundo:** ${data.backgroundColor}
 - **Cor do texto:** ${data.textColor}
 - **Tipografia:** ${data.fontFamily}
-- **Estilo visual:** ${data.style === 'moderno' ? 'Moderno e clean' : data.style === 'ousado' ? 'Ousado e impactante' : data.style === 'elegante' ? 'Elegante e sofisticado' : 'Minimalista'}
+- **Estilo visual:** ${styleOptions.find(s => s.id === data.style)?.label || 'Moderno'}
 - **Idioma:** ${data.language === 'pt-BR' ? 'Português (Brasil)' : data.language}
 
 ---
 
-## 6. INSTRUÇÃO FINAL PARA O LOVABLE
+## 5. INSTRUÇÃO FINAL PARA O LOVABLE
 
 Crie este site completo e profissional com as seguintes características OBRIGATÓRIAS:
 
@@ -322,8 +279,8 @@ Crie este site completo e profissional com as seguintes características OBRIGAT
 - Tailwind CSS para estilização
 - Design system consistente
 
-NÃO INCLUIR:
-- Sistema de autenticação (a menos que solicitado)
+NÃO INCLUIR (a menos que solicitado):
+- Sistema de autenticação
 - Área de login/cadastro
 - Painel administrativo
 
@@ -343,8 +300,8 @@ Foco total em CONVERSÃO e EXPERIÊNCIA DO USUÁRIO.
           workspace_id: workspace.id,
           app_name: data.siteName,
           target_audience: data.targetAudience,
-          main_task: data.mainObjective,
-          main_benefit: data.uniqueValue,
+          main_task: data.dynamicFields.mainObjective || data.dynamicFields.mainPurpose || '',
+          main_benefit: data.dynamicFields.valueProposition || data.dynamicFields.transformation || '',
           daily_users: data.targetAudience,
           pages: selectedSectionLabels.join(', '),
           other_features: data.customSections,
@@ -397,14 +354,13 @@ Foco total em CONVERSÃO e EXPERIÊNCIA DO USUÁRIO.
     window.open('https://lovable.dev', '_blank');
   };
 
-  const stepIcons = [Lightbulb, Target, Layout, FileText, Palette, Sparkles];
+  const stepIcons = [Lightbulb, Target, Layout, Palette, Sparkles];
   const stepTitles = [
-    'Ideia do Site',
-    'Objetivo Principal',
-    'Estrutura de Seções',
-    'Conteúdo e Copy',
-    'Identidade Visual',
-    'Gerar Prompt'
+    'Tipo do Site',
+    'Contexto',
+    'Seções',
+    'Visual',
+    'Prompt'
   ];
 
   const renderStepContent = () => {
@@ -421,15 +377,15 @@ Foco total em CONVERSÃO e EXPERIÊNCIA DO USUÁRIO.
               <div className="w-16 h-16 rounded-2xl bg-emerald-500/10 flex items-center justify-center mx-auto mb-4">
                 <Lightbulb className="h-8 w-8 text-emerald-500" />
               </div>
-              <h2 className="text-2xl font-bold text-foreground">Ideia do Site</h2>
+              <h2 className="text-2xl font-bold text-foreground">Tipo do Site</h2>
               <p className="text-muted-foreground mt-2">
-                {nexiaData ? 'Confirme ou edite as informações abaixo' : 'Vamos entender o que você quer criar. Seja direto!'}
+                {nexiaData ? 'Confirme ou edite as informações abaixo' : 'Que tipo de site você quer criar?'}
               </p>
             </div>
 
             <div className="space-y-4">
               <div className="space-y-2">
-                <Label htmlFor="siteName">Nome do site ou projeto *</Label>
+                <Label htmlFor="siteName">Nome do site ou projeto</Label>
                 <Input
                   id="siteName"
                   placeholder="Ex: Curso de Marketing, Consultoria Silva, Loja Virtual..."
@@ -439,7 +395,7 @@ Foco total em CONVERSÃO e EXPERIÊNCIA DO USUÁRIO.
               </div>
 
               <div className="space-y-3">
-                <Label>Que tipo de site você quer criar? *</Label>
+                <Label>Que tipo de site você quer criar?</Label>
                 <div className="grid gap-2 sm:grid-cols-2">
                   {siteTypeOptions.map((type) => (
                     <div
@@ -460,8 +416,21 @@ Foco total em CONVERSÃO e EXPERIÊNCIA DO USUÁRIO.
                 </div>
               </div>
 
+              {/* Custom type field */}
+              {data.siteType === 'outro' && (
+                <div className="space-y-2">
+                  <Label htmlFor="customSiteType">Descreva o tipo de site</Label>
+                  <Input
+                    id="customSiteType"
+                    placeholder="Ex: Blog, Site de eventos, Plataforma de cursos..."
+                    value={data.customSiteType}
+                    onChange={(e) => updateData('customSiteType', e.target.value)}
+                  />
+                </div>
+              )}
+
               <div className="space-y-2">
-                <Label htmlFor="businessDescription">Descreva seu negócio ou oferta *</Label>
+                <Label htmlFor="businessDescription">Descreva seu negócio ou oferta</Label>
                 <Textarea
                   id="businessDescription"
                   placeholder="Ex: Sou nutricionista e ofereço consultoria online para emagrecimento saudável..."
@@ -472,7 +441,7 @@ Foco total em CONVERSÃO e EXPERIÊNCIA DO USUÁRIO.
               </div>
 
               <div className="space-y-2">
-                <Label htmlFor="targetAudience">Quem é seu público-alvo? *</Label>
+                <Label htmlFor="targetAudience">Quem é seu público-alvo?</Label>
                 <Input
                   id="targetAudience"
                   placeholder="Ex: Mulheres de 25-45 anos que querem emagrecer sem dietas restritivas"
@@ -485,102 +454,69 @@ Foco total em CONVERSÃO e EXPERIÊNCIA DO USUÁRIO.
         );
 
       case 2:
+        const currentFields = getCurrentFields();
         return (
           <div className="space-y-6">
             <div className="text-center mb-8">
               <div className="w-16 h-16 rounded-2xl bg-emerald-500/10 flex items-center justify-center mx-auto mb-4">
                 <Target className="h-8 w-8 text-emerald-500" />
               </div>
-              <h2 className="text-2xl font-bold text-foreground">Objetivo Principal</h2>
+              <h2 className="text-2xl font-bold text-foreground">Contexto do {getSiteTypeLabel()}</h2>
               <p className="text-muted-foreground mt-2">
-                O que você quer que o visitante faça no seu site?
+                Informações específicas para seu tipo de site
               </p>
             </div>
 
             <div className="space-y-4">
-              <div className="space-y-3">
-                <Label>Qual é o objetivo principal? *</Label>
-                <RadioGroup value={data.mainObjective} onValueChange={(value) => updateData('mainObjective', value)}>
-                  <div className="flex items-center space-x-3 p-3 rounded-lg border border-border hover:bg-muted/50 cursor-pointer">
-                    <RadioGroupItem value="vender" id="vender" />
-                    <Label htmlFor="vender" className="cursor-pointer flex-1">
-                      <span className="font-medium">Vender produto ou serviço</span>
-                      <p className="text-sm text-muted-foreground">Converter visitantes em clientes pagantes</p>
-                    </Label>
-                  </div>
-                  <div className="flex items-center space-x-3 p-3 rounded-lg border border-border hover:bg-muted/50 cursor-pointer">
-                    <RadioGroupItem value="capturar-leads" id="capturar-leads" />
-                    <Label htmlFor="capturar-leads" className="cursor-pointer flex-1">
-                      <span className="font-medium">Capturar leads (emails/contatos)</span>
-                      <p className="text-sm text-muted-foreground">Construir lista para relacionamento</p>
-                    </Label>
-                  </div>
-                  <div className="flex items-center space-x-3 p-3 rounded-lg border border-border hover:bg-muted/50 cursor-pointer">
-                    <RadioGroupItem value="agendar" id="agendar" />
-                    <Label htmlFor="agendar" className="cursor-pointer flex-1">
-                      <span className="font-medium">Agendar reunião ou consulta</span>
-                      <p className="text-sm text-muted-foreground">Gerar agendamentos qualificados</p>
-                    </Label>
-                  </div>
-                  <div className="flex items-center space-x-3 p-3 rounded-lg border border-border hover:bg-muted/50 cursor-pointer">
-                    <RadioGroupItem value="apresentar" id="apresentar" />
-                    <Label htmlFor="apresentar" className="cursor-pointer flex-1">
-                      <span className="font-medium">Apresentar a empresa</span>
-                      <p className="text-sm text-muted-foreground">Mostrar credibilidade e serviços</p>
-                    </Label>
-                  </div>
-                  <div className="flex items-center space-x-3 p-3 rounded-lg border border-border hover:bg-muted/50 cursor-pointer">
-                    <RadioGroupItem value="whatsapp" id="whatsapp" />
-                    <Label htmlFor="whatsapp" className="cursor-pointer flex-1">
-                      <span className="font-medium">Levar para o WhatsApp</span>
-                      <p className="text-sm text-muted-foreground">Iniciar conversa direta</p>
-                    </Label>
-                  </div>
-                </RadioGroup>
-              </div>
+              {currentFields.map((field) => (
+                <div key={field.id} className="space-y-2">
+                  <Label htmlFor={field.id}>{field.label}</Label>
+                  {field.type === 'textarea' ? (
+                    <Textarea
+                      id={field.id}
+                      placeholder={field.placeholder}
+                      value={data.dynamicFields[field.id] || ''}
+                      onChange={(e) => updateDynamicField(field.id, e.target.value)}
+                      rows={field.rows || 2}
+                    />
+                  ) : (
+                    <Input
+                      id={field.id}
+                      placeholder={field.placeholder}
+                      value={data.dynamicFields[field.id] || ''}
+                      onChange={(e) => updateDynamicField(field.id, e.target.value)}
+                    />
+                  )}
+                </div>
+              ))}
 
-              <div className="space-y-2">
-                <Label htmlFor="desiredAction">Descreva a ação principal que o visitante deve fazer *</Label>
-                <Textarea
-                  id="desiredAction"
-                  placeholder="Ex: Clicar no botão e comprar o curso, preencher o formulário para receber o ebook..."
-                  value={data.desiredAction}
-                  onChange={(e) => updateData('desiredAction', e.target.value)}
-                  rows={2}
-                />
-              </div>
-
-              <div className="space-y-2">
-                <Label htmlFor="uniqueValue">O que te diferencia da concorrência? (opcional)</Label>
-                <Textarea
-                  id="uniqueValue"
-                  placeholder="Ex: Método exclusivo, garantia de 30 dias, resultados comprovados..."
-                  value={data.uniqueValue}
-                  onChange={(e) => updateData('uniqueValue', e.target.value)}
-                  rows={2}
-                />
-              </div>
+              {currentFields.length === 0 && (
+                <div className="text-center py-8 text-muted-foreground">
+                  <p>Selecione um tipo de site na etapa anterior para ver os campos específicos.</p>
+                </div>
+              )}
             </div>
           </div>
         );
 
       case 3:
+        const sections = getCurrentSections();
         return (
           <div className="space-y-6">
             <div className="text-center mb-8">
               <div className="w-16 h-16 rounded-2xl bg-emerald-500/10 flex items-center justify-center mx-auto mb-4">
                 <Layout className="h-8 w-8 text-emerald-500" />
               </div>
-              <h2 className="text-2xl font-bold text-foreground">Estrutura de Seções</h2>
+              <h2 className="text-2xl font-bold text-foreground">Seções do Site</h2>
               <p className="text-muted-foreground mt-2">
-                Quais seções seu site precisa ter?
+                Quais seções seu {getSiteTypeLabel()} precisa ter?
               </p>
             </div>
 
             <div className="space-y-4">
               <Label>Selecione as seções (clique para adicionar/remover)</Label>
               <div className="grid gap-2 sm:grid-cols-2">
-                {suggestedSections.map((section) => {
+                {sections.map((section) => {
                   const isSelected = data.selectedSections.includes(section.id);
                   return (
                     <div
@@ -615,97 +551,11 @@ Foco total em CONVERSÃO e EXPERIÊNCIA DO USUÁRIO.
                   onChange={(e) => updateData('customSections', e.target.value)}
                 />
               </div>
-
-              <div className="bg-muted/50 rounded-lg p-3 text-sm">
-                <p className="text-muted-foreground">
-                  <strong className="text-foreground">Dica:</strong> Para landing pages de conversão, 
-                  recomendamos: Hero → Problema → Solução → Benefícios → Depoimentos → CTA Final
-                </p>
-              </div>
             </div>
           </div>
         );
 
       case 4:
-        return (
-          <div className="space-y-6">
-            <div className="text-center mb-8">
-              <div className="w-16 h-16 rounded-2xl bg-emerald-500/10 flex items-center justify-center mx-auto mb-4">
-                <FileText className="h-8 w-8 text-emerald-500" />
-              </div>
-              <h2 className="text-2xl font-bold text-foreground">Conteúdo e Copy</h2>
-              <p className="text-muted-foreground mt-2">
-                O que vai aparecer no seu site?
-              </p>
-            </div>
-
-            <div className="space-y-4">
-              <div className="space-y-2">
-                <Label htmlFor="mainHeadline">Headline principal (título do hero) *</Label>
-                <Textarea
-                  id="mainHeadline"
-                  placeholder="Ex: Emagreça 10kg em 90 dias sem passar fome"
-                  value={data.mainHeadline}
-                  onChange={(e) => updateData('mainHeadline', e.target.value)}
-                  rows={2}
-                />
-                <p className="text-xs text-muted-foreground">
-                  Dica: Use um benefício claro ou promessa específica
-                </p>
-              </div>
-
-              <div className="space-y-2">
-                <Label htmlFor="subHeadline">Subheadline (apoio ao título)</Label>
-                <Textarea
-                  id="subHeadline"
-                  placeholder="Ex: Método natural aprovado por nutricionistas, já ajudou mais de 5.000 pessoas"
-                  value={data.subHeadline}
-                  onChange={(e) => updateData('subHeadline', e.target.value)}
-                  rows={2}
-                />
-              </div>
-
-              <div className="space-y-2">
-                <Label htmlFor="mainOffer">Qual é sua oferta principal?</Label>
-                <Textarea
-                  id="mainOffer"
-                  placeholder="Ex: Curso completo + bônus + suporte por 1 ano por apenas 12x de R$97"
-                  value={data.mainOffer}
-                  onChange={(e) => updateData('mainOffer', e.target.value)}
-                  rows={2}
-                />
-              </div>
-
-              <div className="space-y-2">
-                <Label htmlFor="ctaText">Texto do botão principal (CTA)</Label>
-                <Input
-                  id="ctaText"
-                  placeholder="Ex: Quero Começar Agora, Agendar Consulta, Baixar Ebook..."
-                  value={data.ctaText}
-                  onChange={(e) => updateData('ctaText', e.target.value)}
-                />
-              </div>
-
-              {/* Preview */}
-              <div className="mt-6 p-4 rounded-lg border border-border bg-gradient-to-br from-muted/30 to-muted/10">
-                <Label className="text-sm text-muted-foreground mb-3 block">Prévia do Hero</Label>
-                <div className="text-center py-6">
-                  <h1 className="text-xl sm:text-2xl font-bold text-foreground mb-2">
-                    {data.mainHeadline || 'Sua headline aparecerá aqui'}
-                  </h1>
-                  {data.subHeadline && (
-                    <p className="text-muted-foreground mb-4">{data.subHeadline}</p>
-                  )}
-                  <Button style={{ backgroundColor: data.primaryColor }}>
-                    {data.ctaText || 'Começar Agora'}
-                  </Button>
-                </div>
-              </div>
-            </div>
-          </div>
-        );
-
-      case 5:
         return (
           <div className="space-y-6">
             <div className="text-center mb-8">
@@ -721,7 +571,8 @@ Foco total em CONVERSÃO e EXPERIÊNCIA DO USUÁRIO.
             <div className="space-y-4">
               <div className="grid gap-4 sm:grid-cols-2">
                 <div className="space-y-2">
-                  <Label htmlFor="primaryColor">Cor primária (botões/destaques) *</Label>
+                  <Label htmlFor="primaryColor">1. Cor Primária</Label>
+                  <p className="text-xs text-muted-foreground">A cor de destaque da marca, usada em CTAs e ícones.</p>
                   <div className="flex gap-2">
                     <Input
                       id="primaryColor"
@@ -733,14 +584,15 @@ Foco total em CONVERSÃO e EXPERIÊNCIA DO USUÁRIO.
                     <Input
                       value={data.primaryColor}
                       onChange={(e) => updateData('primaryColor', e.target.value)}
-                      placeholder="#10B981"
+                      placeholder="#8000FF"
                       className="flex-1"
                     />
                   </div>
                 </div>
 
                 <div className="space-y-2">
-                  <Label htmlFor="secondaryColor">Cor secundária</Label>
+                  <Label htmlFor="secondaryColor">2. Cor Secundária</Label>
+                  <p className="text-xs text-muted-foreground">Uma cor de apoio para seções ou cards.</p>
                   <div className="flex gap-2">
                     <Input
                       id="secondaryColor"
@@ -752,14 +604,15 @@ Foco total em CONVERSÃO e EXPERIÊNCIA DO USUÁRIO.
                     <Input
                       value={data.secondaryColor}
                       onChange={(e) => updateData('secondaryColor', e.target.value)}
-                      placeholder="#059669"
+                      placeholder="#1F1F1F"
                       className="flex-1"
                     />
                   </div>
                 </div>
 
                 <div className="space-y-2">
-                  <Label htmlFor="backgroundColor">Cor de fundo</Label>
+                  <Label htmlFor="backgroundColor">3. Cor de Fundo</Label>
+                  <p className="text-xs text-muted-foreground">A cor de base para o fundo de toda a aplicação.</p>
                   <div className="flex gap-2">
                     <Input
                       id="backgroundColor"
@@ -771,14 +624,15 @@ Foco total em CONVERSÃO e EXPERIÊNCIA DO USUÁRIO.
                     <Input
                       value={data.backgroundColor}
                       onChange={(e) => updateData('backgroundColor', e.target.value)}
-                      placeholder="#FFFFFF"
+                      placeholder="#171717"
                       className="flex-1"
                     />
                   </div>
                 </div>
 
                 <div className="space-y-2">
-                  <Label htmlFor="textColor">Cor do texto</Label>
+                  <Label htmlFor="textColor">4. Cor do Texto</Label>
+                  <p className="text-xs text-muted-foreground">Cor para todos os textos e ícones.</p>
                   <div className="flex gap-2">
                     <Input
                       id="textColor"
@@ -790,7 +644,7 @@ Foco total em CONVERSÃO e EXPERIÊNCIA DO USUÁRIO.
                     <Input
                       value={data.textColor}
                       onChange={(e) => updateData('textColor', e.target.value)}
-                      placeholder="#1F2937"
+                      placeholder="#FFFFFF"
                       className="flex-1"
                     />
                   </div>
@@ -798,7 +652,7 @@ Foco total em CONVERSÃO e EXPERIÊNCIA DO USUÁRIO.
               </div>
 
               <div className="space-y-2">
-                <Label>Tipografia *</Label>
+                <Label>Tipografia</Label>
                 <Select value={data.fontFamily} onValueChange={(value) => updateData('fontFamily', value)}>
                   <SelectTrigger>
                     <SelectValue placeholder="Escolha uma fonte" />
@@ -814,22 +668,15 @@ Foco total em CONVERSÃO e EXPERIÊNCIA DO USUÁRIO.
               <div className="space-y-3">
                 <Label>Estilo visual</Label>
                 <RadioGroup value={data.style} onValueChange={(value) => updateData('style', value)} className="grid grid-cols-2 gap-2">
-                  <div className={`flex items-center space-x-2 p-3 rounded-lg border cursor-pointer ${data.style === 'moderno' ? 'border-emerald-500 bg-emerald-500/10' : 'border-border hover:bg-muted/50'}`}>
-                    <RadioGroupItem value="moderno" id="moderno" />
-                    <Label htmlFor="moderno" className="cursor-pointer">Moderno</Label>
-                  </div>
-                  <div className={`flex items-center space-x-2 p-3 rounded-lg border cursor-pointer ${data.style === 'ousado' ? 'border-emerald-500 bg-emerald-500/10' : 'border-border hover:bg-muted/50'}`}>
-                    <RadioGroupItem value="ousado" id="ousado" />
-                    <Label htmlFor="ousado" className="cursor-pointer">Ousado</Label>
-                  </div>
-                  <div className={`flex items-center space-x-2 p-3 rounded-lg border cursor-pointer ${data.style === 'elegante' ? 'border-emerald-500 bg-emerald-500/10' : 'border-border hover:bg-muted/50'}`}>
-                    <RadioGroupItem value="elegante" id="elegante" />
-                    <Label htmlFor="elegante" className="cursor-pointer">Elegante</Label>
-                  </div>
-                  <div className={`flex items-center space-x-2 p-3 rounded-lg border cursor-pointer ${data.style === 'minimalista' ? 'border-emerald-500 bg-emerald-500/10' : 'border-border hover:bg-muted/50'}`}>
-                    <RadioGroupItem value="minimalista" id="minimalista" />
-                    <Label htmlFor="minimalista" className="cursor-pointer">Minimalista</Label>
-                  </div>
+                  {styleOptions.map((style) => (
+                    <div 
+                      key={style.id}
+                      className={`flex items-center space-x-2 p-3 rounded-lg border cursor-pointer ${data.style === style.id ? 'border-emerald-500 bg-emerald-500/10' : 'border-border hover:bg-muted/50'}`}
+                    >
+                      <RadioGroupItem value={style.id} id={style.id} />
+                      <Label htmlFor={style.id} className="cursor-pointer">{style.label}</Label>
+                    </div>
+                  ))}
                 </RadioGroup>
               </div>
 
@@ -849,28 +696,33 @@ Foco total em CONVERSÃO e EXPERIÊNCIA DO USUÁRIO.
 
               {/* Preview */}
               <div className="mt-6 p-4 rounded-lg border border-border">
-                <Label className="text-sm text-muted-foreground mb-3 block">Prévia das cores</Label>
+                <Label className="text-sm text-muted-foreground mb-3 block">Pré-visualização da Interface</Label>
                 <div 
                   className="rounded-lg p-6 transition-all"
                   style={{ backgroundColor: data.backgroundColor }}
                 >
-                  <p 
-                    className="font-bold text-xl mb-2"
-                    style={{ color: data.primaryColor, fontFamily: data.fontFamily }}
+                  <div 
+                    className="rounded-lg p-4 mb-3"
+                    style={{ backgroundColor: data.secondaryColor }}
                   >
-                    {data.siteName || 'Seu Site'}
-                  </p>
-                  <p 
-                    className="text-sm mb-4"
-                    style={{ color: data.textColor, fontFamily: data.fontFamily }}
-                  >
-                    Texto de exemplo com a cor e fonte selecionadas
-                  </p>
+                    <span 
+                      className="text-xs font-medium px-2 py-1 rounded"
+                      style={{ backgroundColor: data.primaryColor, color: data.backgroundColor }}
+                    >
+                      NOVO
+                    </span>
+                    <p 
+                      className="text-sm mt-2"
+                      style={{ color: data.textColor, fontFamily: data.fontFamily }}
+                    >
+                      Este texto demonstra a legibilidade.
+                    </p>
+                  </div>
                   <button 
-                    className="px-6 py-2 rounded-lg text-sm font-medium transition-all hover:opacity-90"
-                    style={{ backgroundColor: data.primaryColor, color: data.backgroundColor }}
+                    className="w-full py-2 rounded-lg text-sm font-medium transition-all hover:opacity-90"
+                    style={{ backgroundColor: data.primaryColor, color: data.backgroundColor, fontFamily: data.fontFamily }}
                   >
-                    {data.ctaText || 'Botão CTA'}
+                    Ação Principal
                   </button>
                 </div>
               </div>
@@ -878,7 +730,7 @@ Foco total em CONVERSÃO e EXPERIÊNCIA DO USUÁRIO.
           </div>
         );
 
-      case 6:
+      case 5:
         return (
           <div className="space-y-6">
             <div className="text-center mb-8">
@@ -952,7 +804,7 @@ Foco total em CONVERSÃO e EXPERIÊNCIA DO USUÁRIO.
           </div>
           <Progress value={progress} className="h-2" />
           
-          {/* Step Indicators */}
+          {/* Step Indicators - Clickable */}
           <div className="flex justify-between">
             {stepIcons.map((Icon, index) => {
               const stepNum = index + 1;
@@ -960,24 +812,26 @@ Foco total em CONVERSÃO e EXPERIÊNCIA DO USUÁRIO.
               const isCurrent = currentStep === stepNum;
               
               return (
-                <div 
+                <button 
                   key={index}
+                  onClick={() => goToStep(stepNum)}
                   className={`
-                    w-8 h-8 rounded-full flex items-center justify-center transition-all
+                    w-8 h-8 rounded-full flex items-center justify-center transition-all cursor-pointer hover:scale-110
                     ${isCompleted 
                       ? 'bg-success text-success-foreground' 
                       : isCurrent 
                         ? 'bg-emerald-500 text-white' 
-                        : 'bg-muted text-muted-foreground'
+                        : 'bg-muted text-muted-foreground hover:bg-muted/80'
                     }
                   `}
+                  title={stepTitles[index]}
                 >
                   {isCompleted ? (
                     <Check className="h-4 w-4" />
                   ) : (
                     <Icon className="h-4 w-4" />
                   )}
-                </div>
+                </button>
               );
             })}
           </div>
@@ -998,11 +852,11 @@ Foco total em CONVERSÃO e EXPERIÊNCIA DO USUÁRIO.
               {currentStep === 1 ? 'Cancelar' : 'Voltar'}
             </Button>
             
-            {currentStep === 5 ? (
+            {currentStep === 4 ? (
               <Button 
                 onClick={generatePrompt} 
                 className="flex-1 gap-2 bg-emerald-600 hover:bg-emerald-700"
-                disabled={!canProceed() || isGenerating}
+                disabled={isGenerating}
               >
                 {isGenerating ? (
                   <>Gerando...</>
@@ -1017,7 +871,6 @@ Foco total em CONVERSÃO e EXPERIÊNCIA DO USUÁRIO.
               <Button 
                 onClick={handleNext} 
                 className="flex-1 gap-2"
-                disabled={!canProceed()}
               >
                 Avançar
                 <ArrowRight className="h-4 w-4" />
