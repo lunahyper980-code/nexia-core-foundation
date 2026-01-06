@@ -18,7 +18,7 @@ import {
   DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu';
 import { Input } from '@/components/ui/input';
-import { Plus, Search, MoreHorizontal, Pencil, Trash2, FileSignature, Copy, Send, Loader2, ArrowLeft } from 'lucide-react';
+import { Plus, Search, MoreHorizontal, Trash2, FileSignature, Send, Loader2, ArrowLeft, Eye } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 import { useWorkspace } from '@/contexts/WorkspaceContext';
 import { supabase } from '@/integrations/supabase/client';
@@ -256,11 +256,11 @@ export default function Contratos() {
                             <DropdownMenuContent align="end">
                               <DropdownMenuItem onClick={() => navigate(
                                 contract.source === 'solution_contracts' 
-                                  ? `/solucoes/contrato/${contract.id}` 
-                                  : `/vendas/contratos/${contract.id}`
+                                  ? `/vendas/contratos/ver/${contract.id}` 
+                                  : `/vendas/contratos/ver/${contract.id}?source=contracts`
                               )}>
-                                <Pencil className="h-4 w-4 mr-2" />
-                                Editar
+                                <Eye className="h-4 w-4 mr-2" />
+                                Inspecionar
                               </DropdownMenuItem>
                               {contract.status === 'draft' && (
                                 <DropdownMenuItem onClick={() => markAsSentMutation.mutate({ id: contract.id, source: contract.source })}>
