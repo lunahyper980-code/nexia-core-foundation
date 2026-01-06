@@ -237,20 +237,6 @@ export default function OrganizacaoHub() {
                             <Eye className="h-4 w-4" />
                           </Button>
                           
-                          {org.status === 'completed' && (
-                            <Button
-                              variant="ghost"
-                              size="icon"
-                              className="h-8 w-8"
-                              title="Gerar proposta"
-                              onClick={(e) => {
-                                e.stopPropagation();
-                                navigate(`/solucoes/proposta/novo?organizacao=${org.id}`);
-                              }}
-                            >
-                              <FileOutput className="h-4 w-4" />
-                            </Button>
-                          )}
                           
                           <Button
                             variant="ghost"
