@@ -39,7 +39,8 @@ export type EditType =
   | 'refactor-code'
   | 'optimize'
   | 'change-images'
-  | 'make-pwa';
+  | 'make-pwa'
+  | 'admin-panel';
 
 interface ProjectContext {
   templateId?: string;
@@ -441,6 +442,47 @@ Implementar service worker com:
 [ ] Detecção de plataforma implementada
 [ ] Modal de instalação criado
 [ ] Teste de instalação em dispositivo real
+
+=== FIM DO PROMPT ===
+`.trim(),
+  },
+  'admin-panel': {
+    icon: Settings,
+    title: 'Adicionar Painel Administrativo',
+    fields: [
+      { id: 'adminPages', label: 'Páginas do painel', placeholder: 'Ex: Dashboard, Usuários, Relatórios, Configurações...', type: 'textarea' },
+      { id: 'mainMetrics', label: 'Métricas principais', placeholder: 'O que o admin precisa visualizar? Ex: vendas, usuários ativos...', type: 'textarea' },
+      { id: 'adminActions', label: 'Ações administrativas', placeholder: 'O que o admin pode fazer? Ex: aprovar, bloquear, exportar...', type: 'textarea' },
+      { id: 'accessControl', label: 'Controle de acesso', placeholder: 'Quem pode acessar o painel? Ex: apenas admins, gestores...', type: 'input' },
+    ],
+    promptTemplate: (projectName, projectType, values) => `
+=== PROMPT DE ATUALIZAÇÃO ===
+Projeto: ${projectName} (${projectType})
+Tipo: ADICIONAR PAINEL ADMINISTRATIVO
+
+🎛️ PÁGINAS DO PAINEL:
+${values.adminPages}
+
+📊 MÉTRICAS PRINCIPAIS:
+${values.mainMetrics}
+
+⚡ AÇÕES ADMINISTRATIVAS:
+${values.adminActions}
+
+🔐 CONTROLE DE ACESSO:
+${values.accessControl}
+
+INSTRUÇÕES:
+- Criar área administrativa completa e funcional
+- Implementar dashboard com as métricas solicitadas
+- Adicionar navegação lateral para todas as páginas
+- Garantir que apenas usuários autorizados acessem
+- Usar tabelas com busca, filtros e paginação
+- Incluir gráficos e cards de resumo no dashboard
+- Adicionar ações em lote quando apropriado
+- Manter o design consistente com o resto do app
+- Implementar confirmações para ações destrutivas
+- Adicionar feedback visual para todas as ações
 
 === FIM DO PROMPT ===
 `.trim(),
