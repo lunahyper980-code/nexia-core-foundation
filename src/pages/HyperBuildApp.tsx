@@ -1,27 +1,27 @@
 import { useState, useEffect } from 'react';
 import { AppLayout } from '@/components/AppLayout';
 import { Button } from '@/components/ui/button';
-import { Card, CardContent } from '@/components/ui/card';
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
-import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group';
-import { Checkbox } from '@/components/ui/checkbox';
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Progress } from '@/components/ui/progress';
+import { SelectableCard, ColorCard } from '@/components/ui/selectable-card';
 import { 
   ArrowLeft, 
   ArrowRight, 
-  Lightbulb, 
-  Target, 
-  Users, 
-  Layout, 
-  GitBranch, 
+  Check, 
+  Rocket, 
+  Sparkles, 
   Palette, 
-  Sparkles,
-  Check,
-  Copy,
-  ExternalLink
+  Loader2, 
+  Copy, 
+  ExternalLink, 
+  FileText, 
+  Globe, 
+  Type,
+  Users,
+  Layout
 } from 'lucide-react';
 import { useNavigate, useSearchParams } from 'react-router-dom';
 import { toast } from 'sonner';
@@ -30,89 +30,87 @@ import { useWorkspace } from '@/contexts/WorkspaceContext';
 import { useAuth } from '@/contexts/AuthContext';
 import { NexiaOriginBanner, parseNexiaParams } from '@/components/nexia';
 
+// Platform logos
+import platformLovable from '@/assets/platform-lovable.png';
+import platformFirebase from '@/assets/platform-firebase.png';
+import platformBolt from '@/assets/platform-bolt.png';
+import platformGoogleAI from '@/assets/platform-google-ai.svg';
+import platformBase44 from '@/assets/platform-base44.png';
 
-const TOTAL_STEPS = 7;
-
-const fontOptions = [
-  'Inter',
-  'Poppins',
-  'Roboto',
-  'Montserrat',
-  'Open Sans',
-  'Lato',
-  'Nunito',
-  'Raleway',
-  'Space Grotesk',
-  'DM Sans',
-];
-
-const suggestedScreens = [
-  { id: 'login', label: 'Login / Cadastro', description: 'Autenticação de usuários' },
-  { id: 'home', label: 'Tela Principal (Home)', description: 'Dashboard ou visão geral' },
-  { id: 'main-action', label: 'Tela da Ação Principal', description: 'Onde a função principal acontece' },
-  { id: 'history', label: 'Histórico', description: 'Registro de ações anteriores' },
-  { id: 'profile', label: 'Perfil do Usuário', description: 'Dados e configurações pessoais' },
-  { id: 'admin', label: 'Painel Administrativo', description: 'Gestão e relatórios' },
-  { id: 'notifications', label: 'Notificações', description: 'Alertas e avisos' },
-  { id: 'settings', label: 'Configurações', description: 'Preferências do app' },
-];
-
-interface WizardData {
-  // Step 1 - Idea
+interface FormData {
   appName: string;
-  businessType: string;
   targetAudience: string;
-  mainProblem: string;
-  // Step 2 - Main Function
-  mainAction: string;
-  actionFrequency: string;
-  primaryUser: string;
-  // Step 3 - System Users
-  endUser: string;
-  adminUser: string;
-  needsAdminPanel: string;
-  // Step 4 - Essential Screens
-  selectedScreens: string[];
-  customScreens: string;
-  // Step 5 - Operational Flow
-  onEnterAction: string;
-  afterMainAction: string;
-  hasStatusTracking: string;
-  hasHistory: string;
-  // Step 6 - Visual Identity
+  mainTask: string;
+  mainBenefit: string;
+  dailyUsers: string;
+  pages: string;
+  otherFeatures: string;
   primaryColor: string;
   secondaryColor: string;
   backgroundColor: string;
   textColor: string;
   fontFamily: string;
+  customFont: string;
   language: string;
+  customLanguage: string;
   targetPlatform: string;
 }
 
-const initialData: WizardData = {
+const initialFormData: FormData = {
   appName: '',
-  businessType: '',
   targetAudience: '',
-  mainProblem: '',
-  mainAction: '',
-  actionFrequency: '',
-  primaryUser: 'clientes',
-  endUser: '',
-  adminUser: '',
-  needsAdminPanel: 'sim',
-  selectedScreens: ['login', 'home', 'main-action'],
-  customScreens: '',
-  onEnterAction: '',
-  afterMainAction: '',
-  hasStatusTracking: 'sim',
-  hasHistory: 'sim',
+  mainTask: '',
+  mainBenefit: '',
+  dailyUsers: '',
+  pages: '',
+  otherFeatures: '',
   primaryColor: '#8B5CF6',
   secondaryColor: '#6366F1',
   backgroundColor: '#0F0A1A',
   textColor: '#F8FAFC',
   fontFamily: 'Inter',
+  customFont: '',
   language: 'pt-BR',
+  customLanguage: '',
   targetPlatform: 'lovable',
+};
+
+const fonts = [
+  { value: 'Inter', label: 'Inter' },
+  { value: 'Poppins', label: 'Poppins' },
+  { value: 'Roboto', label: 'Roboto' },
+  { value: 'Montserrat', label: 'Montserrat' },
+  { value: 'DM Sans', label: 'DM Sans' },
+  { value: 'custom', label: 'Outra' },
+];
+
+const languages = [
+  { value: 'pt-BR', label: 'Português', flag: '🇧🇷', subtitle: 'Brasil' },
+  { value: 'en', label: 'Inglês', flag: '🇺🇸', subtitle: 'English' },
+  { value: 'es', label: 'Espanhol', flag: '🇪🇸', subtitle: 'Español' },
+  { value: 'other', label: 'Outro', flag: '🌐', subtitle: 'Idioma' },
+];
+
+const platforms = [
+  { value: 'lovable', label: 'Lovable', image: platformLovable, subtitle: 'Recomendado' },
+  { value: 'firebase-studio', label: 'Firebase Studio', image: platformFirebase, subtitle: 'Google' },
+  { value: 'bolt', label: 'Bolt', image: platformBolt, subtitle: 'StackBlitz' },
+  { value: 'replit', label: 'Replit', letter: 'R', subtitle: 'Colaborativo', bgColor: '#F26207' },
+  { value: 'v0', label: 'v0.dev', letter: 'v0', subtitle: 'Vercel', bgColor: '#000000' },
+  { value: 'base44', label: 'Base44', image: platformBase44, subtitle: 'No-code' },
+  { value: 'google-ai-studio', label: 'Google AI', image: platformGoogleAI, subtitle: 'Gemini' },
+  { value: 'other', label: 'Outros', letter: '...', subtitle: 'Qualquer', bgColor: '#374151' },
+];
+
+const platformUrls: Record<string, string> = {
+  lovable: 'https://lovable.dev/projects/create',
+  'firebase-studio': 'https://console.firebase.google.com/',
+  bolt: 'https://bolt.new/',
+  replit: 'https://replit.com/',
+  v0: 'https://v0.dev/',
+  base44: 'https://base44.com/',
+  'google-ai-studio': 'https://aistudio.google.com/',
+  other: 'https://lovable.dev/projects/create',
 };
 
 export default function HyperBuildApp() {
@@ -120,899 +118,688 @@ export default function HyperBuildApp() {
   const [searchParams] = useSearchParams();
   const { workspace } = useWorkspace();
   const { user } = useAuth();
-  const [currentStep, setCurrentStep] = useState(1);
-  const [data, setData] = useState<WizardData>(initialData);
-  const [generatedPrompt, setGeneratedPrompt] = useState('');
-  const [isGenerating, setIsGenerating] = useState(false);
   
+  const [currentStep, setCurrentStep] = useState(1);
+  const [formData, setFormData] = useState<FormData>(initialFormData);
+  const [errors, setErrors] = useState<Partial<FormData>>({});
+  const [saving, setSaving] = useState(false);
+  const [generatedPrompt, setGeneratedPrompt] = useState('');
+  const [projectId, setProjectId] = useState<string | null>(null);
+
   // Parse Nexia data from URL
   const nexiaData = parseNexiaParams(searchParams);
 
   // Pre-fill form with Nexia data
   useEffect(() => {
     if (nexiaData) {
-      setData(prev => ({
+      setFormData(prev => ({
         ...prev,
         appName: nexiaData.projectName || nexiaData.companyName || prev.appName,
-        businessType: nexiaData.sectorNiche || prev.businessType,
         targetAudience: nexiaData.targetAudience || prev.targetAudience,
-        mainProblem: nexiaData.mainProblem || nexiaData.primaryGoal || prev.mainProblem,
+        mainBenefit: nexiaData.mainProblem || nexiaData.primaryGoal || prev.mainBenefit,
       }));
     }
   }, []);
 
-  const progress = (currentStep / TOTAL_STEPS) * 100;
+  const totalSteps = 5;
+  const progress = (currentStep / totalSteps) * 100;
 
-  const updateData = (field: keyof WizardData, value: string | string[]) => {
-    setData(prev => ({ ...prev, [field]: value }));
+  const updateField = (field: keyof FormData, value: string) => {
+    setFormData({ ...formData, [field]: value });
+    if (errors[field]) {
+      setErrors({ ...errors, [field]: undefined });
+    }
   };
 
-  const toggleScreen = (screenId: string) => {
-    setData(prev => ({
-      ...prev,
-      selectedScreens: prev.selectedScreens.includes(screenId)
-        ? prev.selectedScreens.filter(id => id !== screenId)
-        : [...prev.selectedScreens, screenId]
-    }));
+  const getFontStyle = () => {
+    const font = formData.fontFamily === 'custom' && formData.customFont 
+      ? formData.customFont 
+      : formData.fontFamily;
+    return { fontFamily: `"${font}", sans-serif` };
+  };
+
+  const generatePrompt = (): string => {
+    const font = formData.fontFamily === 'custom' ? formData.customFont : formData.fontFamily;
+    const languageLabel = formData.language === 'other' ? formData.customLanguage : (languages.find(l => l.value === formData.language)?.label || formData.language);
+    const platformLabel = platforms.find(p => p.value === formData.targetPlatform)?.label || formData.targetPlatform;
+
+    const prompt = `# PROJETO: ${formData.appName}
+
+## 1. CONTEXTO DO PROJETO
+- **Tipo de solução:** Aplicativo / SaaS
+- **Descrição:** Aplicativo completo desenvolvido para resolver problemas operacionais reais e facilitar a gestão do negócio.
+
+## 2. PÚBLICO-ALVO
+${formData.targetAudience}
+
+## 3. FUNÇÃO PRINCIPAL
+${formData.mainTask}
+
+## 4. PROBLEMA RESOLVIDO / BENEFÍCIO PRINCIPAL
+${formData.mainBenefit}
+
+## 5. USUÁRIOS DO SISTEMA
+${formData.dailyUsers}
+
+## 6. TELAS/PÁGINAS ESSENCIAIS
+${formData.pages}
+
+## 7. FUNCIONALIDADES ADICIONAIS
+${formData.otherFeatures || 'Nenhuma funcionalidade adicional especificada.'}
+
+## 8. IDENTIDADE VISUAL
+- **Cor primária:** ${formData.primaryColor}
+- **Cor secundária:** ${formData.secondaryColor}
+- **Cor de fundo:** ${formData.backgroundColor}
+- **Cor do texto:** ${formData.textColor}
+- **Tipografia:** ${font}
+
+## 9. CONFIGURAÇÕES
+- **Idioma:** ${languageLabel}
+- **Plataforma:** ${platformLabel}
+
+## 10. INSTRUÇÃO FINAL
+
+## REQUISITOS OBRIGATÓRIOS PARA APLICATIVO/SAAS:
+
+1. **Frontend Interativo Completo**
+   - TODAS as telas devem ser funcionais e clicáveis
+   - Navegação fluida entre TODAS as páginas do fluxo
+   - Menus responsivos (sidebar, navbar, bottom navigation para mobile)
+   - Estados visuais: loading, sucesso, erro, vazio
+
+2. **Sistema de Autenticação**
+   - Tela de Login com validação visual
+   - Tela de Cadastro com validação visual
+   - Recuperação de senha (fluxo simulado)
+   - Proteção de rotas autenticadas
+   - Perfis diferentes: cliente, funcionário, admin
+
+3. **Painéis e Dashboards com Métricas Reais**
+   - Painel principal com métricas do negócio
+   - Gráficos e cards com dados simulados realistas
+   - Área administrativa completa
+   - Relatórios visuais
+
+4. **Fluxos Clicáveis Completos**
+   - Formulários com validação e feedback visual
+   - Ações com confirmação (modais, toasts)
+   - Estados de loading, sucesso e erro em CADA ação
+   - Simulação de operações CRUD completas
+   - Notificações e alertas contextuais
+
+5. **UX/UI Profissional**
+   - Design responsivo mobile-first
+   - Animações e transições suaves
+   - Feedback visual para TODAS as ações
+   - Hierarquia visual clara - o mais importante chama mais atenção
+   - Microinterações que guiam o usuário
+
+CRÍTICO: Gerar código COMPLETO e FUNCIONAL. NENHUMA página pode estar vazia, com placeholder ou "em construção". Cada tela deve parecer de um produto real em produção.`;
+
+    return prompt;
+  };
+
+  const handleCopyPrompt = async () => {
+    try {
+      await navigator.clipboard.writeText(generatedPrompt);
+      toast.success('Prompt copiado para a área de transferência!');
+    } catch (error) {
+      toast.error('Erro ao copiar prompt');
+    }
+  };
+
+  const handleOpenPlatform = () => {
+    const url = platformUrls[formData.targetPlatform] || platformUrls.lovable;
+    window.open(url, '_blank');
   };
 
   const handleNext = () => {
-    if (currentStep < TOTAL_STEPS) {
-      setCurrentStep(prev => prev + 1);
+    if (currentStep < totalSteps - 1) {
+      setCurrentStep(currentStep + 1);
+    } else if (currentStep === totalSteps - 1) {
+      handleSubmit();
     }
   };
 
   const handleBack = () => {
     if (currentStep > 1) {
-      setCurrentStep(prev => prev - 1);
+      setCurrentStep(currentStep - 1);
+      setErrors({});
     } else {
       navigate('/solucoes/criar/app');
     }
   };
 
   const goToStep = (step: number) => {
-    if (step >= 1 && step <= TOTAL_STEPS) {
+    if (step >= 1 && step < totalSteps) {
       setCurrentStep(step);
+      setErrors({});
     }
   };
 
-  const generatePrompt = async () => {
-    setIsGenerating(true);
-    
-    const selectedScreenLabels = data.selectedScreens
-      .map(id => suggestedScreens.find(s => s.id === id)?.label)
-      .filter(Boolean);
-    
-    if (data.customScreens) {
-      selectedScreenLabels.push(...data.customScreens.split(',').map(s => s.trim()));
+  const handleSubmit = async () => {
+    if (!workspace) {
+      toast.error('Workspace não encontrado');
+      return;
     }
 
-    const prompt = `
-=== PROMPT PARA CRIAÇÃO DE APLICATIVO NO LOVABLE ===
+    setSaving(true);
 
-📱 TIPO DE SOLUÇÃO: Aplicativo / SaaS
+    try {
+      const prompt = generatePrompt();
+      
+      const { data, error } = await supabase.from('projects').insert({
+        workspace_id: workspace.id,
+        app_name: formData.appName || 'Novo Aplicativo',
+        target_audience: formData.targetAudience,
+        main_task: formData.mainTask,
+        main_benefit: formData.mainBenefit,
+        daily_users: formData.dailyUsers,
+        pages: formData.pages,
+        other_features: formData.otherFeatures || null,
+        primary_color: formData.primaryColor,
+        secondary_color: formData.secondaryColor,
+        background_color: formData.backgroundColor,
+        text_color: formData.textColor,
+        font_family: formData.fontFamily === 'custom' ? formData.customFont : formData.fontFamily,
+        custom_font: formData.fontFamily === 'custom' ? formData.customFont : null,
+        language: formData.language,
+        target_platform: formData.targetPlatform,
+        status: 'prompt_generated',
+        generated_prompt: prompt,
+      }).select('id').single();
 
----
+      if (error) throw error;
 
-## 1. CONTEXTO DO PROJETO
-
-Você vai criar um aplicativo completo chamado "${data.appName}".
-
-Este é um app para ${data.businessType}, voltado para ${data.targetAudience}.
-
-O principal problema que resolve: ${data.mainProblem}
-
----
-
-## 2. FUNÇÃO PRINCIPAL DO APP
-
-A ação principal do aplicativo é: ${data.mainAction}
-
-Frequência de uso dessa ação: ${data.actionFrequency}
-
-O app é usado principalmente por: ${data.primaryUser === 'clientes' ? 'Clientes/Usuários finais' : data.primaryUser === 'gestores' ? 'Gestores/Administradores' : 'Ambos (clientes e gestores)'}
-
----
-
-## 3. USUÁRIOS DO SISTEMA
-
-**Usuário final (quem usa no dia a dia):**
-${data.endUser}
-
-**Administrador (quem gerencia):**
-${data.adminUser || 'O próprio dono do negócio'}
-
-**Painel administrativo:** ${data.needsAdminPanel === 'sim' ? 'Sim, incluir painel de gestão completo' : 'Não necessário'}
-
----
-
-## 4. TELAS ESSENCIAIS DO APLICATIVO
-
-O app deve conter as seguintes telas:
-${selectedScreenLabels.map(screen => `- ${screen}`).join('\n')}
-
----
-
-## 5. FLUXO OPERACIONAL REAL
-
-**Ao entrar no app, o usuário:**
-${data.onEnterAction}
-
-**Após realizar a ação principal:**
-${data.afterMainAction}
-
-**Acompanhamento de status:** ${data.hasStatusTracking === 'sim' ? 'Sim - O usuário pode acompanhar o status em tempo real' : 'Não necessário'}
-
-**Histórico de ações:** ${data.hasHistory === 'sim' ? 'Sim - Manter registro completo de todas as ações' : 'Não necessário'}
-
----
-
-## 6. IDENTIDADE VISUAL
-
-- **Cor primária:** ${data.primaryColor}
-- **Cor secundária:** ${data.secondaryColor}
-- **Cor de fundo:** ${data.backgroundColor}
-- **Cor do texto:** ${data.textColor}
-- **Tipografia:** ${data.fontFamily}
-- **Idioma:** ${data.language === 'pt-BR' ? 'Português (Brasil)' : data.language}
-
----
-
-## 7. INSTRUÇÃO FINAL PARA O LOVABLE
-
-Crie este aplicativo completo e funcional com as seguintes características OBRIGATÓRIAS:
-
-### AUTENTICAÇÃO E SEGURANÇA
-- Sistema de login e cadastro completo
-- Proteção de rotas para usuários autenticados
-- Perfis de usuário com dados editáveis
-
-### INTERFACE E EXPERIÊNCIA
-- Design moderno, limpo e profissional
-- Totalmente responsivo (mobile-first)
-- Animações suaves e micro-interações
-- Feedback visual claro para todas as ações
-- Loading states e tratamento de erros
-
-### FUNCIONALIDADES CORE
-- Todas as telas listadas acima devem ser funcionais
-- Navegação intuitiva entre as telas
-- Fluxo operacional conforme descrito
-- Estados de vazio, carregamento e erro
-
-${data.needsAdminPanel === 'sim' ? `### PAINEL ADMINISTRATIVO
-- Dashboard com métricas principais
-- Gestão de usuários
-- Relatórios e estatísticas
-- Configurações do sistema` : ''}
-
-### QUALIDADE DE CÓDIGO
-- Componentes reutilizáveis
-- TypeScript tipado corretamente
-- Integração com Supabase para persistência
-- Código limpo e organizado
-
-NÃO criar mockups ou protótipos. Criar o aplicativo COMPLETO e FUNCIONAL.
-Todas as interações devem funcionar de verdade.
-O app deve estar pronto para uso real.
-
-=== FIM DO PROMPT ===
-`.trim();
-
-    setGeneratedPrompt(prompt);
-    setCurrentStep(TOTAL_STEPS);
-    
-    // Save to database
-    if (workspace) {
-      try {
-        const { data: projectData } = await supabase.from('projects').insert({
+      // Log activity if came from Nexia
+      if (nexiaData?.planningId && user) {
+        await supabase.from('activity_logs').insert({
           workspace_id: workspace.id,
-          app_name: data.appName,
-          target_audience: data.targetAudience,
-          main_task: data.mainAction,
-          main_benefit: data.mainProblem,
-          daily_users: data.endUser,
-          pages: selectedScreenLabels.join(', '),
-          other_features: data.customScreens,
-          primary_color: data.primaryColor,
-          secondary_color: data.secondaryColor,
-          background_color: data.backgroundColor,
-          text_color: data.textColor,
-          font_family: data.fontFamily,
-          language: data.language,
-          target_platform: data.targetPlatform,
-          generated_prompt: prompt,
-          status: 'prompt_generated'
-        }).select().single();
-
-        // Log activity if came from Nexia
-        if (nexiaData?.planningId && user) {
-          await supabase.from('activity_logs').insert({
-            workspace_id: workspace.id,
-            user_id: user.id,
-            type: 'SOLUTION_CREATED_FROM_NEXIA',
-            entity_type: 'project',
-            entity_id: projectData?.id || null,
-            title: 'Solução digital criada',
-            description: `Aplicativo "${data.appName}" criado a partir do planejamento Nexia`,
-            message: `Aplicativo "${data.appName}" criado a partir do planejamento Nexia`,
-            metadata: { 
-              planning_id: nexiaData.planningId,
-              client_id: nexiaData.clientId,
-              solution_type: 'app',
-              mode: nexiaData.mode
-            }
-          });
-        }
-
-        toast.success('Projeto salvo com sucesso!');
-      } catch (error) {
-        console.error('Error saving project:', error);
+          user_id: user.id,
+          type: 'SOLUTION_CREATED_FROM_NEXIA',
+          entity_type: 'project',
+          entity_id: data?.id || null,
+          title: 'Solução digital criada',
+          description: `Aplicativo "${formData.appName}" criado a partir do planejamento Nexia`,
+          message: `Aplicativo "${formData.appName}" criado a partir do planejamento Nexia`,
+          metadata: { 
+            planning_id: nexiaData.planningId,
+            client_id: nexiaData.clientId,
+            solution_type: 'app',
+            mode: nexiaData.mode
+          }
+        });
       }
-    }
 
-    setIsGenerating(false);
-  };
-
-  const copyPrompt = () => {
-    navigator.clipboard.writeText(generatedPrompt);
-    toast.success('Prompt copiado para a área de transferência!');
-  };
-
-  const openLovable = () => {
-    window.open('https://lovable.dev', '_blank');
-  };
-
-  const stepIcons = [Lightbulb, Target, Users, Layout, GitBranch, Palette, Sparkles];
-  const stepTitles = [
-    'Ideia do Aplicativo',
-    'Função Principal',
-    'Usuários do Sistema',
-    'Telas Essenciais',
-    'Fluxo Operacional',
-    'Identidade Visual',
-    'Gerar Prompt'
-  ];
-
-  const renderStepContent = () => {
-    switch (currentStep) {
-      case 1:
-        return (
-          <div className="space-y-6">
-            {/* Nexia Origin Banner */}
-            {nexiaData && (
-              <NexiaOriginBanner nexiaData={nexiaData} />
-            )}
-
-            <div className="text-center mb-8">
-              <div className="w-16 h-16 rounded-2xl bg-primary/10 flex items-center justify-center mx-auto mb-4">
-                <Lightbulb className="h-8 w-8 text-primary" />
-              </div>
-              <h2 className="text-2xl font-bold text-foreground">Ideia do Aplicativo</h2>
-              <p className="text-muted-foreground mt-2">
-                {nexiaData ? 'Confirme ou edite as informações abaixo' : 'Vamos começar entendendo sua ideia. Não precisa ser técnico!'}
-              </p>
-            </div>
-
-            <div className="space-y-4">
-              <div className="space-y-2">
-                <Label htmlFor="appName">Nome do aplicativo *</Label>
-                <Input
-                  id="appName"
-                  placeholder="Ex: MeuDelivery, AgendaFácil, GestãoPro..."
-                  value={data.appName}
-                  onChange={(e) => updateData('appName', e.target.value)}
-                />
-              </div>
-
-              <div className="space-y-2">
-                <Label htmlFor="businessType">Tipo de negócio ou ideia *</Label>
-                <Input
-                  id="businessType"
-                  placeholder="Ex: delivery de comida, agendamento de serviços, gestão de clientes..."
-                  value={data.businessType}
-                  onChange={(e) => updateData('businessType', e.target.value)}
-                />
-              </div>
-
-              <div className="space-y-2">
-                <Label htmlFor="targetAudience">Para quem é o aplicativo? *</Label>
-                <Input
-                  id="targetAudience"
-                  placeholder="Ex: donos de pizzarias, salões de beleza, academias..."
-                  value={data.targetAudience}
-                  onChange={(e) => updateData('targetAudience', e.target.value)}
-                />
-              </div>
-
-              <div className="space-y-2">
-                <Label htmlFor="mainProblem">Qual problema principal ele resolve? *</Label>
-                <Textarea
-                  id="mainProblem"
-                  placeholder="Ex: acabar com anotações em papel, organizar agendamentos, controlar entregas..."
-                  value={data.mainProblem}
-                  onChange={(e) => updateData('mainProblem', e.target.value)}
-                  rows={3}
-                />
-              </div>
-            </div>
-          </div>
-        );
-
-      case 2:
-        return (
-          <div className="space-y-6">
-            <div className="text-center mb-8">
-              <div className="w-16 h-16 rounded-2xl bg-primary/10 flex items-center justify-center mx-auto mb-4">
-                <Target className="h-8 w-8 text-primary" />
-              </div>
-              <h2 className="text-2xl font-bold text-foreground">Função Principal</h2>
-              <p className="text-muted-foreground mt-2">
-                Qual é a ação mais importante que o app realiza?
-              </p>
-            </div>
-
-            <div className="space-y-4">
-              <div className="space-y-2">
-                <Label htmlFor="mainAction">Qual é a ação principal do app? *</Label>
-                <Textarea
-                  id="mainAction"
-                  placeholder="Ex: fazer pedidos de comida, agendar horários, cadastrar clientes..."
-                  value={data.mainAction}
-                  onChange={(e) => updateData('mainAction', e.target.value)}
-                  rows={3}
-                />
-              </div>
-
-              <div className="space-y-2">
-                <Label htmlFor="actionFrequency">Com que frequência essa ação acontece? *</Label>
-                <Select value={data.actionFrequency} onValueChange={(value) => updateData('actionFrequency', value)}>
-                  <SelectTrigger>
-                    <SelectValue placeholder="Selecione a frequência" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="muitas-vezes-dia">Muitas vezes ao dia</SelectItem>
-                    <SelectItem value="algumas-vezes-dia">Algumas vezes ao dia</SelectItem>
-                    <SelectItem value="diariamente">Uma vez por dia</SelectItem>
-                    <SelectItem value="semanalmente">Semanalmente</SelectItem>
-                    <SelectItem value="ocasionalmente">Ocasionalmente</SelectItem>
-                  </SelectContent>
-                </Select>
-              </div>
-
-              <div className="space-y-3">
-                <Label>O app é usado mais por quem?</Label>
-                <RadioGroup value={data.primaryUser} onValueChange={(value) => updateData('primaryUser', value)}>
-                  <div className="flex items-center space-x-3 p-3 rounded-lg border border-border hover:bg-muted/50 cursor-pointer">
-                    <RadioGroupItem value="clientes" id="clientes" />
-                    <Label htmlFor="clientes" className="cursor-pointer flex-1">
-                      <span className="font-medium">Clientes / Usuários finais</span>
-                      <p className="text-sm text-muted-foreground">Pessoas que usam o serviço</p>
-                    </Label>
-                  </div>
-                  <div className="flex items-center space-x-3 p-3 rounded-lg border border-border hover:bg-muted/50 cursor-pointer">
-                    <RadioGroupItem value="gestores" id="gestores" />
-                    <Label htmlFor="gestores" className="cursor-pointer flex-1">
-                      <span className="font-medium">Gestores / Administradores</span>
-                      <p className="text-sm text-muted-foreground">Donos ou funcionários do negócio</p>
-                    </Label>
-                  </div>
-                  <div className="flex items-center space-x-3 p-3 rounded-lg border border-border hover:bg-muted/50 cursor-pointer">
-                    <RadioGroupItem value="ambos" id="ambos" />
-                    <Label htmlFor="ambos" className="cursor-pointer flex-1">
-                      <span className="font-medium">Ambos igualmente</span>
-                      <p className="text-sm text-muted-foreground">Clientes e gestores usam bastante</p>
-                    </Label>
-                  </div>
-                </RadioGroup>
-              </div>
-            </div>
-          </div>
-        );
-
-      case 3:
-        return (
-          <div className="space-y-6">
-            <div className="text-center mb-8">
-              <div className="w-16 h-16 rounded-2xl bg-primary/10 flex items-center justify-center mx-auto mb-4">
-                <Users className="h-8 w-8 text-primary" />
-              </div>
-              <h2 className="text-2xl font-bold text-foreground">Usuários do Sistema</h2>
-              <p className="text-muted-foreground mt-2">
-                Quem vai usar o aplicativo no dia a dia?
-              </p>
-            </div>
-
-            <div className="space-y-4">
-              <div className="space-y-2">
-                <Label htmlFor="endUser">Quem usa como usuário final? *</Label>
-                <Textarea
-                  id="endUser"
-                  placeholder="Ex: clientes que fazem pedidos, pacientes que agendam consultas..."
-                  value={data.endUser}
-                  onChange={(e) => updateData('endUser', e.target.value)}
-                  rows={2}
-                />
-              </div>
-
-              <div className="space-y-2">
-                <Label htmlFor="adminUser">Quem usa como administrador?</Label>
-                <Textarea
-                  id="adminUser"
-                  placeholder="Ex: dono da loja, recepcionista, gerente... (opcional)"
-                  value={data.adminUser}
-                  onChange={(e) => updateData('adminUser', e.target.value)}
-                  rows={2}
-                />
-              </div>
-
-              <div className="space-y-3">
-                <Label>O app precisa de painel administrativo?</Label>
-                <RadioGroup value={data.needsAdminPanel} onValueChange={(value) => updateData('needsAdminPanel', value)}>
-                  <div className="flex items-center space-x-3 p-3 rounded-lg border border-border hover:bg-muted/50 cursor-pointer">
-                    <RadioGroupItem value="sim" id="admin-sim" />
-                    <Label htmlFor="admin-sim" className="cursor-pointer flex-1">
-                      <span className="font-medium">Sim</span>
-                      <p className="text-sm text-muted-foreground">Incluir dashboard, relatórios e gestão</p>
-                    </Label>
-                  </div>
-                  <div className="flex items-center space-x-3 p-3 rounded-lg border border-border hover:bg-muted/50 cursor-pointer">
-                    <RadioGroupItem value="nao" id="admin-nao" />
-                    <Label htmlFor="admin-nao" className="cursor-pointer flex-1">
-                      <span className="font-medium">Não</span>
-                      <p className="text-sm text-muted-foreground">Apenas o app para usuários finais</p>
-                    </Label>
-                  </div>
-                </RadioGroup>
-              </div>
-            </div>
-          </div>
-        );
-
-      case 4:
-        return (
-          <div className="space-y-6">
-            <div className="text-center mb-8">
-              <div className="w-16 h-16 rounded-2xl bg-primary/10 flex items-center justify-center mx-auto mb-4">
-                <Layout className="h-8 w-8 text-primary" />
-              </div>
-              <h2 className="text-2xl font-bold text-foreground">Telas Essenciais</h2>
-              <p className="text-muted-foreground mt-2">
-                Selecione as telas que seu app precisa ter
-              </p>
-            </div>
-
-            <div className="space-y-4">
-              <Label>Telas sugeridas (clique para selecionar)</Label>
-              <div className="grid gap-3 sm:grid-cols-2">
-                {suggestedScreens.map((screen) => {
-                  const isSelected = data.selectedScreens.includes(screen.id);
-                  return (
-                    <div
-                      key={screen.id}
-                      className={`
-                        p-4 rounded-lg border cursor-pointer transition-all
-                        ${isSelected 
-                          ? 'border-primary bg-primary/10 ring-1 ring-primary' 
-                          : 'border-border hover:border-primary/50 hover:bg-muted/50'
-                        }
-                      `}
-                      onClick={() => toggleScreen(screen.id)}
-                    >
-                      <div className="flex items-start gap-3">
-                        <Checkbox checked={isSelected} className="mt-0.5" />
-                        <div className="flex-1">
-                          <p className="font-medium text-foreground">{screen.label}</p>
-                          <p className="text-sm text-muted-foreground">{screen.description}</p>
-                        </div>
-                      </div>
-                    </div>
-                  );
-                })}
-              </div>
-
-              <div className="space-y-2 pt-4">
-                <Label htmlFor="customScreens">Outras telas que você precisa (opcional)</Label>
-                <Input
-                  id="customScreens"
-                  placeholder="Ex: Carrinho, Pagamento, Cupons... (separar por vírgula)"
-                  value={data.customScreens}
-                  onChange={(e) => updateData('customScreens', e.target.value)}
-                />
-              </div>
-            </div>
-          </div>
-        );
-
-      case 5:
-        return (
-          <div className="space-y-6">
-            <div className="text-center mb-8">
-              <div className="w-16 h-16 rounded-2xl bg-primary/10 flex items-center justify-center mx-auto mb-4">
-                <GitBranch className="h-8 w-8 text-primary" />
-              </div>
-              <h2 className="text-2xl font-bold text-foreground">Fluxo Operacional</h2>
-              <p className="text-muted-foreground mt-2">
-                Como o usuário navega e usa o app?
-              </p>
-            </div>
-
-            <div className="space-y-4">
-              <div className="space-y-2">
-                <Label htmlFor="onEnterAction">O que o usuário faz ao entrar no app? *</Label>
-                <Textarea
-                  id="onEnterAction"
-                  placeholder="Ex: vê os produtos disponíveis, visualiza seus agendamentos, acessa o dashboard..."
-                  value={data.onEnterAction}
-                  onChange={(e) => updateData('onEnterAction', e.target.value)}
-                  rows={2}
-                />
-              </div>
-
-              <div className="space-y-2">
-                <Label htmlFor="afterMainAction">O que acontece após a ação principal? *</Label>
-                <Textarea
-                  id="afterMainAction"
-                  placeholder="Ex: pedido vai para a cozinha, horário fica reservado, cliente recebe confirmação..."
-                  value={data.afterMainAction}
-                  onChange={(e) => updateData('afterMainAction', e.target.value)}
-                  rows={2}
-                />
-              </div>
-
-              <div className="space-y-3">
-                <Label>Existe acompanhamento de status?</Label>
-                <RadioGroup value={data.hasStatusTracking} onValueChange={(value) => updateData('hasStatusTracking', value)}>
-                  <div className="flex items-center space-x-3 p-3 rounded-lg border border-border hover:bg-muted/50 cursor-pointer">
-                    <RadioGroupItem value="sim" id="status-sim" />
-                    <Label htmlFor="status-sim" className="cursor-pointer flex-1">
-                      <span className="font-medium">Sim</span>
-                      <p className="text-sm text-muted-foreground">Usuário acompanha em tempo real (preparo, entrega...)</p>
-                    </Label>
-                  </div>
-                  <div className="flex items-center space-x-3 p-3 rounded-lg border border-border hover:bg-muted/50 cursor-pointer">
-                    <RadioGroupItem value="nao" id="status-nao" />
-                    <Label htmlFor="status-nao" className="cursor-pointer flex-1">
-                      <span className="font-medium">Não</span>
-                      <p className="text-sm text-muted-foreground">Não precisa de acompanhamento</p>
-                    </Label>
-                  </div>
-                </RadioGroup>
-              </div>
-
-              <div className="space-y-3">
-                <Label>Existe histórico de ações?</Label>
-                <RadioGroup value={data.hasHistory} onValueChange={(value) => updateData('hasHistory', value)}>
-                  <div className="flex items-center space-x-3 p-3 rounded-lg border border-border hover:bg-muted/50 cursor-pointer">
-                    <RadioGroupItem value="sim" id="history-sim" />
-                    <Label htmlFor="history-sim" className="cursor-pointer flex-1">
-                      <span className="font-medium">Sim</span>
-                      <p className="text-sm text-muted-foreground">Manter registro de pedidos, agendamentos, etc.</p>
-                    </Label>
-                  </div>
-                  <div className="flex items-center space-x-3 p-3 rounded-lg border border-border hover:bg-muted/50 cursor-pointer">
-                    <RadioGroupItem value="nao" id="history-nao" />
-                    <Label htmlFor="history-nao" className="cursor-pointer flex-1">
-                      <span className="font-medium">Não</span>
-                      <p className="text-sm text-muted-foreground">Não precisa de histórico</p>
-                    </Label>
-                  </div>
-                </RadioGroup>
-              </div>
-            </div>
-          </div>
-        );
-
-      case 6:
-        return (
-          <div className="space-y-6">
-            <div className="text-center mb-8">
-              <div className="w-16 h-16 rounded-2xl bg-primary/10 flex items-center justify-center mx-auto mb-4">
-                <Palette className="h-8 w-8 text-primary" />
-              </div>
-              <h2 className="text-2xl font-bold text-foreground">Identidade Visual</h2>
-              <p className="text-muted-foreground mt-2">
-                Defina as cores e estilo do seu app
-              </p>
-            </div>
-
-            <div className="space-y-4">
-              <div className="grid gap-4 sm:grid-cols-2">
-                <div className="space-y-2">
-                  <Label htmlFor="primaryColor">Cor primária *</Label>
-                  <div className="flex gap-2">
-                    <Input
-                      id="primaryColor"
-                      type="color"
-                      value={data.primaryColor}
-                      onChange={(e) => updateData('primaryColor', e.target.value)}
-                      className="w-14 h-10 p-1 cursor-pointer"
-                    />
-                    <Input
-                      value={data.primaryColor}
-                      onChange={(e) => updateData('primaryColor', e.target.value)}
-                      placeholder="#8B5CF6"
-                      className="flex-1"
-                    />
-                  </div>
-                </div>
-
-                <div className="space-y-2">
-                  <Label htmlFor="secondaryColor">Cor secundária</Label>
-                  <div className="flex gap-2">
-                    <Input
-                      id="secondaryColor"
-                      type="color"
-                      value={data.secondaryColor}
-                      onChange={(e) => updateData('secondaryColor', e.target.value)}
-                      className="w-14 h-10 p-1 cursor-pointer"
-                    />
-                    <Input
-                      value={data.secondaryColor}
-                      onChange={(e) => updateData('secondaryColor', e.target.value)}
-                      placeholder="#6366F1"
-                      className="flex-1"
-                    />
-                  </div>
-                </div>
-
-                <div className="space-y-2">
-                  <Label htmlFor="backgroundColor">Cor de fundo</Label>
-                  <div className="flex gap-2">
-                    <Input
-                      id="backgroundColor"
-                      type="color"
-                      value={data.backgroundColor}
-                      onChange={(e) => updateData('backgroundColor', e.target.value)}
-                      className="w-14 h-10 p-1 cursor-pointer"
-                    />
-                    <Input
-                      value={data.backgroundColor}
-                      onChange={(e) => updateData('backgroundColor', e.target.value)}
-                      placeholder="#0F0A1A"
-                      className="flex-1"
-                    />
-                  </div>
-                </div>
-
-                <div className="space-y-2">
-                  <Label htmlFor="textColor">Cor do texto</Label>
-                  <div className="flex gap-2">
-                    <Input
-                      id="textColor"
-                      type="color"
-                      value={data.textColor}
-                      onChange={(e) => updateData('textColor', e.target.value)}
-                      className="w-14 h-10 p-1 cursor-pointer"
-                    />
-                    <Input
-                      value={data.textColor}
-                      onChange={(e) => updateData('textColor', e.target.value)}
-                      placeholder="#F8FAFC"
-                      className="flex-1"
-                    />
-                  </div>
-                </div>
-              </div>
-
-              <div className="space-y-2">
-                <Label>Tipografia *</Label>
-                <Select value={data.fontFamily} onValueChange={(value) => updateData('fontFamily', value)}>
-                  <SelectTrigger>
-                    <SelectValue placeholder="Escolha uma fonte" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    {fontOptions.map((font) => (
-                      <SelectItem key={font} value={font}>{font}</SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
-              </div>
-
-              <div className="space-y-2">
-                <Label>Idioma</Label>
-                <Select value={data.language} onValueChange={(value) => updateData('language', value)}>
-                  <SelectTrigger>
-                    <SelectValue />
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="pt-BR">Português (Brasil)</SelectItem>
-                    <SelectItem value="en">English</SelectItem>
-                    <SelectItem value="es">Español</SelectItem>
-                  </SelectContent>
-                </Select>
-              </div>
-
-              {/* Preview */}
-              <div className="mt-6 p-4 rounded-lg border border-border">
-                <Label className="text-sm text-muted-foreground mb-3 block">Prévia das cores</Label>
-                <div 
-                  className="rounded-lg p-4 transition-all"
-                  style={{ backgroundColor: data.backgroundColor }}
-                >
-                  <p 
-                    className="font-bold text-lg mb-2"
-                    style={{ color: data.primaryColor, fontFamily: data.fontFamily }}
-                  >
-                    {data.appName || 'Seu App'}
-                  </p>
-                  <p 
-                    className="text-sm"
-                    style={{ color: data.textColor, fontFamily: data.fontFamily }}
-                  >
-                    Texto de exemplo com a cor e fonte selecionadas
-                  </p>
-                  <button 
-                    className="mt-3 px-4 py-2 rounded-lg text-sm font-medium"
-                    style={{ backgroundColor: data.primaryColor, color: data.backgroundColor }}
-                  >
-                    Botão Exemplo
-                  </button>
-                </div>
-              </div>
-            </div>
-          </div>
-        );
-
-      case 7:
-        return (
-          <div className="space-y-6">
-            <div className="text-center mb-8">
-              <div className="w-16 h-16 rounded-2xl bg-success/10 flex items-center justify-center mx-auto mb-4">
-                <Sparkles className="h-8 w-8 text-success" />
-              </div>
-              <h2 className="text-2xl font-bold text-foreground">Prompt Gerado!</h2>
-              <p className="text-muted-foreground mt-2">
-                Seu prompt está pronto. Copie e cole no Lovable para criar seu app.
-              </p>
-            </div>
-
-            <Card className="border-success/50">
-              <CardContent className="p-4">
-                <div className="flex items-center justify-between mb-3">
-                  <span className="text-sm font-medium text-muted-foreground">Prompt completo</span>
-                  <Button variant="outline" size="sm" onClick={copyPrompt} className="gap-2">
-                    <Copy className="h-4 w-4" />
-                    Copiar
-                  </Button>
-                </div>
-                <Textarea
-                  value={generatedPrompt}
-                  readOnly
-                  className="min-h-[300px] font-mono text-sm bg-muted/30"
-                />
-              </CardContent>
-            </Card>
-
-            <div className="flex flex-col sm:flex-row gap-3">
-              <Button onClick={copyPrompt} className="flex-1 gap-2">
-                <Copy className="h-4 w-4" />
-                Copiar Prompt
-              </Button>
-              <Button onClick={openLovable} variant="outline" className="flex-1 gap-2">
-                <ExternalLink className="h-4 w-4" />
-                Abrir Lovable
-              </Button>
-            </div>
-
-            <div className="bg-muted/50 rounded-lg p-4 text-sm text-muted-foreground">
-              <p className="font-medium text-foreground mb-2">Próximos passos:</p>
-              <ol className="list-decimal list-inside space-y-1">
-                <li>Clique em "Copiar Prompt"</li>
-                <li>Abra o Lovable (ou clique no botão acima)</li>
-                <li>Cole o prompt no chat do Lovable</li>
-                <li>Aguarde a IA criar seu aplicativo!</li>
-              </ol>
-            </div>
-          </div>
-        );
-
-      default:
-        return null;
+      setProjectId(data.id);
+      setGeneratedPrompt(prompt);
+      setCurrentStep(totalSteps);
+      toast.success('Projeto criado com sucesso!');
+    } catch (error) {
+      console.error('Error creating project:', error);
+      toast.error('Erro ao criar projeto');
+    } finally {
+      setSaving(false);
     }
   };
 
   return (
-    <AppLayout title="Criar do Zero">
-      <div className="max-w-2xl mx-auto space-y-6">
-
-        {/* Progress */}
-        <div className="space-y-3">
-          <div className="flex items-center justify-between text-sm">
-            <span className="text-muted-foreground">
-              Etapa {currentStep} de {TOTAL_STEPS}
-            </span>
-            <span className="font-medium text-foreground">
-              {stepTitles[currentStep - 1]}
-            </span>
-          </div>
-          <Progress value={progress} className="h-2" />
-          
-          {/* Step Indicators - Clickable */}
-          <div className="flex justify-between">
-            {stepIcons.map((Icon, index) => {
-              const stepNum = index + 1;
-              const isCompleted = currentStep > stepNum;
-              const isCurrent = currentStep === stepNum;
-              
-              return (
-                <button 
-                  key={index}
-                  onClick={() => goToStep(stepNum)}
-                  className={`
-                    w-8 h-8 rounded-full flex items-center justify-center transition-all cursor-pointer hover:scale-110
-                    ${isCompleted 
-                      ? 'bg-success text-success-foreground' 
-                      : isCurrent 
-                        ? 'bg-primary text-primary-foreground' 
-                        : 'bg-muted text-muted-foreground hover:bg-muted/80'
-                    }
-                  `}
-                  title={stepTitles[index]}
-                >
-                  {isCompleted ? (
-                    <Check className="h-4 w-4" />
-                  ) : (
-                    <Icon className="h-4 w-4" />
-                  )}
-                </button>
-              );
-            })}
+    <AppLayout title="Criar Aplicativo do Zero">
+      <div className="max-w-4xl mx-auto space-y-6">
+        {/* Header */}
+        <div className="flex items-center gap-4">
+          <Button 
+            variant="ghost" 
+            size="icon"
+            onClick={() => navigate('/solucoes/criar/app')}
+          >
+            <ArrowLeft className="h-5 w-5" />
+          </Button>
+          <div className="flex-1">
+            <h1 className="text-2xl font-bold text-foreground">Criar Aplicativo do Zero</h1>
+            <p className="text-muted-foreground">
+              Configure as informações do seu aplicativo
+            </p>
           </div>
         </div>
 
-        {/* Content */}
-        <Card>
-          <CardContent className="p-6">
-            {renderStepContent()}
+        {/* Nexia Origin Banner */}
+        {nexiaData && (
+          <NexiaOriginBanner nexiaData={nexiaData} />
+        )}
+
+        {/* Progress */}
+        <div className="space-y-2">
+          <div className="flex items-center justify-between text-sm">
+            <span className="text-muted-foreground">Etapa {currentStep} de {totalSteps}</span>
+            <span className="text-muted-foreground">{Math.round(progress)}%</span>
+          </div>
+          <Progress value={progress} className="h-2" />
+        </div>
+
+        {/* Form Card */}
+        <Card className="border-border/50">
+          <CardHeader>
+            <div className="flex items-center gap-3">
+              <div className="p-2.5 rounded-xl bg-primary/10">
+                {currentStep === 1 && <Sparkles className="h-5 w-5 text-primary" />}
+                {currentStep === 2 && <Users className="h-5 w-5 text-primary" />}
+                {currentStep === 3 && <Layout className="h-5 w-5 text-primary" />}
+                {currentStep === 4 && <Palette className="h-5 w-5 text-primary" />}
+                {currentStep === 5 && <FileText className="h-5 w-5 text-primary" />}
+              </div>
+              <div>
+                <CardTitle>
+                  {currentStep === 1 && 'Identidade do App'}
+                  {currentStep === 2 && 'Propósito e Usuários'}
+                  {currentStep === 3 && 'Estrutura e Recursos'}
+                  {currentStep === 4 && 'Identidade Visual e Configurações'}
+                  {currentStep === 5 && 'Prompt Gerado'}
+                </CardTitle>
+                <CardDescription>
+                  {currentStep === 1 && 'Defina o nome e público do seu aplicativo'}
+                  {currentStep === 2 && 'Descreva a função principal e benefícios'}
+                  {currentStep === 3 && 'Configure as páginas e recursos extras'}
+                  {currentStep === 4 && 'Personalize cores, fontes, idioma e plataforma'}
+                  {currentStep === 5 && 'Copie o prompt e crie seu app na plataforma'}
+                </CardDescription>
+              </div>
+            </div>
+          </CardHeader>
+
+          <CardContent className="space-y-6">
+            {/* Step 1: Identity */}
+            {currentStep === 1 && (
+              <div className="space-y-5 animate-fade-in">
+                <div className="space-y-2">
+                  <Label htmlFor="appName">
+                    Qual o nome do seu aplicativo?
+                  </Label>
+                  <Input
+                    id="appName"
+                    value={formData.appName}
+                    onChange={(e) => updateField('appName', e.target.value)}
+                    placeholder="Ex: AgendaFácil, MeuTreino, GestãoPro..."
+                  />
+                </div>
+
+                <div className="space-y-2">
+                  <Label htmlFor="targetAudience">
+                    Para quem é este aplicativo?
+                  </Label>
+                  <Textarea
+                    id="targetAudience"
+                    value={formData.targetAudience}
+                    onChange={(e) => updateField('targetAudience', e.target.value)}
+                    placeholder="Ex: Donos de barbearia, donos de pizzaria, lojistas locais..."
+                    rows={2}
+                  />
+                </div>
+              </div>
+            )}
+
+            {/* Step 2: Purpose */}
+            {currentStep === 2 && (
+              <div className="space-y-5 animate-fade-in">
+                <div className="space-y-2">
+                  <Label htmlFor="mainTask">
+                    Qual é a principal tarefa que este app vai fazer?
+                  </Label>
+                  <Textarea
+                    id="mainTask"
+                    value={formData.mainTask}
+                    onChange={(e) => updateField('mainTask', e.target.value)}
+                    placeholder="Ex: Anotar pedidos, agendar horários, gerenciar cardápio..."
+                    rows={2}
+                  />
+                </div>
+
+                <div className="space-y-2">
+                  <Label htmlFor="mainBenefit">
+                    Qual é a maior ajuda que este app vai dar para o usuário?
+                  </Label>
+                  <Textarea
+                    id="mainBenefit"
+                    value={formData.mainBenefit}
+                    onChange={(e) => updateField('mainBenefit', e.target.value)}
+                    placeholder="Ex: Vender mais, organizar pedidos, eliminar WhatsApp..."
+                    rows={3}
+                  />
+                </div>
+
+                <div className="space-y-2">
+                  <Label htmlFor="dailyUsers">
+                    Quem vai usar o aplicativo no dia a dia?
+                  </Label>
+                  <Textarea
+                    id="dailyUsers"
+                    value={formData.dailyUsers}
+                    onChange={(e) => updateField('dailyUsers', e.target.value)}
+                    placeholder="Ex: Clientes finais, funcionários, gerente..."
+                    rows={2}
+                  />
+                </div>
+              </div>
+            )}
+
+            {/* Step 3: Structure */}
+            {currentStep === 3 && (
+              <div className="space-y-5 animate-fade-in">
+                <div className="space-y-2">
+                  <Label htmlFor="pages">
+                    Quais páginas/telas o aplicativo deve ter?
+                  </Label>
+                  <Input
+                    id="pages"
+                    value={formData.pages}
+                    onChange={(e) => updateField('pages', e.target.value)}
+                    placeholder="Ex: Login, Home, Cardápio, Carrinho, Perfil, Admin..."
+                  />
+                  <p className="text-xs text-muted-foreground">
+                    Separe as páginas por vírgula
+                  </p>
+                </div>
+
+                <div className="space-y-2">
+                  <Label htmlFor="otherFeatures">
+                    Outros recursos importantes <span className="text-muted-foreground">(opcional)</span>
+                  </Label>
+                  <Textarea
+                    id="otherFeatures"
+                    value={formData.otherFeatures}
+                    onChange={(e) => updateField('otherFeatures', e.target.value)}
+                    placeholder="Ex: Cupons, fidelidade, notificações, integração com WhatsApp..."
+                    rows={3}
+                  />
+                </div>
+              </div>
+            )}
+
+            {/* Step 4: Visual Identity */}
+            {currentStep === 4 && (
+              <div className="space-y-8 animate-fade-in">
+                {/* Platform Selection */}
+                <div className="space-y-3">
+                  <Label className="text-base font-medium flex items-center gap-2">
+                    <Globe className="h-4 w-4 text-primary" />
+                    Plataforma de destino
+                  </Label>
+                  <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
+                    {platforms.map((platform) => (
+                      <SelectableCard
+                        key={platform.value}
+                        selected={formData.targetPlatform === platform.value}
+                        title={platform.label}
+                        subtitle={platform.subtitle}
+                        size="sm"
+                        onClick={() => updateField('targetPlatform', platform.value)}
+                        preview={
+                          platform.image ? (
+                            <img 
+                              src={platform.image} 
+                              alt={platform.label} 
+                              className="w-10 h-10 object-contain"
+                            />
+                          ) : (
+                            <div 
+                              className="w-10 h-10 rounded-lg flex items-center justify-center text-white font-bold text-sm"
+                              style={{ backgroundColor: platform.bgColor }}
+                            >
+                              {platform.letter}
+                            </div>
+                          )
+                        }
+                      />
+                    ))}
+                  </div>
+                </div>
+
+                {/* Language Selection */}
+                <div className="space-y-3">
+                  <Label className="text-base font-medium flex items-center gap-2">
+                    <Globe className="h-4 w-4 text-primary" />
+                    Idioma do aplicativo
+                  </Label>
+                  <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
+                    {languages.map((lang) => (
+                      <SelectableCard
+                        key={lang.value}
+                        selected={formData.language === lang.value}
+                        title={lang.label}
+                        subtitle={lang.subtitle}
+                        size="sm"
+                        preview={<span className="text-3xl">{lang.flag}</span>}
+                        onClick={() => updateField('language', lang.value)}
+                      />
+                    ))}
+                  </div>
+                  {formData.language === 'other' && (
+                    <Input
+                      value={formData.customLanguage}
+                      onChange={(e) => updateField('customLanguage', e.target.value)}
+                      placeholder="Digite o idioma desejado (ex: Francês, Alemão, Japonês)"
+                      className="mt-3"
+                    />
+                  )}
+                </div>
+
+                {/* Colors */}
+                <div className="space-y-3">
+                  <Label className="text-base font-medium flex items-center gap-2">
+                    <Palette className="h-4 w-4 text-primary" />
+                    Identidade Visual
+                  </Label>
+                  <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
+                    <ColorCard
+                      color={formData.primaryColor}
+                      label="Primária"
+                      onColorChange={(color) => updateField('primaryColor', color)}
+                    />
+                    <ColorCard
+                      color={formData.secondaryColor}
+                      label="Secundária"
+                      onColorChange={(color) => updateField('secondaryColor', color)}
+                    />
+                    <ColorCard
+                      color={formData.backgroundColor}
+                      label="Fundo"
+                      onColorChange={(color) => updateField('backgroundColor', color)}
+                    />
+                    <ColorCard
+                      color={formData.textColor}
+                      label="Texto"
+                      onColorChange={(color) => updateField('textColor', color)}
+                    />
+                  </div>
+                </div>
+
+                {/* Typography */}
+                <div className="space-y-3">
+                  <Label className="text-base font-medium flex items-center gap-2">
+                    <Type className="h-4 w-4 text-primary" />
+                    Tipografia
+                  </Label>
+                  <div className="grid grid-cols-3 sm:grid-cols-6 gap-3">
+                    {fonts.map((font) => (
+                      <SelectableCard
+                        key={font.value}
+                        selected={formData.fontFamily === font.value}
+                        title={font.label}
+                        size="sm"
+                        showCheckmark={false}
+                        onClick={() => updateField('fontFamily', font.value)}
+                        className="py-3"
+                        style={{ fontFamily: font.value !== 'custom' ? font.value : undefined }}
+                      />
+                    ))}
+                  </div>
+                  {formData.fontFamily === 'custom' && (
+                    <Input
+                      value={formData.customFont}
+                      onChange={(e) => updateField('customFont', e.target.value)}
+                      placeholder="Nome da fonte (Google Fonts)"
+                      className="mt-3"
+                    />
+                  )}
+                </div>
+
+                {/* Preview */}
+                <div className="space-y-3">
+                  <Label className="text-base font-medium">Pré-visualização</Label>
+                  <div 
+                    className="rounded-xl p-6 border border-border/50 overflow-hidden"
+                    style={{ 
+                      backgroundColor: formData.backgroundColor,
+                      ...getFontStyle()
+                    }}
+                  >
+                    <div 
+                      className="rounded-lg p-4 mb-4"
+                      style={{ backgroundColor: formData.secondaryColor }}
+                    >
+                      <h3 
+                        className="text-lg font-bold mb-2"
+                        style={{ color: formData.textColor }}
+                      >
+                        {formData.appName || 'Nome do App'}
+                      </h3>
+                      <p 
+                        className="text-sm opacity-80"
+                        style={{ color: formData.textColor }}
+                      >
+                        Este é um exemplo de como seu aplicativo vai parecer com as cores e fonte selecionadas.
+                      </p>
+                    </div>
+                    <div className="flex gap-3">
+                      <button
+                        className="px-4 py-2 rounded-lg font-medium text-sm transition-opacity hover:opacity-90"
+                        style={{ 
+                          backgroundColor: formData.primaryColor,
+                          color: '#FFFFFF'
+                        }}
+                      >
+                        Botão Primário
+                      </button>
+                      <button
+                        className="px-4 py-2 rounded-lg font-medium text-sm border-2 transition-opacity hover:opacity-90"
+                        style={{ 
+                          borderColor: formData.primaryColor,
+                          color: formData.primaryColor,
+                          backgroundColor: 'transparent'
+                        }}
+                      >
+                        Botão Secundário
+                      </button>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            )}
+
+            {/* Step 5: Generated Prompt */}
+            {currentStep === 5 && (
+              <div className="space-y-6 animate-fade-in">
+                <div className="p-4 rounded-xl bg-green-500/10 border border-green-500/20">
+                  <div className="flex items-center gap-2 text-green-500 mb-2">
+                    <Check className="h-5 w-5" />
+                    <span className="font-medium">Projeto criado com sucesso!</span>
+                  </div>
+                  <p className="text-sm text-muted-foreground">
+                    Seu prompt foi gerado e salvo. Copie-o e cole na plataforma para criar seu aplicativo.
+                  </p>
+                </div>
+
+                <div className="space-y-3">
+                  <Label className="text-base font-medium">Prompt Gerado</Label>
+                  <Textarea
+                    value={generatedPrompt}
+                    readOnly
+                    rows={16}
+                    className="font-mono text-sm bg-muted/30 resize-none"
+                  />
+                </div>
+
+                <div className="flex flex-col sm:flex-row gap-3">
+                  <Button onClick={handleCopyPrompt} className="flex-1 gap-2">
+                    <Copy className="h-4 w-4" />
+                    Copiar Prompt
+                  </Button>
+                  <Button onClick={handleOpenPlatform} variant="outline" className="flex-1 gap-2">
+                    <ExternalLink className="h-4 w-4" />
+                    Abrir {platforms.find(p => p.value === formData.targetPlatform)?.label || 'Plataforma'}
+                  </Button>
+                </div>
+
+                <div className="pt-4 border-t border-border">
+                  <Button 
+                    variant="ghost" 
+                    onClick={() => navigate('/solucoes/criar/app')}
+                    className="w-full gap-2"
+                  >
+                    Voltar para Criação de Apps
+                  </Button>
+                </div>
+              </div>
+            )}
+
+            {/* Navigation Buttons */}
+            {currentStep < 5 && (
+              <div className="flex items-center justify-between pt-4 border-t border-border">
+                <Button
+                  variant="outline"
+                  onClick={handleBack}
+                  disabled={saving}
+                  className="gap-2"
+                >
+                  <ArrowLeft className="h-4 w-4" />
+                  Voltar
+                </Button>
+
+                <Button onClick={handleNext} disabled={saving} className="gap-2">
+                  {saving ? (
+                    <>
+                      <Loader2 className="h-4 w-4 animate-spin" />
+                      Criando...
+                    </>
+                  ) : currentStep === 4 ? (
+                    <>
+                      Gerar Prompt
+                      <Rocket className="h-4 w-4" />
+                    </>
+                  ) : (
+                    <>
+                      Próximo
+                      <ArrowRight className="h-4 w-4" />
+                    </>
+                  )}
+                </Button>
+              </div>
+            )}
           </CardContent>
         </Card>
 
-        {/* Navigation */}
-        {currentStep < TOTAL_STEPS && (
-          <div className="flex gap-3">
-            <Button variant="outline" onClick={handleBack} className="gap-2">
-              <ArrowLeft className="h-4 w-4" />
-              {currentStep === 1 ? 'Cancelar' : 'Voltar'}
-            </Button>
-            
-            {currentStep === 6 ? (
-              <Button 
-                onClick={generatePrompt} 
-                className="flex-1 gap-2"
-                disabled={isGenerating}
-              >
-                {isGenerating ? (
-                  <>Gerando...</>
-                ) : (
-                  <>
-                    <Sparkles className="h-4 w-4" />
-                    Gerar Prompt
-                  </>
-                )}
-              </Button>
-            ) : (
-              <Button 
-                onClick={handleNext} 
-                className="flex-1 gap-2"
-              >
-                Avançar
-                <ArrowRight className="h-4 w-4" />
-              </Button>
-            )}
-          </div>
-        )}
-
-        {/* Final step - back to start */}
-        {currentStep === TOTAL_STEPS && (
-          <Button 
-            variant="outline" 
-            onClick={() => navigate('/solucoes')} 
-            className="w-full"
-          >
-            Voltar para Soluções Digitais
-          </Button>
-        )}
+        {/* Step Indicators - Clickable */}
+        <div className="flex justify-center gap-2">
+          {[1, 2, 3, 4, 5].map((step) => (
+            <button
+              key={step}
+              onClick={() => goToStep(step)}
+              disabled={saving || step === 5}
+              className={`
+                w-3 h-3 rounded-full transition-all duration-300
+                ${step === currentStep 
+                  ? 'bg-primary w-8' 
+                  : step < currentStep 
+                    ? 'bg-primary/50 cursor-pointer hover:bg-primary/70' 
+                    : step < 5 
+                      ? 'bg-muted cursor-pointer hover:bg-muted-foreground/30'
+                      : 'bg-muted'
+                }
+              `}
+            />
+          ))}
+        </div>
       </div>
     </AppLayout>
   );
