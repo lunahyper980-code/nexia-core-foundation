@@ -41,13 +41,16 @@ interface Contract {
   status: string;
   sent_at: string | null;
   created_at: string;
-  clients: { name: string } | null;
+  clientName: string | null;
+  source: 'contracts' | 'solution_contracts';
 }
 
 const statusLabels: Record<string, { label: string; variant: 'default' | 'secondary' | 'destructive' | 'outline' }> = {
   draft: { label: 'Rascunho', variant: 'secondary' },
   sent: { label: 'Enviado', variant: 'default' },
   signed: { label: 'Assinado', variant: 'default' },
+  completed: { label: 'Concluído', variant: 'default' },
+  pending: { label: 'Pendente', variant: 'secondary' },
 };
 
 export default function Contratos() {
@@ -56,30 +59,64 @@ export default function Contratos() {
   const queryClient = useQueryClient();
   const [searchQuery, setSearchQuery] = useState('');
   const [deleteId, setDeleteId] = useState<string | null>(null);
+  const [deleteSource, setDeleteSource] = useState<'contracts' | 'solution_contracts'>('contracts');
 
   const { data: contracts, isLoading } = useQuery({
-    queryKey: ['contracts', workspace?.id],
+    queryKey: ['all-contracts', workspace?.id],
     queryFn: async () => {
       if (!workspace?.id) return [];
-      const { data, error } = await supabase
+      
+      // Fetch from contracts table
+      const { data: legacyContracts, error: legacyError } = await supabase
         .from('contracts')
         .select('id, title, status, sent_at, created_at, clients(name)')
-        .eq('workspace_id', workspace.id)
-        .order('created_at', { ascending: false });
+        .eq('workspace_id', workspace.id);
 
-      if (error) throw error;
-      return data as Contract[];
+      if (legacyError) throw legacyError;
+
+      // Fetch from solution_contracts table
+      const { data: solutionContracts, error: solutionError } = await supabase
+        .from('solution_contracts')
+        .select('id, contractor_name, contracted_name, status, created_at, contract_generated_at')
+        .eq('workspace_id', workspace.id);
+
+      if (solutionError) throw solutionError;
+
+      // Merge and normalize
+      const merged: Contract[] = [
+        ...(legacyContracts || []).map((c: any) => ({
+          id: c.id,
+          title: c.title,
+          status: c.status,
+          sent_at: c.sent_at,
+          created_at: c.created_at,
+          clientName: c.clients?.name || null,
+          source: 'contracts' as const,
+        })),
+        ...(solutionContracts || []).map((c: any) => ({
+          id: c.id,
+          title: `Contrato - ${c.contractor_name || 'Cliente'}`,
+          status: c.status,
+          sent_at: c.contract_generated_at,
+          created_at: c.created_at,
+          clientName: c.contractor_name || null,
+          source: 'solution_contracts' as const,
+        })),
+      ];
+
+      // Sort by created_at descending
+      return merged.sort((a, b) => new Date(b.created_at).getTime() - new Date(a.created_at).getTime());
     },
     enabled: !!workspace?.id,
   });
 
   const deleteMutation = useMutation({
-    mutationFn: async (id: string) => {
-      const { error } = await supabase.from('contracts').delete().eq('id', id);
+    mutationFn: async ({ id, source }: { id: string; source: 'contracts' | 'solution_contracts' }) => {
+      const { error } = await supabase.from(source).delete().eq('id', id);
       if (error) throw error;
     },
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['contracts'] });
+      queryClient.invalidateQueries({ queryKey: ['all-contracts'] });
       toast.success('Contrato excluído');
       setDeleteId(null);
     },
@@ -89,15 +126,23 @@ export default function Contratos() {
   });
 
   const markAsSentMutation = useMutation({
-    mutationFn: async (id: string) => {
-      const { error } = await supabase
-        .from('contracts')
-        .update({ status: 'sent', sent_at: new Date().toISOString() })
-        .eq('id', id);
-      if (error) throw error;
+    mutationFn: async ({ id, source }: { id: string; source: 'contracts' | 'solution_contracts' }) => {
+      if (source === 'contracts') {
+        const { error } = await supabase
+          .from('contracts')
+          .update({ status: 'sent', sent_at: new Date().toISOString() })
+          .eq('id', id);
+        if (error) throw error;
+      } else {
+        const { error } = await supabase
+          .from('solution_contracts')
+          .update({ status: 'sent', contract_generated_at: new Date().toISOString() })
+          .eq('id', id);
+        if (error) throw error;
+      }
     },
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['contracts'] });
+      queryClient.invalidateQueries({ queryKey: ['all-contracts'] });
       toast.success('Contrato marcado como enviado');
     },
     onError: () => {
@@ -108,7 +153,7 @@ export default function Contratos() {
   const filteredContracts = contracts?.filter(
     (c) =>
       c.title.toLowerCase().includes(searchQuery.toLowerCase()) ||
-      c.clients?.name.toLowerCase().includes(searchQuery.toLowerCase())
+      c.clientName?.toLowerCase().includes(searchQuery.toLowerCase())
   ) || [];
 
   return (
@@ -188,7 +233,7 @@ export default function Contratos() {
                       <TableRow key={contract.id}>
                         <TableCell className="font-medium">{contract.title}</TableCell>
                         <TableCell className="hidden sm:table-cell">
-                          {contract.clients?.name || '-'}
+                          {contract.clientName || '-'}
                         </TableCell>
                         <TableCell>
                           <Badge variant={statusLabels[contract.status]?.variant || 'secondary'}>
@@ -209,18 +254,22 @@ export default function Contratos() {
                               </Button>
                             </DropdownMenuTrigger>
                             <DropdownMenuContent align="end">
-                              <DropdownMenuItem onClick={() => navigate(`/vendas/contratos/${contract.id}`)}>
+                              <DropdownMenuItem onClick={() => navigate(
+                                contract.source === 'solution_contracts' 
+                                  ? `/solucoes/contrato/${contract.id}` 
+                                  : `/vendas/contratos/${contract.id}`
+                              )}>
                                 <Pencil className="h-4 w-4 mr-2" />
                                 Editar
                               </DropdownMenuItem>
                               {contract.status === 'draft' && (
-                                <DropdownMenuItem onClick={() => markAsSentMutation.mutate(contract.id)}>
+                                <DropdownMenuItem onClick={() => markAsSentMutation.mutate({ id: contract.id, source: contract.source })}>
                                   <Send className="h-4 w-4 mr-2" />
                                   Marcar como enviado
                                 </DropdownMenuItem>
                               )}
                               <DropdownMenuItem
-                                onClick={() => setDeleteId(contract.id)}
+                                onClick={() => { setDeleteId(contract.id); setDeleteSource(contract.source); }}
                                 className="text-destructive focus:text-destructive"
                               >
                                 <Trash2 className="h-4 w-4 mr-2" />
@@ -253,7 +302,7 @@ export default function Contratos() {
               </Button>
               <Button
                 variant="destructive"
-                onClick={() => deleteId && deleteMutation.mutate(deleteId)}
+                onClick={() => deleteId && deleteMutation.mutate({ id: deleteId, source: deleteSource })}
                 disabled={deleteMutation.isPending}
               >
                 {deleteMutation.isPending && <Loader2 className="h-4 w-4 animate-spin mr-2" />}
