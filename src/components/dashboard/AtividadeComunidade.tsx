@@ -338,20 +338,14 @@ export function AtividadeComunidade() {
     addEventToFeed(newEvent);
   }, [lastLabel, addEventToFeed]);
 
-  // Intervalo de atualização mais frequente: 15-45 segundos
-  // Isso garante que eventos fictícios apareçam regularmente e empurrem eventos reais para baixo
+  // Intervalo de atualização: 20 minutos
   useEffect(() => {
-    const scheduleNextUpdate = () => {
-      const interval = 15000 + Math.random() * 30000; // 15-45 segundos
-      return setTimeout(() => {
-        addNewFictionalEvent();
-        const timeoutId = scheduleNextUpdate();
-        return () => clearTimeout(timeoutId);
-      }, interval);
-    };
+    const intervalMs = 20 * 60 * 1000; // 20 minutos
+    const timer = setInterval(() => {
+      addNewFictionalEvent();
+    }, intervalMs);
 
-    const timeoutId = scheduleNextUpdate();
-    return () => clearTimeout(timeoutId);
+    return () => clearInterval(timer);
   }, [addNewFictionalEvent]);
 
   return (
