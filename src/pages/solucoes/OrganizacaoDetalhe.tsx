@@ -703,14 +703,6 @@ export default function OrganizacaoDetalhe() {
               {/* Action Buttons */}
               <div className="flex flex-wrap gap-3 pt-4 border-t border-border">
                 <Button 
-                  variant="outline" 
-                  onClick={() => navigate(`/solucoes/contrato/novo?organizacao=${id}`)}
-                  className="gap-2"
-                >
-                  <FileSignature className="h-4 w-4" />
-                  Gerar Contrato
-                </Button>
-                <Button 
                   variant="ghost" 
                   onClick={() => setShowDelete(true)}
                   className="gap-2 text-destructive hover:text-destructive"
