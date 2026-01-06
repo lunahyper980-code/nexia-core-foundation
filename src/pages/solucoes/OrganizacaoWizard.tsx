@@ -20,7 +20,6 @@ import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '@/hooks/use-toast';
 import { useDemoModeForForms } from '@/hooks/useDemoModeForForms';
 import { useModuleState } from '@/hooks/useModuleState';
-import { ResumeSessionBanner } from '@/components/ResumeSessionBanner';
 
 interface FormData {
   businessType: string;
@@ -58,7 +57,6 @@ export default function OrganizacaoWizard() {
   const [step, setStep] = useState(1);
   const [isGenerating, setIsGenerating] = useState(false);
   const [selectedChannels, setSelectedChannels] = useState<string[]>([]);
-  const [showResumeBanner, setShowResumeBanner] = useState(false);
   
   const [formData, setFormData] = useState<FormData>({
     businessType: '',
@@ -69,15 +67,8 @@ export default function OrganizacaoWizard() {
     organizationGoal: ''
   });
 
-  // Check for saved state on mount
+  // Restore state on mount
   useEffect(() => {
-    const saved = getSavedState();
-    if (saved && (saved.currentStep && saved.currentStep > 1 || (saved.formData && Object.keys(saved.formData).length > 0))) {
-      setShowResumeBanner(true);
-    }
-  }, []);
-
-  const handleResumeSession = () => {
     const saved = getSavedState();
     if (saved) {
       if (saved.currentStep) setStep(saved.currentStep);
@@ -88,13 +79,7 @@ export default function OrganizacaoWizard() {
         }
       }
     }
-    setShowResumeBanner(false);
-  };
-
-  const handleStartFresh = () => {
-    clearState();
-    setShowResumeBanner(false);
-  };
+  }, [getSavedState]);
 
   const handleStepChange = (newStep: number) => {
     setStep(newStep);
@@ -218,16 +203,6 @@ export default function OrganizacaoWizard() {
           <ArrowLeft className="h-4 w-4" />
           Voltar
         </Button>
-
-        {/* Resume Session Banner */}
-        {showResumeBanner && (
-          <ResumeSessionBanner
-            title="Continuar de onde parou?"
-            description={`Você estava na etapa ${getSavedState()?.currentStep || 1} de 2`}
-            onResume={handleResumeSession}
-            onStartFresh={handleStartFresh}
-          />
-        )}
 
         {/* Progress */}
         <div className="space-y-2">
