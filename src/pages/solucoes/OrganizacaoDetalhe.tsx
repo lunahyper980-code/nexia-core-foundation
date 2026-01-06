@@ -704,14 +704,6 @@ export default function OrganizacaoDetalhe() {
               <div className="flex flex-wrap gap-3 pt-4 border-t border-border">
                 <Button 
                   variant="outline" 
-                  onClick={() => navigate(`/solucoes/proposta/novo?organizacao=${id}`)}
-                  className="gap-2"
-                >
-                  <FileText className="h-4 w-4" />
-                  Gerar Proposta
-                </Button>
-                <Button 
-                  variant="outline" 
                   onClick={() => navigate(`/solucoes/contrato/novo?organizacao=${id}`)}
                   className="gap-2"
                 >
