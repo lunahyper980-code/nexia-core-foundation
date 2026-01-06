@@ -70,7 +70,7 @@ export default function EntregaForm() {
     status: 'delivered',
   });
 
-  const [origin, setOrigin] = useState<'manual' | 'proposal' | 'nexia' | 'project'>('manual');
+  const [origin, setOrigin] = useState<'manual' | 'proposal' | 'nexia' | 'project' | 'launch_kit' | 'positioning' | 'authority' | 'organization' | 'diagnosis'>('manual');
 
   // Fetch existing delivery if editing
   const { data: delivery, isLoading: loadingDelivery } = useQuery({
@@ -128,6 +128,86 @@ export default function EntregaForm() {
       const { data, error } = await supabase
         .from('projects')
         .select('id, app_name, target_platform')
+        .eq('workspace_id', workspace.id)
+        .order('created_at', { ascending: false });
+      if (error) throw error;
+      return data;
+    },
+    enabled: !!workspace?.id,
+  });
+
+  // Fetch launch kits
+  const { data: launchKits } = useQuery({
+    queryKey: ['launch-kits-list', workspace?.id],
+    queryFn: async () => {
+      if (!workspace?.id) return [];
+      const { data, error } = await supabase
+        .from('launch_kits')
+        .select('id, business_name, project_type')
+        .eq('workspace_id', workspace.id)
+        .order('created_at', { ascending: false });
+      if (error) throw error;
+      return data;
+    },
+    enabled: !!workspace?.id,
+  });
+
+  // Fetch positionings
+  const { data: positionings } = useQuery({
+    queryKey: ['positionings-list', workspace?.id],
+    queryFn: async () => {
+      if (!workspace?.id) return [];
+      const { data, error } = await supabase
+        .from('digital_positionings')
+        .select('id, company_name, segment')
+        .eq('workspace_id', workspace.id)
+        .order('created_at', { ascending: false });
+      if (error) throw error;
+      return data;
+    },
+    enabled: !!workspace?.id,
+  });
+
+  // Fetch authority strategies
+  const { data: authorityStrategies } = useQuery({
+    queryKey: ['authority-list', workspace?.id],
+    queryFn: async () => {
+      if (!workspace?.id) return [];
+      const { data, error } = await supabase
+        .from('authority_strategies')
+        .select('id, business_name, segment')
+        .eq('workspace_id', workspace.id)
+        .order('created_at', { ascending: false });
+      if (error) throw error;
+      return data;
+    },
+    enabled: !!workspace?.id,
+  });
+
+  // Fetch process organizations
+  const { data: processOrganizations } = useQuery({
+    queryKey: ['organizations-list', workspace?.id],
+    queryFn: async () => {
+      if (!workspace?.id) return [];
+      const { data, error } = await supabase
+        .from('process_organizations')
+        .select('id, business_type')
+        .eq('workspace_id', workspace.id)
+        .order('created_at', { ascending: false });
+      if (error) throw error;
+      return data;
+    },
+    enabled: !!workspace?.id,
+  });
+
+  // Fetch diagnoses
+  const { data: diagnoses } = useQuery({
+    queryKey: ['diagnoses-list', workspace?.id],
+    queryFn: async () => {
+      if (!workspace?.id) return [];
+      const { data, error } = await supabase
+        .from('digital_diagnoses')
+        .select('id, company_name, segment')
         .eq('workspace_id', workspace.id)
         .order('created_at', { ascending: false });
       if (error) throw error;
@@ -396,7 +476,7 @@ ${formData.next_steps ? `Próximos passos:\n${formData.next_steps}` : ''}
               <Label>Origem (opcional)</Label>
               <Select
                 value={origin}
-                onValueChange={(value: 'manual' | 'proposal' | 'nexia' | 'project') => {
+                onValueChange={(value: 'manual' | 'proposal' | 'nexia' | 'project' | 'launch_kit' | 'positioning' | 'authority' | 'organization' | 'diagnosis') => {
                   setOrigin(value);
                   if (value === 'manual') {
                     setFormData({ ...formData, proposal_id: null, planning_id: null, project_id: null });
@@ -410,7 +490,12 @@ ${formData.next_steps ? `Próximos passos:\n${formData.next_steps}` : ''}
                   <SelectItem value="manual">Nenhuma (manual)</SelectItem>
                   <SelectItem value="proposal">Proposta</SelectItem>
                   <SelectItem value="nexia">Planejamento Nexia</SelectItem>
-                  <SelectItem value="project">Solução Digital</SelectItem>
+                  <SelectItem value="project">Site ou Aplicativo</SelectItem>
+                  <SelectItem value="launch_kit">Kit de Lançamento</SelectItem>
+                  <SelectItem value="positioning">Posicionamento Digital</SelectItem>
+                  <SelectItem value="authority">Autoridade Digital</SelectItem>
+                  <SelectItem value="organization">Organização de Processos</SelectItem>
+                  <SelectItem value="diagnosis">Diagnóstico Digital</SelectItem>
                 </SelectContent>
               </Select>
             </div>
@@ -496,6 +581,151 @@ ${formData.next_steps ? `Próximos passos:\n${formData.next_steps}` : ''}
                     {projects.map((p) => (
                       <SelectItem key={p.id} value={p.id}>
                         {p.app_name}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              </div>
+            )}
+
+            {origin === 'launch_kit' && launchKits && launchKits.length > 0 && (
+              <div className="space-y-2">
+                <Label>Kit de Lançamento</Label>
+                <Select
+                  value={formData.project_id || ''}
+                  onValueChange={(value) => {
+                    const kit = launchKits.find((k) => k.id === value);
+                    setFormData({
+                      ...formData,
+                      project_id: value,
+                      title: kit ? `Entrega - Kit ${kit.business_name}` : formData.title,
+                      delivery_type: 'material',
+                    });
+                  }}
+                >
+                  <SelectTrigger>
+                    <SelectValue placeholder="Selecione um kit de lançamento" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {launchKits.map((k) => (
+                      <SelectItem key={k.id} value={k.id}>
+                        {k.business_name} ({k.project_type || 'Kit'})
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              </div>
+            )}
+
+            {origin === 'positioning' && positionings && positionings.length > 0 && (
+              <div className="space-y-2">
+                <Label>Posicionamento Digital</Label>
+                <Select
+                  value={formData.project_id || ''}
+                  onValueChange={(value) => {
+                    const pos = positionings.find((p) => p.id === value);
+                    setFormData({
+                      ...formData,
+                      project_id: value,
+                      title: pos ? `Entrega - Posicionamento ${pos.company_name}` : formData.title,
+                      delivery_type: 'material',
+                    });
+                  }}
+                >
+                  <SelectTrigger>
+                    <SelectValue placeholder="Selecione um posicionamento" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {positionings.map((p) => (
+                      <SelectItem key={p.id} value={p.id}>
+                        {p.company_name} - {p.segment}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              </div>
+            )}
+
+            {origin === 'authority' && authorityStrategies && authorityStrategies.length > 0 && (
+              <div className="space-y-2">
+                <Label>Autoridade Digital</Label>
+                <Select
+                  value={formData.project_id || ''}
+                  onValueChange={(value) => {
+                    const auth = authorityStrategies.find((a) => a.id === value);
+                    setFormData({
+                      ...formData,
+                      project_id: value,
+                      title: auth ? `Entrega - Autoridade ${auth.business_name}` : formData.title,
+                      delivery_type: 'material',
+                    });
+                  }}
+                >
+                  <SelectTrigger>
+                    <SelectValue placeholder="Selecione uma estratégia de autoridade" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {authorityStrategies.map((a) => (
+                      <SelectItem key={a.id} value={a.id}>
+                        {a.business_name} - {a.segment}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              </div>
+            )}
+
+            {origin === 'organization' && processOrganizations && processOrganizations.length > 0 && (
+              <div className="space-y-2">
+                <Label>Organização de Processos</Label>
+                <Select
+                  value={formData.project_id || ''}
+                  onValueChange={(value) => {
+                    const org = processOrganizations.find((o) => o.id === value);
+                    setFormData({
+                      ...formData,
+                      project_id: value,
+                      title: org ? `Entrega - Organização ${org.business_type}` : formData.title,
+                      delivery_type: 'material',
+                    });
+                  }}
+                >
+                  <SelectTrigger>
+                    <SelectValue placeholder="Selecione uma organização de processos" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {processOrganizations.map((o) => (
+                      <SelectItem key={o.id} value={o.id}>
+                        {o.business_type}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              </div>
+            )}
+
+            {origin === 'diagnosis' && diagnoses && diagnoses.length > 0 && (
+              <div className="space-y-2">
+                <Label>Diagnóstico Digital</Label>
+                <Select
+                  value={formData.project_id || ''}
+                  onValueChange={(value) => {
+                    const diag = diagnoses.find((d) => d.id === value);
+                    setFormData({
+                      ...formData,
+                      project_id: value,
+                      title: diag ? `Entrega - Diagnóstico ${diag.company_name}` : formData.title,
+                      delivery_type: 'material',
+                    });
+                  }}
+                >
+                  <SelectTrigger>
+                    <SelectValue placeholder="Selecione um diagnóstico" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {diagnoses.map((d) => (
+                      <SelectItem key={d.id} value={d.id}>
+                        {d.company_name} - {d.segment}
                       </SelectItem>
                     ))}
                   </SelectContent>
