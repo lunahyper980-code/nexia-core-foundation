@@ -34,6 +34,8 @@ import {
   fontOptions, 
   styleOptions 
 } from '@/data/siteTypeFields';
+import { useModuleState } from '@/hooks/useModuleState';
+import { ResumeSessionBanner } from '@/components/ResumeSessionBanner';
 
 const TOTAL_STEPS = 5;
 
@@ -88,9 +90,35 @@ export default function HyperBuildSite() {
   const [data, setData] = useState<WizardData>(initialData);
   const [generatedPrompt, setGeneratedPrompt] = useState('');
   const [isGenerating, setIsGenerating] = useState(false);
+  const [showResumeBanner, setShowResumeBanner] = useState(false);
+  
+  const { getSavedState, saveStep, saveFormData, clearState } = useModuleState('criar-site');
   
   // Parse Nexia data from URL
   const nexiaData = parseNexiaParams(searchParams);
+
+  // Check for saved state on mount (only if not coming from Nexia)
+  useEffect(() => {
+    if (nexiaData) return;
+    const saved = getSavedState();
+    if (saved && (saved.currentStep && saved.currentStep > 1 || (saved.formData && Object.keys(saved.formData).length > 0))) {
+      setShowResumeBanner(true);
+    }
+  }, []);
+
+  const handleResumeSession = () => {
+    const saved = getSavedState();
+    if (saved) {
+      if (saved.currentStep) setCurrentStep(saved.currentStep);
+      if (saved.formData) setData(prev => ({ ...prev, ...saved.formData }));
+    }
+    setShowResumeBanner(false);
+  };
+
+  const handleStartFresh = () => {
+    clearState();
+    setShowResumeBanner(false);
+  };
 
   // Pre-fill form with Nexia data
   useEffect(() => {
@@ -119,34 +147,50 @@ export default function HyperBuildSite() {
   const progress = (currentStep / TOTAL_STEPS) * 100;
 
   const updateData = (field: keyof WizardData, value: string | string[] | Record<string, string>) => {
-    setData(prev => ({ ...prev, [field]: value }));
+    setData(prev => {
+      const updated = { ...prev, [field]: value };
+      saveFormData(updated);
+      return updated;
+    });
   };
 
   const updateDynamicField = (fieldId: string, value: string) => {
-    setData(prev => ({
-      ...prev,
-      dynamicFields: { ...prev.dynamicFields, [fieldId]: value }
-    }));
+    setData(prev => {
+      const updated = {
+        ...prev,
+        dynamicFields: { ...prev.dynamicFields, [fieldId]: value }
+      };
+      saveFormData(updated);
+      return updated;
+    });
   };
 
   const toggleSection = (sectionId: string) => {
-    setData(prev => ({
-      ...prev,
-      selectedSections: prev.selectedSections.includes(sectionId)
-        ? prev.selectedSections.filter(id => id !== sectionId)
-        : [...prev.selectedSections, sectionId]
-    }));
+    setData(prev => {
+      const updated = {
+        ...prev,
+        selectedSections: prev.selectedSections.includes(sectionId)
+          ? prev.selectedSections.filter(id => id !== sectionId)
+          : [...prev.selectedSections, sectionId]
+      };
+      saveFormData(updated);
+      return updated;
+    });
   };
 
   const handleNext = () => {
     if (currentStep < TOTAL_STEPS) {
-      setCurrentStep(prev => prev + 1);
+      const newStep = currentStep + 1;
+      setCurrentStep(newStep);
+      saveStep(newStep);
     }
   };
 
   const handleBack = () => {
     if (currentStep > 1) {
-      setCurrentStep(prev => prev - 1);
+      const newStep = currentStep - 1;
+      setCurrentStep(newStep);
+      saveStep(newStep);
     } else {
       navigate('/solucoes/criar/site');
     }
@@ -155,6 +199,7 @@ export default function HyperBuildSite() {
   const goToStep = (step: number) => {
     if (step >= 1 && step <= TOTAL_STEPS) {
       setCurrentStep(step);
+      saveStep(step);
     }
   };
 
@@ -292,6 +337,7 @@ Foco total em CONVERSÃO e EXPERIÊNCIA DO USUÁRIO.
 
     setGeneratedPrompt(prompt);
     setCurrentStep(TOTAL_STEPS);
+    clearState();
     
     // Save to database
     if (workspace) {
@@ -368,6 +414,16 @@ Foco total em CONVERSÃO e EXPERIÊNCIA DO USUÁRIO.
       case 1:
         return (
           <div className="space-y-6">
+            {/* Resume Session Banner */}
+            {showResumeBanner && (
+              <ResumeSessionBanner
+                title="Continuar de onde parou?"
+                description={`Você estava na etapa ${getSavedState()?.currentStep || 1} de ${TOTAL_STEPS}`}
+                onResume={handleResumeSession}
+                onStartFresh={handleStartFresh}
+              />
+            )}
+
             {/* Nexia Origin Banner */}
             {nexiaData && (
               <NexiaOriginBanner nexiaData={nexiaData} />
