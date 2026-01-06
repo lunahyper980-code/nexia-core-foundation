@@ -40,6 +40,8 @@ import { useWorkspace } from '@/contexts/WorkspaceContext';
 import { useAuth } from '@/contexts/AuthContext';
 import { supabase } from '@/integrations/supabase/client';
 import { toast } from 'sonner';
+import { useModuleState } from '@/hooks/useModuleState';
+import { ResumeSessionBanner } from '@/components/ResumeSessionBanner';
 
 // ==============================================
 // TIPOS DE SOLUÇÃO E ENTREGÁVEIS
@@ -176,6 +178,9 @@ export default function ContratoNexiaWizard() {
   const [isGenerating, setIsGenerating] = useState(false);
   const [generatedContract, setGeneratedContract] = useState<string | null>(null);
   const [contractId, setContractId] = useState<string | null>(null);
+  const [showResumeBanner, setShowResumeBanner] = useState(false);
+  
+  const { getSavedState, saveStep, saveFormData, clearState } = useModuleState('contrato-nexia');
 
   // Form state
   const [formData, setFormData] = useState({
@@ -216,6 +221,29 @@ export default function ContratoNexiaWizard() {
     additionalClauses: '',
   });
 
+  // Check for saved state on mount (only if not pre-filled from URL)
+  useEffect(() => {
+    if (solutionParam || projectName) return;
+    const saved = getSavedState();
+    if (saved && (saved.currentStep && saved.currentStep > 1 || (saved.formData && Object.keys(saved.formData).length > 0))) {
+      setShowResumeBanner(true);
+    }
+  }, [solutionParam, projectName]);
+
+  const handleResumeSession = () => {
+    const saved = getSavedState();
+    if (saved) {
+      if (saved.currentStep) setCurrentStep(saved.currentStep);
+      if (saved.formData) setFormData(prev => ({ ...prev, ...saved.formData }));
+    }
+    setShowResumeBanner(false);
+  };
+
+  const handleStartFresh = () => {
+    clearState();
+    setShowResumeBanner(false);
+  };
+
   // Auto-fill deliverables when solution changes
   useEffect(() => {
     if (formData.solutionType) {
@@ -230,16 +258,22 @@ export default function ContratoNexiaWizard() {
   }, [formData.solutionType]);
 
   const updateForm = (field: string, value: any) => {
-    setFormData(prev => ({ ...prev, [field]: value }));
+    setFormData(prev => {
+      const updated = { ...prev, [field]: value };
+      saveFormData(updated);
+      return updated;
+    });
   };
 
   const toggleArrayItem = (field: string, item: string) => {
     setFormData(prev => {
       const arr = prev[field as keyof typeof prev] as string[];
-      return {
+      const updated = {
         ...prev,
         [field]: arr.includes(item) ? arr.filter(i => i !== item) : [...arr, item],
       };
+      saveFormData(updated);
+      return updated;
     });
   };
 
@@ -406,6 +440,7 @@ ${formData.contractorDocument}
       setGeneratedContract(contractText);
       setContractId(inserted?.id);
       setCurrentStep(6);
+      clearState();
       
       toast.success('Contrato gerado com sucesso!');
     } catch (error: any) {

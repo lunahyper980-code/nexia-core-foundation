@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useNavigate, useSearchParams } from "react-router-dom";
 import { useWorkspace } from "@/contexts/WorkspaceContext";
 import { useAuth } from "@/contexts/AuthContext";
@@ -23,6 +23,8 @@ import {
 } from "lucide-react";
 import { AppLayout } from "@/components/AppLayout";
 import { sanitizeInput } from "@/lib/inputValidation";
+import { useModuleState } from '@/hooks/useModuleState';
+import { ResumeSessionBanner } from '@/components/ResumeSessionBanner';
 
 interface FormData {
   // Bloco 1 - Negócio
@@ -79,6 +81,9 @@ export default function BriefingRapido() {
   const [step, setStep] = useState(1);
   const [isGenerating, setIsGenerating] = useState(false);
   const [errors, setErrors] = useState<Record<string, string>>({});
+  const [showResumeBanner, setShowResumeBanner] = useState(false);
+  
+  const { getSavedState, saveStep, saveFormData, clearState } = useModuleState('briefing-rapido');
   
   const [formData, setFormData] = useState<FormData>({
     companyName: leadName,
@@ -98,8 +103,35 @@ export default function BriefingRapido() {
     interests: [],
   });
 
+  // Check for saved state on mount (only if no lead params)
+  useEffect(() => {
+    if (leadName) return; // Don't show resume if coming from lead
+    const saved = getSavedState();
+    if (saved && (saved.currentStep && saved.currentStep > 1 || (saved.formData && Object.keys(saved.formData).length > 0))) {
+      setShowResumeBanner(true);
+    }
+  }, [leadName]);
+
+  const handleResumeSession = () => {
+    const saved = getSavedState();
+    if (saved) {
+      if (saved.currentStep) setStep(saved.currentStep);
+      if (saved.formData) setFormData(prev => ({ ...prev, ...saved.formData }));
+    }
+    setShowResumeBanner(false);
+  };
+
+  const handleStartFresh = () => {
+    clearState();
+    setShowResumeBanner(false);
+  };
+
   const updateField = (field: keyof FormData, value: any) => {
-    setFormData(prev => ({ ...prev, [field]: value }));
+    setFormData(prev => {
+      const updated = { ...prev, [field]: value };
+      saveFormData(updated);
+      return updated;
+    });
     setErrors(prev => ({ ...prev, [field]: '' }));
   };
 
@@ -109,7 +141,9 @@ export default function BriefingRapido() {
       const updated = current.includes(value)
         ? current.filter(v => v !== value)
         : [...current, value];
-      return { ...prev, [field]: updated };
+      const newFormData = { ...prev, [field]: updated };
+      saveFormData(newFormData);
+      return newFormData;
     });
   };
 
@@ -131,7 +165,9 @@ export default function BriefingRapido() {
   const handleAdvanceStep = () => {
     if (step === 1 && !validateStep1()) return;
     if (step === 3 && !validateStep3()) return;
-    setStep(step + 1);
+    const newStep = step + 1;
+    setStep(newStep);
+    saveStep(newStep);
   };
 
   const handleFinish = async () => {
@@ -205,6 +241,7 @@ export default function BriefingRapido() {
       });
 
       toast.success('Briefing criado com sucesso!');
+      clearState();
       navigate(`/nexia-ai/briefing/${briefing.id}`);
 
     } catch (error: any) {
@@ -240,6 +277,16 @@ export default function BriefingRapido() {
             </p>
           </div>
         </div>
+
+        {/* Resume Session Banner */}
+        {showResumeBanner && (
+          <ResumeSessionBanner
+            title="Continuar de onde parou?"
+            description={`Você estava na etapa ${getSavedState()?.currentStep || 1} de ${TOTAL_STEPS}`}
+            onResume={handleResumeSession}
+            onStartFresh={handleStartFresh}
+          />
+        )}
 
         {/* Progress */}
         <div className="flex gap-2">
