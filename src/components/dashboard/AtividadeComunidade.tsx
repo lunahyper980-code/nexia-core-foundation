@@ -237,86 +237,8 @@ export function AtividadeComunidade() {
     getCurrentUser();
   }, []);
 
-  // Busca atividades reais recentes (incluindo do próprio usuário)
-  useEffect(() => {
-    if (!isReady) return;
-
-    const fetchRealActivities = async () => {
-      try {
-        // Busca as últimas atividades
-        const { data: activities, error } = await supabase
-          .from('activity_logs')
-          .select(`
-            id,
-            type,
-            message,
-            created_at,
-            metadata,
-            workspace_id
-          `)
-          .order('created_at', { ascending: false })
-          .limit(20);
-
-        if (error || !activities || activities.length === 0) return;
-
-        const realEventsToAdd: CommunityEvent[] = [];
-        
-        for (const activity of activities) {
-          if (realEventsToAdd.length >= 5) break; // Máximo 5 eventos reais
-          
-          const { data: workspace } = await supabase
-            .from('workspaces')
-            .select('user_id')
-            .eq('id', activity.workspace_id)
-            .single();
-          
-          if (!workspace) continue;
-          
-          const { data: profile } = await supabase
-            .from('profiles')
-            .select('full_name')
-            .eq('id', workspace.user_id)
-            .single();
-          
-          let displayName = 'Você';
-          // Se for outro usuário, mostra o nome formatado
-          if (workspace.user_id !== currentUserId) {
-            if (profile?.full_name) {
-              const parts = profile.full_name.trim().split(' ');
-              if (parts.length >= 2) {
-                displayName = `${parts[0]} ${parts[parts.length - 1][0]}.`;
-              } else {
-                displayName = parts[0];
-              }
-            } else {
-              displayName = 'Usuário';
-            }
-          }
-          
-          const event = convertActivityToEvent(
-            activity as { id: string; type: string; message: string; created_at: string; metadata: Record<string, unknown> | null },
-            displayName
-          );
-          if (event) {
-            realEventsToAdd.push(event);
-          }
-        }
-        
-        // Mescla: eventos reais no topo + fictícios para completar 5
-        if (realEventsToAdd.length > 0) {
-          setEvents(prev => {
-            const fictionalEvents = prev.filter(e => !e.isReal);
-            const combined = [...realEventsToAdd, ...fictionalEvents];
-            return combined.slice(0, 5);
-          });
-        }
-      } catch (error) {
-        console.error('Error in fetchRealActivities:', error);
-      }
-    };
-
-    fetchRealActivities();
-  }, [isReady, currentUserId]);
+  // Não busca atividades reais no carregamento inicial - mantém apenas fictícias
+  // As atividades reais só aparecem em tempo real quando acontecem
 
   // Função para adicionar um novo evento (real ou fictício) no topo
   const addEventToFeed = useCallback((newEvent: CommunityEvent) => {
@@ -416,10 +338,11 @@ export function AtividadeComunidade() {
     addEventToFeed(newEvent);
   }, [lastLabel, addEventToFeed]);
 
-  // Intervalo de atualização variável (5-24 horas)
+  // Intervalo de atualização mais frequente: 15-45 segundos
+  // Isso garante que eventos fictícios apareçam regularmente e empurrem eventos reais para baixo
   useEffect(() => {
     const scheduleNextUpdate = () => {
-      const interval = 18000000 + Math.random() * 68400000; // 5-24 horas
+      const interval = 15000 + Math.random() * 30000; // 15-45 segundos
       return setTimeout(() => {
         addNewFictionalEvent();
         const timeoutId = scheduleNextUpdate();
