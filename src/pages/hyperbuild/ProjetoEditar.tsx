@@ -45,6 +45,7 @@ const technicalOptions: EditOption[] = [
   { id: 'integrate-tool', icon: Link, title: 'Conectar Serviço', description: 'Conectar API ou serviço externo', color: 'text-orange-500' },
   { id: 'improve-ai', icon: Bot, title: 'Aprimorar IA', description: 'Aprimorar funcionalidades com IA', color: 'text-pink-500' },
   { id: 'refactor-code', icon: Code2, title: 'Reorganizar Código', description: 'Melhorar organização e performance', color: 'text-cyan-500' },
+  { id: 'admin-panel', icon: Settings, title: 'Painel Administrativo', description: 'Adicionar área de gestão', color: 'text-violet-500' },
 ];
 
 const finalizationOptions: EditOption[] = [
