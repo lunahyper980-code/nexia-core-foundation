@@ -27,6 +27,8 @@ import { supabase } from '@/integrations/supabase/client';
 import { useWorkspace } from '@/contexts/WorkspaceContext';
 import { useAuth } from '@/contexts/AuthContext';
 import { toast } from 'sonner';
+import { useModuleState } from '@/hooks/useModuleState';
+import { ResumeSessionBanner } from '@/components/ResumeSessionBanner';
 
 const STEPS = [
   { id: 1, title: 'Contratado', icon: User, description: 'Seus dados' },
@@ -83,6 +85,9 @@ export default function ContratoWizard() {
   const { user } = useAuth();
   const [currentStep, setCurrentStep] = useState(1);
   const [isGenerating, setIsGenerating] = useState(false);
+  const [showResumeBanner, setShowResumeBanner] = useState(false);
+  
+  const { getSavedState, saveStep, saveFormData, clearState } = useModuleState('contrato-hyperbuild');
 
   const [formData, setFormData] = useState<ContractFormData>({
     contractorType: 'juridica',
@@ -107,6 +112,28 @@ export default function ContratoWizard() {
     terminationPenalty: false,
     additionalClauses: '',
   });
+
+  // Check for saved state on mount
+  useEffect(() => {
+    const saved = getSavedState();
+    if (saved && (saved.currentStep && saved.currentStep > 1 || (saved.formData && Object.keys(saved.formData).length > 0))) {
+      setShowResumeBanner(true);
+    }
+  }, []);
+
+  const handleResumeSession = () => {
+    const saved = getSavedState();
+    if (saved) {
+      if (saved.currentStep) setCurrentStep(saved.currentStep);
+      if (saved.formData) setFormData(prev => ({ ...prev, ...saved.formData }));
+    }
+    setShowResumeBanner(false);
+  };
+
+  const handleStartFresh = () => {
+    clearState();
+    setShowResumeBanner(false);
+  };
 
   // Fetch project data
   const { data: project, isLoading: isLoadingProject } = useQuery({
@@ -163,27 +190,39 @@ export default function ContratoWizard() {
   }, [workspaceData]);
 
   const updateFormData = (field: keyof ContractFormData, value: unknown) => {
-    setFormData(prev => ({ ...prev, [field]: value }));
+    setFormData(prev => {
+      const updated = { ...prev, [field]: value };
+      saveFormData(updated);
+      return updated;
+    });
   };
 
   const togglePlatform = (platformId: string) => {
-    setFormData(prev => ({
-      ...prev,
-      platforms: prev.platforms.includes(platformId)
-        ? prev.platforms.filter(p => p !== platformId)
-        : [...prev.platforms, platformId],
-    }));
+    setFormData(prev => {
+      const updated = {
+        ...prev,
+        platforms: prev.platforms.includes(platformId)
+          ? prev.platforms.filter(p => p !== platformId)
+          : [...prev.platforms, platformId],
+      };
+      saveFormData(updated);
+      return updated;
+    });
   };
 
   const nextStep = () => {
     if (currentStep < STEPS.length) {
-      setCurrentStep(prev => prev + 1);
+      const newStep = currentStep + 1;
+      setCurrentStep(newStep);
+      saveStep(newStep);
     }
   };
 
   const prevStep = () => {
     if (currentStep > 1) {
-      setCurrentStep(prev => prev - 1);
+      const newStep = currentStep - 1;
+      setCurrentStep(newStep);
+      saveStep(newStep);
     }
   };
 
@@ -289,6 +328,7 @@ export default function ContratoWizard() {
 
       toast.success('Contrato gerado com sucesso!');
       queryClient.invalidateQueries({ queryKey: ['contracts'] });
+      clearState();
       navigate(`/hyperbuild/projeto/${projectId}/contrato/${contract.id}`);
     } catch (error) {
       console.error('Error generating contract:', error);
@@ -370,6 +410,16 @@ export default function ContratoWizard() {
             })}
           </div>
         </div>
+
+        {/* Resume Session Banner */}
+        {showResumeBanner && (
+          <ResumeSessionBanner
+            title="Continuar de onde parou?"
+            description={`Você estava na etapa ${getSavedState()?.currentStep || 1} de ${STEPS.length}`}
+            onResume={handleResumeSession}
+            onStartFresh={handleStartFresh}
+          />
+        )}
 
         {/* Form Content */}
         <Card>
