@@ -34,12 +34,12 @@ export function WorkspaceProvider({ children }: { children: ReactNode }) {
       return;
     }
 
-    // Try to fetch existing workspace
-    const { data, error } = await supabase
+    // Fetch all workspaces for user (to handle legacy duplicates)
+    const { data: workspaces, error } = await supabase
       .from('workspaces')
       .select('*')
       .eq('user_id', user.id)
-      .maybeSingle();
+      .order('created_at', { ascending: true });
 
     if (error) {
       console.error('Error fetching workspace:', error);
@@ -47,8 +47,9 @@ export function WorkspaceProvider({ children }: { children: ReactNode }) {
       return;
     }
 
-    if (data) {
-      setWorkspace(data as Workspace);
+    // If workspaces exist, use the oldest one (first created)
+    if (workspaces && workspaces.length > 0) {
+      setWorkspace(workspaces[0] as Workspace);
       setLoading(false);
       return;
     }
@@ -62,7 +63,23 @@ export function WorkspaceProvider({ children }: { children: ReactNode }) {
       .single();
 
     if (createError) {
-      console.error('Error creating workspace:', createError);
+      // Handle unique constraint violation (race condition)
+      if (createError.code === '23505') {
+        console.log('Workspace already exists, fetching...');
+        const { data: existingWorkspace } = await supabase
+          .from('workspaces')
+          .select('*')
+          .eq('user_id', user.id)
+          .order('created_at', { ascending: true })
+          .limit(1)
+          .single();
+        
+        if (existingWorkspace) {
+          setWorkspace(existingWorkspace as Workspace);
+        }
+      } else {
+        console.error('Error creating workspace:', createError);
+      }
     } else {
       setWorkspace(newWorkspace as Workspace);
       console.log('Workspace created successfully');
