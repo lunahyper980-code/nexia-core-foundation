@@ -169,12 +169,6 @@ export default function EncontrarClientes() {
       ) : (
         // Search Screen
         <div className="w-full space-y-6">
-          {/* Next Step Card */}
-          <NextStepCard 
-            message="Rodar o Nexia Simples para descobrir o que oferecer ao cliente."
-            buttonText="Ir para Nexia AI"
-            path="/nexia-ai/diagnostico-rapido"
-          />
 
           {/* Global Search Card */}
           <GlobalSearchCard
