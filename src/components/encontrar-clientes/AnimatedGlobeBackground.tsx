@@ -47,9 +47,13 @@ export function AnimatedGlobeBackground() {
 
     canvas.addEventListener('mousemove', handleMouseMove);
 
-    // Globe parameters - MASSIVE globe that dominates the viewport
-    const globeRadius = Math.min(width, height) * 0.55;
-    const numPoints = 2000;
+    // Globe parameters - REFINED: smaller, more elegant globe
+    // Size: ~55-60% of available content height for balanced proportions
+    const availableHeight = height * 0.55;
+    const availableContentWidth = width - sidebarWidth;
+    const globeRadius = Math.min(availableContentWidth * 0.35, availableHeight * 0.5);
+    
+    const numPoints = 1200; // Reduced for cleaner look
     const points: { phi: number; theta: number; size: number }[] = [];
     const connections: { from: number; to: number }[] = [];
 
@@ -60,12 +64,12 @@ export function AnimatedGlobeBackground() {
       points.push({
         phi,
         theta,
-        size: Math.random() * 1.5 + 0.5,
+        size: Math.random() * 1.2 + 0.4,
       });
     }
 
-    // Generate connections
-    for (let i = 0; i < 150; i++) {
+    // Generate connections - fewer for cleaner look
+    for (let i = 0; i < 100; i++) {
       const from = Math.floor(Math.random() * numPoints);
       const to = Math.floor(Math.random() * numPoints);
       if (from !== to) {
@@ -80,46 +84,60 @@ export function AnimatedGlobeBackground() {
       ctx.clearRect(0, 0, width, height);
 
       // Smooth mouse following
-      mouseX += (targetMouseX - mouseX) * 0.05;
-      mouseY += (targetMouseY - mouseY) * 0.05;
+      mouseX += (targetMouseX - mouseX) * 0.03;
+      mouseY += (targetMouseY - mouseY) * 0.03;
 
-      // Calculate rotation based on mouse
-      const targetRotationY = ((mouseX - width / 2) / width) * 0.5;
-      const targetRotationX = ((mouseY - height / 2) / height) * 0.3;
+      // Calculate rotation based on mouse - reduced sensitivity
+      const targetRotationY = ((mouseX - width / 2) / width) * 0.3;
+      const targetRotationX = ((mouseY - height / 2) / height) * 0.2;
 
-      rotationY += (targetRotationY - rotationY) * 0.02;
-      rotationX += (targetRotationX - rotationX) * 0.02;
+      rotationY += (targetRotationY - rotationY) * 0.015;
+      rotationX += (targetRotationX - rotationX) * 0.015;
 
-      // Auto rotation
-      const autoRotation = Date.now() * 0.0001;
+      // Auto rotation - SLOWER: reduced by ~40% for premium feel
+      const autoRotation = Date.now() * 0.00006;
 
       // SIDEBAR-AWARE CENTER: Calculate center considering sidebar offset
-      // Available width = full width - sidebar width
-      // Center X = sidebar width + (available width / 2)
-      const availableWidth = width - sidebarWidth;
-      const centerX = sidebarWidth + (availableWidth / 2);
-      // Globe shifted down 12% to not compete with title
-      const centerY = height / 2 + height * 0.1;
+      const contentWidth = width - sidebarWidth;
+      const centerX = sidebarWidth + (contentWidth / 2);
+      // Globe positioned slightly ABOVE center for hero visual feel
+      const centerY = height * 0.45;
 
-      // Draw outer glow
+      // === COLOR PALETTE: More neutral, less purple, technical feel ===
+      // Primary: Cool gray-blue (desaturated, technical)
+      const primaryR = 140;
+      const primaryG = 150;
+      const primaryB = 180;
+      
+      // Accent: Very subtle purple-gray
+      const accentR = 160;
+      const accentG = 155;
+      const accentB = 190;
+      
+      // Highlight: Soft white-blue
+      const highlightR = 200;
+      const highlightG = 210;
+      const highlightB = 230;
+
+      // Draw subtle outer glow - very muted
       const gradient = ctx.createRadialGradient(
         centerX,
         centerY,
         0,
         centerX,
         centerY,
-        globeRadius * 1.5
+        globeRadius * 1.4
       );
-      gradient.addColorStop(0, 'rgba(139, 92, 246, 0.08)');
-      gradient.addColorStop(0.5, 'rgba(139, 92, 246, 0.03)');
-      gradient.addColorStop(1, 'rgba(139, 92, 246, 0)');
+      gradient.addColorStop(0, `rgba(${primaryR}, ${primaryG}, ${primaryB}, 0.04)`);
+      gradient.addColorStop(0.6, `rgba(${primaryR}, ${primaryG}, ${primaryB}, 0.015)`);
+      gradient.addColorStop(1, `rgba(${primaryR}, ${primaryG}, ${primaryB}, 0)`);
       ctx.fillStyle = gradient;
       ctx.fillRect(0, 0, width, height);
 
-      // Draw globe outline
+      // Draw globe outline - subtle
       ctx.beginPath();
       ctx.arc(centerX, centerY, globeRadius, 0, Math.PI * 2);
-      ctx.strokeStyle = 'rgba(139, 92, 246, 0.15)';
+      ctx.strokeStyle = `rgba(${primaryR}, ${primaryG}, ${primaryB}, 0.12)`;
       ctx.lineWidth = 1;
       ctx.stroke();
 
@@ -157,8 +175,8 @@ export function AnimatedGlobeBackground() {
       // Sort by Z (depth) for proper rendering
       projectedPoints.sort((a, b) => a.z - b.z);
 
-      // Draw connections first (back to front)
-      ctx.lineWidth = 0.5;
+      // Draw connections first (back to front) - more subtle
+      ctx.lineWidth = 0.4;
       for (const conn of connections) {
         const p1 = projectedPoints.find((p) => p.index === conn.from);
         const p2 = projectedPoints.find((p) => p.index === conn.to);
@@ -168,39 +186,39 @@ export function AnimatedGlobeBackground() {
             Math.pow(p1.x - p2.x, 2) + Math.pow(p1.y - p2.y, 2)
           );
 
-          if (dist < globeRadius * 0.4) {
-            const opacity = Math.min(p1.z + 0.5, p2.z + 0.5) * 0.3 * (1 - dist / (globeRadius * 0.4));
+          if (dist < globeRadius * 0.35) {
+            const opacity = Math.min(p1.z + 0.5, p2.z + 0.5) * 0.2 * (1 - dist / (globeRadius * 0.35));
             ctx.beginPath();
             ctx.moveTo(p1.x, p1.y);
             ctx.lineTo(p2.x, p2.y);
-            ctx.strokeStyle = `rgba(139, 92, 246, ${Math.max(0, opacity)})`;
+            ctx.strokeStyle = `rgba(${accentR}, ${accentG}, ${accentB}, ${Math.max(0, opacity)})`;
             ctx.stroke();
           }
         }
       }
 
-      // Draw points
+      // Draw points - neutral colors with subtle accent
       for (const point of projectedPoints) {
         if (point.z > -0.5) {
           const opacity = (point.z + 1) / 2;
-          const size = point.size * (0.5 + opacity * 0.5);
+          const size = point.size * (0.4 + opacity * 0.4);
 
-          // Glow
+          // Subtle glow - very reduced
           ctx.beginPath();
-          ctx.arc(point.x, point.y, size * 3, 0, Math.PI * 2);
-          ctx.fillStyle = `rgba(139, 92, 246, ${opacity * 0.1})`;
+          ctx.arc(point.x, point.y, size * 2.5, 0, Math.PI * 2);
+          ctx.fillStyle = `rgba(${primaryR}, ${primaryG}, ${primaryB}, ${opacity * 0.06})`;
           ctx.fill();
 
-          // Point
+          // Point - more white/neutral
           ctx.beginPath();
           ctx.arc(point.x, point.y, size, 0, Math.PI * 2);
-          ctx.fillStyle = `rgba(167, 139, 250, ${opacity * 0.8})`;
+          ctx.fillStyle = `rgba(${highlightR}, ${highlightG}, ${highlightB}, ${opacity * 0.7})`;
           ctx.fill();
         }
       }
 
-      // Draw latitude lines
-      for (let lat = -80; lat <= 80; lat += 20) {
+      // Draw latitude lines - very subtle
+      for (let lat = -60; lat <= 60; lat += 30) {
         const latRad = (lat * Math.PI) / 180;
         const r = Math.cos(latRad) * globeRadius;
         const yOffset = Math.sin(latRad) * globeRadius;
@@ -215,13 +233,13 @@ export function AnimatedGlobeBackground() {
           0,
           Math.PI * 2
         );
-        ctx.strokeStyle = 'rgba(139, 92, 246, 0.08)';
-        ctx.lineWidth = 1;
+        ctx.strokeStyle = `rgba(${primaryR}, ${primaryG}, ${primaryB}, 0.05)`;
+        ctx.lineWidth = 0.8;
         ctx.stroke();
       }
 
-      // Draw longitude lines
-      for (let lon = 0; lon < 360; lon += 30) {
+      // Draw longitude lines - very subtle
+      for (let lon = 0; lon < 360; lon += 45) {
         const lonRad = ((lon + autoRotation * 57.3 + rotationY * 57.3) * Math.PI) / 180;
 
         ctx.beginPath();
@@ -234,23 +252,23 @@ export function AnimatedGlobeBackground() {
           0,
           Math.PI * 2
         );
-        const opacity = 0.05 + Math.abs(Math.sin(lonRad)) * 0.05;
-        ctx.strokeStyle = `rgba(139, 92, 246, ${opacity})`;
-        ctx.lineWidth = 1;
+        const opacity = 0.03 + Math.abs(Math.sin(lonRad)) * 0.03;
+        ctx.strokeStyle = `rgba(${primaryR}, ${primaryG}, ${primaryB}, ${opacity})`;
+        ctx.lineWidth = 0.8;
         ctx.stroke();
       }
 
-      // Inner glow highlight
+      // Inner glow highlight - soft white, elegant
       const innerGlow = ctx.createRadialGradient(
-        centerX - globeRadius * 0.3,
-        centerY - globeRadius * 0.3,
+        centerX - globeRadius * 0.25,
+        centerY - globeRadius * 0.25,
         0,
         centerX,
         centerY,
         globeRadius
       );
-      innerGlow.addColorStop(0, 'rgba(255, 255, 255, 0.05)');
-      innerGlow.addColorStop(0.5, 'rgba(255, 255, 255, 0.02)');
+      innerGlow.addColorStop(0, 'rgba(255, 255, 255, 0.04)');
+      innerGlow.addColorStop(0.4, 'rgba(255, 255, 255, 0.015)');
       innerGlow.addColorStop(1, 'rgba(255, 255, 255, 0)');
       ctx.fillStyle = innerGlow;
       ctx.beginPath();
