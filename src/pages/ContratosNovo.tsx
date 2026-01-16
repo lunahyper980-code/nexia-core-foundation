@@ -176,7 +176,7 @@ export default function ContratosNovo() {
           </div>
           <Button 
             className="gap-2" 
-            onClick={() => navigate('/vendas/contratos/nexia')}
+            onClick={() => navigate('/contratos/novo')}
           >
             <Plus className="h-4 w-4" />
             Novo Contrato

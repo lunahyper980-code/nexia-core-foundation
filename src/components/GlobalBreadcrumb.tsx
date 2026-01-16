@@ -137,6 +137,13 @@ const BREADCRUMB_CONFIG: Record<string, BreadcrumbItem[]> = {
     { label: 'Criar do Zero' },
   ],
 
+  // Contratos (Modo simples)
+  '/contratos': [{ label: 'Contratos' }],
+  '/contratos/novo': [
+    { label: 'Contratos', href: '/contratos' },
+    { label: 'Novo Contrato' },
+  ],
+
   // Vendas
   '/vendas': [{ label: 'Vendas' }],
   '/vendas/propostas': [
@@ -152,9 +159,9 @@ const BREADCRUMB_CONFIG: Record<string, BreadcrumbItem[]> = {
     { label: 'Vendas', href: '/vendas' },
     { label: 'Contratos' },
   ],
+  // Mantido por compatibilidade (mas breadcrumb agora aponta para o fluxo do modo simples)
   '/vendas/contratos/nexia': [
-    { label: 'Vendas', href: '/vendas' },
-    { label: 'Contratos', href: '/vendas/contratos' },
+    { label: 'Contratos', href: '/contratos' },
     { label: 'Novo Contrato' },
   ],
   '/vendas/whatsapp': [

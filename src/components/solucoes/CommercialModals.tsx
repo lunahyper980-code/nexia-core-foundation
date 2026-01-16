@@ -744,7 +744,7 @@ export function CommercialButtons({ solutionId, solutionTitle }: CommercialButto
 
   const handleGenerateContract = (e: React.MouseEvent) => {
     e.stopPropagation();
-    navigate(`/vendas/contratos/nexia?solucao=${solutionId}`);
+    navigate(`/contratos/novo?solucao=${solutionId}`);
   };
 
   return (
