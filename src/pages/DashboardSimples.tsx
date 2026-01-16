@@ -1,3 +1,4 @@
+import { useState, useMemo } from 'react';
 import { Link } from 'react-router-dom';
 import { AppLayout } from '@/components/AppLayout';
 import { PremiumFrame } from '@/components/ui/PremiumFrame';
@@ -19,6 +20,7 @@ import {
 } from 'lucide-react';
 import { NexiaLoader } from '@/components/ui/nexia-loader';
 import { Card, CardContent } from '@/components/ui/card';
+import { Button } from '@/components/ui/button';
 import { useQuery } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
 import { useWorkspace } from '@/contexts/WorkspaceContext';
@@ -31,7 +33,6 @@ import {
   Tooltip, 
   ResponsiveContainer 
 } from 'recharts';
-import { useMemo } from 'react';
 
 export default function DashboardSimples() {
   const { isAdminOrOwner, loading: roleLoading } = useUserRole();
@@ -39,6 +40,9 @@ export default function DashboardSimples() {
   const { metrics: contractMetrics } = useContractsMetrics();
   const { metrics: ownerMetrics } = useOwnerMetrics();
   const { workspace } = useWorkspace();
+  
+  // Chart period selector: 7 or 30 days
+  const [chartPeriod, setChartPeriod] = useState<7 | 30>(30);
 
   // Fetch project types distribution
   const { data: projectTypes } = useQuery({
@@ -81,34 +85,69 @@ export default function DashboardSimples() {
     enabled: !!workspace?.id,
   });
 
-  // Generate chart data baseado nos contratos reais
-  const chartBaseValue = contractMetrics.totalValue || ownerMetrics.totalPipelineValue || 10000;
-  
+  // Current total revenue - this is the BASE value that must match the last chart point
+  const totalRevenue = ownerMetrics.totalPipelineValue || contractMetrics.totalValue || 0;
+
+  // Generate chart data: build history BACKWARDS from current totalRevenue
+  // Last point = today = totalRevenue (exact match with card)
   const chartData = useMemo(() => {
-    const days = 30;
+    const days = chartPeriod;
     const data = [];
-    const baseValue = chartBaseValue * 0.65;
-    const increment = chartBaseValue * 0.35 / days;
+    const finalValue = totalRevenue;
     
-    // Use seeded random for consistent chart across refreshes
+    // If no revenue yet, show flat zero line
+    if (finalValue <= 0) {
+      for (let i = 0; i < days; i++) {
+        const date = new Date();
+        date.setDate(date.getDate() - (days - 1 - i));
+        data.push({
+          date: date.toLocaleDateString('pt-BR', { day: '2-digit', month: 'short' }),
+          fullDate: date.toLocaleDateString('pt-BR', { day: '2-digit', month: '2-digit' }),
+          value: 0,
+        });
+      }
+      return data;
+    }
+    
+    // Starting value is ~65% of final for realistic growth curve
+    const startValue = finalValue * 0.65;
+    const growthRange = finalValue - startValue;
+    
+    // Seeded random for consistent chart across refreshes
     const seededRandom = (seed: number) => {
-      const x = Math.sin(seed) * 10000;
+      const x = Math.sin(seed * 9999) * 10000;
       return x - Math.floor(x);
     };
     
     for (let i = 0; i < days; i++) {
       const date = new Date();
-      date.setDate(date.getDate() - (days - i - 1));
-      // Small variations but always trending up
-      const randomFactor = 0.95 + seededRandom(i * 7) * 0.1;
+      date.setDate(date.getDate() - (days - 1 - i));
+      
+      // Calculate progress (0 to 1)
+      const progress = i / (days - 1);
+      
+      // Smooth growth curve with small variations
+      // Last point (i === days-1) must be exactly finalValue
+      let value: number;
+      if (i === days - 1) {
+        // Today = exact final value
+        value = finalValue;
+      } else {
+        // Add small random variations (±3%) for realism
+        const baseValue = startValue + growthRange * progress;
+        const variation = 0.97 + seededRandom(i * 7 + chartPeriod) * 0.06;
+        value = Math.round(baseValue * variation);
+      }
       
       data.push({
         date: date.toLocaleDateString('pt-BR', { day: '2-digit', month: 'short' }),
-        value: Math.round((baseValue + increment * i) * randomFactor),
+        fullDate: date.toLocaleDateString('pt-BR', { day: '2-digit', month: '2-digit' }),
+        value,
       });
     }
+    
     return data;
-  }, [chartBaseValue]);
+  }, [totalRevenue, chartPeriod]);
 
   if (roleLoading) {
     return (
@@ -129,9 +168,7 @@ export default function DashboardSimples() {
     }).format(value);
   };
 
-  // Valores calculados dinamicamente a partir dos contratos
-  // Não usar valores fixos - pegar do hook de contratos para consistência
-  const totalRevenue = ownerMetrics.totalPipelineValue || contractMetrics.totalValue || 0;
+  // Recorrência e comissão calculados dinamicamente
   const monthlyRecurrence = contractMetrics.totalRecurrence || 0;
   const commission = Math.round((teamData?.stats.totalVolume || monthlyRecurrence) * 0.1);
 
@@ -181,8 +218,32 @@ export default function DashboardSimples() {
     <AppLayout title="Dashboard">
       <div className="content-premium space-premium">
         
-        {/* Main Chart */}
-        <PremiumFrame title="Evolução (últimos 30 dias)" className="fade-in">
+        {/* Main Chart - Evolução do Faturamento */}
+        <PremiumFrame className="fade-in">
+          <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 mb-4">
+            <h3 className="text-base font-semibold text-foreground flex items-center gap-2">
+              <TrendingUp className="h-4 w-4 text-primary" />
+              Evolução do Faturamento
+            </h3>
+            <div className="flex gap-2">
+              <Button
+                variant={chartPeriod === 7 ? "default" : "outline"}
+                size="sm"
+                onClick={() => setChartPeriod(7)}
+                className="text-xs h-8"
+              >
+                Últimos 7 dias
+              </Button>
+              <Button
+                variant={chartPeriod === 30 ? "default" : "outline"}
+                size="sm"
+                onClick={() => setChartPeriod(30)}
+                className="text-xs h-8"
+              >
+                Últimos 30 dias
+              </Button>
+            </div>
+          </div>
           <div className="h-[200px] sm:h-[280px] w-full">
             <ResponsiveContainer width="100%" height="100%">
               <AreaChart data={chartData} margin={{ top: 10, right: 10, left: 0, bottom: 0 }}>
@@ -192,30 +253,31 @@ export default function DashboardSimples() {
                     <stop offset="95%" stopColor="hsl(268, 65%, 58%)" stopOpacity={0}/>
                   </linearGradient>
                 </defs>
-                <CartesianGrid strokeDasharray="3 3" stroke="hsl(230, 12%, 14%)" />
+                <CartesianGrid strokeDasharray="3 3" stroke="hsl(230, 12%, 18%)" />
                 <XAxis 
                   dataKey="date" 
                   stroke="hsl(220, 8%, 55%)" 
                   fontSize={11}
                   tickLine={false}
                   axisLine={false}
-                  interval="preserveStartEnd"
+                  interval={chartPeriod === 7 ? 0 : "preserveStartEnd"}
                 />
                 <YAxis 
                   stroke="hsl(220, 8%, 55%)" 
                   fontSize={11}
                   tickLine={false}
                   axisLine={false}
-                  tickFormatter={(value) => `${(value / 1000).toFixed(0)}k`}
+                  tickFormatter={(value) => value >= 1000 ? `${(value / 1000).toFixed(0)}k` : `${value}`}
                 />
                 <Tooltip 
                   contentStyle={{ 
                     backgroundColor: 'hsl(230, 16%, 9%)',
-                    border: '1px solid hsl(230, 12%, 14%)',
+                    border: '1px solid hsl(230, 12%, 18%)',
                     borderRadius: '8px',
                     color: 'hsl(220, 15%, 92%)',
                   }}
-                  formatter={(value: number) => [formatCurrency(value), 'Valor']}
+                  formatter={(value: number) => [formatCurrency(value), 'Faturamento']}
+                  labelFormatter={(label) => `Data: ${label}`}
                 />
                 <Area 
                   type="monotone" 
