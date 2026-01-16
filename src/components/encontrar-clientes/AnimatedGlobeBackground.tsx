@@ -1,7 +1,16 @@
 import { useEffect, useRef } from 'react';
+import { useSidebarState } from '@/contexts/SidebarContext';
+import { useBreakpoint } from '@/hooks/use-breakpoint';
 
 export function AnimatedGlobeBackground() {
   const canvasRef = useRef<HTMLCanvasElement>(null);
+  const { collapsed } = useSidebarState();
+  const breakpoint = useBreakpoint();
+
+  // Calculate sidebar width based on state
+  const isMobile = breakpoint === 'mobile';
+  const isTablet = breakpoint === 'tablet';
+  const sidebarWidth = isMobile ? 0 : (isTablet || collapsed) ? 64 : 256;
 
   useEffect(() => {
     const canvas = canvasRef.current;
@@ -84,9 +93,13 @@ export function AnimatedGlobeBackground() {
       // Auto rotation
       const autoRotation = Date.now() * 0.0001;
 
-      const centerX = width / 2;
-      // Globe shifted down 15% to not compete with title
-      const centerY = height / 2 + height * 0.12;
+      // SIDEBAR-AWARE CENTER: Calculate center considering sidebar offset
+      // Available width = full width - sidebar width
+      // Center X = sidebar width + (available width / 2)
+      const availableWidth = width - sidebarWidth;
+      const centerX = sidebarWidth + (availableWidth / 2);
+      // Globe shifted down 12% to not compete with title
+      const centerY = height / 2 + height * 0.1;
 
       // Draw outer glow
       const gradient = ctx.createRadialGradient(
@@ -254,7 +267,7 @@ export function AnimatedGlobeBackground() {
       window.removeEventListener('resize', handleResize);
       canvas.removeEventListener('mousemove', handleMouseMove);
     };
-  }, []);
+  }, [sidebarWidth]);
 
   return (
     <canvas
