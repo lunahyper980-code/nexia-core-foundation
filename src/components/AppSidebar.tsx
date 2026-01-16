@@ -40,14 +40,13 @@ interface NavItem {
   mode?: 'simple' | 'advanced' | 'both';
 }
 
-// Items for SIMPLE mode
+// Items for SIMPLE mode (sem Propostas - não é fonte financeira)
 const simpleNavItems: NavItem[] = [
   { label: 'Dashboard', path: '/dashboard', icon: LayoutDashboard, mode: 'simple' },
   { label: 'Encontrar Clientes', path: '/encontrar-clientes', icon: Search, mode: 'simple' },
   { label: 'Criar App / Site', path: '/solucoes', icon: Smartphone, mode: 'simple' },
   { label: 'Meus Projetos', path: '/hyperbuild/projetos-lista', icon: FolderOpen, mode: 'simple' },
   { label: 'Contratos', path: '/contratos', icon: FileSignature, mode: 'simple' },
-  { label: 'Propostas', path: '/vendas/propostas', icon: FileText, mode: 'simple' },
   { label: 'Clientes', path: '/clientes', icon: Users, mode: 'simple' },
   { label: 'Créditos', path: '/creditos', icon: Coins, mode: 'simple' },
   { label: 'Minha Equipe', path: '/admin/equipe', icon: UsersRound, adminOnly: true, mode: 'simple' },

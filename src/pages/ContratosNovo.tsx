@@ -17,6 +17,7 @@ import {
   DropdownMenu,
   DropdownMenuContent,
   DropdownMenuItem,
+  DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu';
 import {
@@ -44,9 +45,13 @@ import {
   Download,
   Pencil,
   FileText,
-  DollarSign,
   TrendingUp,
   RefreshCcw,
+  CheckCircle,
+  Clock,
+  Send,
+  RotateCcw,
+  XCircle,
 } from 'lucide-react';
 import { useContractsMetrics, DemoContract } from '@/hooks/useContractsMetrics';
 import { NexiaLoader } from '@/components/ui/nexia-loader';
@@ -57,232 +62,12 @@ import { format } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
 import { useNavigate } from 'react-router-dom';
 
-// 14 contratos fictícios para ADMIN com recorrência total ASSINADOS = R$ 3.223
-// 9 Assinados, 3 Pendentes, 2 Em renovação
-// Recorrências assinados: 289 + 497 + 359 + 89 + 449 + 169 + 547 + 379 + 445 = 3.223
-const MOCK_CONTRACTS: DemoContract[] = [
-  // 9 ASSINADOS (soma recorrência = 3223)
-  {
-    id: 'mock-1',
-    owner_user_id: '',
-    workspace_id: '',
-    client_name: 'Pizzaria Bella Massa',
-    project_type: 'App',
-    value: 1450,
-    recurrence_type: 'Mensal',
-    recurrence_value_monthly: 289,
-    status: 'Assinado',
-    start_date: new Date(Date.now() - 65 * 24 * 60 * 60 * 1000).toISOString(),
-    is_demo: true,
-    created_at: new Date(Date.now() - 65 * 24 * 60 * 60 * 1000).toISOString(),
-    updated_at: new Date().toISOString(),
-  },
-  {
-    id: 'mock-2',
-    owner_user_id: '',
-    workspace_id: '',
-    client_name: 'Clínica Sorriso Perfeito',
-    project_type: 'Site',
-    value: 890,
-    recurrence_type: 'Mensal',
-    recurrence_value_monthly: 497,
-    status: 'Assinado',
-    start_date: new Date(Date.now() - 58 * 24 * 60 * 60 * 1000).toISOString(),
-    is_demo: true,
-    created_at: new Date(Date.now() - 58 * 24 * 60 * 60 * 1000).toISOString(),
-    updated_at: new Date().toISOString(),
-  },
-  {
-    id: 'mock-3',
-    owner_user_id: '',
-    workspace_id: '',
-    client_name: 'Burger House Express',
-    project_type: 'App',
-    value: 1680,
-    recurrence_type: 'Mensal',
-    recurrence_value_monthly: 359,
-    status: 'Assinado',
-    start_date: new Date(Date.now() - 50 * 24 * 60 * 60 * 1000).toISOString(),
-    is_demo: true,
-    created_at: new Date(Date.now() - 50 * 24 * 60 * 60 * 1000).toISOString(),
-    updated_at: new Date().toISOString(),
-  },
-  {
-    id: 'mock-4',
-    owner_user_id: '',
-    workspace_id: '',
-    client_name: 'Advocacia Silva & Matos',
-    project_type: 'Landing Page',
-    value: 350,
-    recurrence_type: 'Mensal',
-    recurrence_value_monthly: 89,
-    status: 'Assinado',
-    start_date: new Date(Date.now() - 42 * 24 * 60 * 60 * 1000).toISOString(),
-    is_demo: true,
-    created_at: new Date(Date.now() - 42 * 24 * 60 * 60 * 1000).toISOString(),
-    updated_at: new Date().toISOString(),
-  },
-  {
-    id: 'mock-5',
-    owner_user_id: '',
-    workspace_id: '',
-    client_name: 'CellTech Store',
-    project_type: 'E-commerce',
-    value: 1280,
-    recurrence_type: 'Mensal',
-    recurrence_value_monthly: 449,
-    status: 'Assinado',
-    start_date: new Date(Date.now() - 35 * 24 * 60 * 60 * 1000).toISOString(),
-    is_demo: true,
-    created_at: new Date(Date.now() - 35 * 24 * 60 * 60 * 1000).toISOString(),
-    updated_at: new Date().toISOString(),
-  },
-  {
-    id: 'mock-6',
-    owner_user_id: '',
-    workspace_id: '',
-    client_name: 'Studio Forma & Saúde',
-    project_type: 'Site',
-    value: 780,
-    recurrence_type: 'Mensal',
-    recurrence_value_monthly: 169,
-    status: 'Assinado',
-    start_date: new Date(Date.now() - 28 * 24 * 60 * 60 * 1000).toISOString(),
-    is_demo: true,
-    created_at: new Date(Date.now() - 28 * 24 * 60 * 60 * 1000).toISOString(),
-    updated_at: new Date().toISOString(),
-  },
-  {
-    id: 'mock-7',
-    owner_user_id: '',
-    workspace_id: '',
-    client_name: 'Sabor do Oceano Restaurante',
-    project_type: 'App',
-    value: 1890,
-    recurrence_type: 'Mensal',
-    recurrence_value_monthly: 547,
-    status: 'Assinado',
-    start_date: new Date(Date.now() - 21 * 24 * 60 * 60 * 1000).toISOString(),
-    is_demo: true,
-    created_at: new Date(Date.now() - 21 * 24 * 60 * 60 * 1000).toISOString(),
-    updated_at: new Date().toISOString(),
-  },
-  {
-    id: 'mock-8',
-    owner_user_id: '',
-    workspace_id: '',
-    client_name: 'Imóveis Prime Corretora',
-    project_type: 'Landing Page',
-    value: 420,
-    recurrence_type: 'Mensal',
-    recurrence_value_monthly: 379,
-    status: 'Assinado',
-    start_date: new Date(Date.now() - 14 * 24 * 60 * 60 * 1000).toISOString(),
-    is_demo: true,
-    created_at: new Date(Date.now() - 14 * 24 * 60 * 60 * 1000).toISOString(),
-    updated_at: new Date().toISOString(),
-  },
-  {
-    id: 'mock-9',
-    owner_user_id: '',
-    workspace_id: '',
-    client_name: 'Salão Beleza Pura',
-    project_type: 'Site',
-    value: 650,
-    recurrence_type: 'Mensal',
-    recurrence_value_monthly: 445,
-    status: 'Assinado',
-    start_date: new Date(Date.now() - 7 * 24 * 60 * 60 * 1000).toISOString(),
-    is_demo: true,
-    created_at: new Date(Date.now() - 7 * 24 * 60 * 60 * 1000).toISOString(),
-    updated_at: new Date().toISOString(),
-  },
-  // 3 PENDENTES
-  {
-    id: 'mock-10',
-    owner_user_id: '',
-    workspace_id: '',
-    client_name: 'Fit Center Academia',
-    project_type: 'App',
-    value: 1560,
-    recurrence_type: 'Mensal',
-    recurrence_value_monthly: 297,
-    status: 'Pendente',
-    start_date: new Date(Date.now() - 5 * 24 * 60 * 60 * 1000).toISOString(),
-    is_demo: true,
-    created_at: new Date(Date.now() - 5 * 24 * 60 * 60 * 1000).toISOString(),
-    updated_at: new Date().toISOString(),
-  },
-  {
-    id: 'mock-11',
-    owner_user_id: '',
-    workspace_id: '',
-    client_name: 'Dr. Carlos Mendes',
-    project_type: 'Site',
-    value: 720,
-    recurrence_type: 'Mensal',
-    recurrence_value_monthly: 129,
-    status: 'Pendente',
-    start_date: new Date(Date.now() - 3 * 24 * 60 * 60 * 1000).toISOString(),
-    is_demo: true,
-    created_at: new Date(Date.now() - 3 * 24 * 60 * 60 * 1000).toISOString(),
-    updated_at: new Date().toISOString(),
-  },
-  {
-    id: 'mock-12',
-    owner_user_id: '',
-    workspace_id: '',
-    client_name: 'PetLove Shop',
-    project_type: 'E-commerce',
-    value: 980,
-    recurrence_type: 'Mensal',
-    recurrence_value_monthly: 229,
-    status: 'Pendente',
-    start_date: new Date(Date.now() - 2 * 24 * 60 * 60 * 1000).toISOString(),
-    is_demo: true,
-    created_at: new Date(Date.now() - 2 * 24 * 60 * 60 * 1000).toISOString(),
-    updated_at: new Date().toISOString(),
-  },
-  // 2 EM RENOVAÇÃO
-  {
-    id: 'mock-13',
-    owner_user_id: '',
-    workspace_id: '',
-    client_name: 'WorldSpeak Idiomas',
-    project_type: 'Landing Page',
-    value: 380,
-    recurrence_type: 'Mensal',
-    recurrence_value_monthly: 79,
-    status: 'Em renovação',
-    start_date: new Date(Date.now() - 380 * 24 * 60 * 60 * 1000).toISOString(),
-    is_demo: true,
-    created_at: new Date(Date.now() - 380 * 24 * 60 * 60 * 1000).toISOString(),
-    updated_at: new Date().toISOString(),
-  },
-  {
-    id: 'mock-14',
-    owner_user_id: '',
-    workspace_id: '',
-    client_name: 'Construtora Alicerce',
-    project_type: 'Site',
-    value: 920,
-    recurrence_type: 'Mensal',
-    recurrence_value_monthly: 189,
-    status: 'Em renovação',
-    start_date: new Date(Date.now() - 400 * 24 * 60 * 60 * 1000).toISOString(),
-    is_demo: true,
-    created_at: new Date(Date.now() - 400 * 24 * 60 * 60 * 1000).toISOString(),
-    updated_at: new Date().toISOString(),
-  },
-];
-
-// Valor de recorrência fixo para admin = R$ 3.223
-const ADMIN_FIXED_RECURRENCE = 3223;
-
 const statusConfig: Record<string, { label: string; variant: 'default' | 'secondary' | 'destructive' | 'outline' }> = {
   'Assinado': { label: 'Assinado', variant: 'default' },
   'Ativo': { label: 'Ativo', variant: 'default' },
   'Pendente': { label: 'Pendente', variant: 'secondary' },
+  'Enviado': { label: 'Enviado', variant: 'outline' },
+  'Rascunho': { label: 'Rascunho', variant: 'outline' },
   'Em renovação': { label: 'Em renovação', variant: 'outline' },
   'Cancelado': { label: 'Cancelado', variant: 'destructive' },
 };
@@ -290,8 +75,9 @@ const statusConfig: Record<string, { label: string; variant: 'default' | 'second
 const projectTypes = ['Site', 'Landing Page', 'E-commerce', 'App', 'Sistema'];
 
 export default function ContratosNovo() {
-  const { contracts, metrics, loading, refetch } = useContractsMetrics();
+  const { contracts, displayMetrics, loading, refetch, isAdminOrOwner } = useContractsMetrics();
   const navigate = useNavigate();
+  const queryClient = useQueryClient();
   const [searchQuery, setSearchQuery] = useState('');
   const [statusFilter, setStatusFilter] = useState<string>('all');
   const [typeFilter, setTypeFilter] = useState<string>('all');
@@ -317,6 +103,30 @@ export default function ContratosNovo() {
     },
   });
 
+  // Update status mutation
+  const updateStatusMutation = useMutation({
+    mutationFn: async ({ id, status }: { id: string; status: string }) => {
+      // Don't update demo/local contracts
+      if (id.startsWith('local-')) {
+        throw new Error('Não é possível alterar contratos de demonstração');
+      }
+      
+      const { error } = await supabase
+        .from('demo_contracts')
+        .update({ status, updated_at: new Date().toISOString() })
+        .eq('id', id);
+      if (error) throw error;
+    },
+    onSuccess: (_, { status }) => {
+      toast.success(`Status alterado para "${status}"`);
+      refetch();
+      queryClient.invalidateQueries({ queryKey: ['contracts'] });
+    },
+    onError: (error: Error) => {
+      toast.error(error.message || 'Erro ao alterar status');
+    },
+  });
+
   // Filter contracts
   const filteredContracts = contracts.filter((contract) => {
     const matchesSearch =
@@ -335,6 +145,12 @@ export default function ContratosNovo() {
       currency: 'BRL',
     }).format(value);
   };
+
+  const handleStatusChange = (contractId: string, newStatus: string) => {
+    updateStatusMutation.mutate({ id: contractId, status: newStatus });
+  };
+
+  const isLocalContract = (id: string) => id.startsWith('local-');
 
   if (loading) {
     return (
@@ -374,7 +190,7 @@ export default function ContratosNovo() {
                 <div>
                   <p className="text-xs text-muted-foreground font-medium">Recorrência Mensal</p>
                   <p className="text-2xl font-bold text-primary mt-1">
-                    {formatCurrency(metrics.totalRecurrence)}
+                    {formatCurrency(displayMetrics.totalRecurrence)}
                   </p>
                   <p className="text-xs text-muted-foreground/70 mt-0.5">
                     de contratos assinados
@@ -393,7 +209,7 @@ export default function ContratosNovo() {
                 <div>
                   <p className="text-xs text-muted-foreground font-medium">Contratos Ativos</p>
                   <p className="text-2xl font-bold text-foreground mt-1">
-                    {metrics.activeContracts}
+                    {displayMetrics.activeContracts}
                   </p>
                   <p className="text-xs text-muted-foreground/70 mt-0.5">
                     status: Assinado
@@ -412,7 +228,7 @@ export default function ContratosNovo() {
                 <div>
                   <p className="text-xs text-muted-foreground font-medium">Ticket Médio</p>
                   <p className="text-2xl font-bold text-foreground mt-1">
-                    {formatCurrency(metrics.averageTicket)}
+                    {formatCurrency(displayMetrics.averageTicket)}
                   </p>
                   <p className="text-xs text-muted-foreground/70 mt-0.5">
                     valor médio por contrato
@@ -446,6 +262,8 @@ export default function ContratosNovo() {
                 <SelectItem value="all">Todos os Status</SelectItem>
                 <SelectItem value="Assinado">Assinado</SelectItem>
                 <SelectItem value="Pendente">Pendente</SelectItem>
+                <SelectItem value="Enviado">Enviado</SelectItem>
+                <SelectItem value="Rascunho">Rascunho</SelectItem>
                 <SelectItem value="Em renovação">Em renovação</SelectItem>
                 <SelectItem value="Cancelado">Cancelado</SelectItem>
               </SelectContent>
@@ -533,21 +351,71 @@ export default function ContratosNovo() {
                                 <MoreHorizontal className="h-4 w-4" />
                               </Button>
                             </DropdownMenuTrigger>
-                            <DropdownMenuContent align="end">
+                            <DropdownMenuContent align="end" className="w-48">
                               <DropdownMenuItem onClick={() => setViewContract(contract)}>
                                 <Eye className="h-4 w-4 mr-2" />
                                 Ver Detalhes
                               </DropdownMenuItem>
+                              
+                              <DropdownMenuSeparator />
+                              
+                              {/* Status Change Actions */}
+                              <DropdownMenuItem 
+                                onClick={() => handleStatusChange(contract.id, 'Assinado')}
+                                disabled={contract.status === 'Assinado' || isLocalContract(contract.id)}
+                              >
+                                <CheckCircle className="h-4 w-4 mr-2 text-emerald-500" />
+                                Marcar como Assinado
+                              </DropdownMenuItem>
+                              
+                              <DropdownMenuItem 
+                                onClick={() => handleStatusChange(contract.id, 'Enviado')}
+                                disabled={contract.status === 'Enviado' || isLocalContract(contract.id)}
+                              >
+                                <Send className="h-4 w-4 mr-2 text-blue-500" />
+                                Marcar como Enviado
+                              </DropdownMenuItem>
+                              
+                              <DropdownMenuItem 
+                                onClick={() => handleStatusChange(contract.id, 'Pendente')}
+                                disabled={contract.status === 'Pendente' || isLocalContract(contract.id)}
+                              >
+                                <Clock className="h-4 w-4 mr-2 text-yellow-500" />
+                                Marcar como Pendente
+                              </DropdownMenuItem>
+                              
+                              <DropdownMenuItem 
+                                onClick={() => handleStatusChange(contract.id, 'Em renovação')}
+                                disabled={contract.status === 'Em renovação' || isLocalContract(contract.id)}
+                              >
+                                <RotateCcw className="h-4 w-4 mr-2 text-purple-500" />
+                                Marcar como Em renovação
+                              </DropdownMenuItem>
+                              
+                              <DropdownMenuItem 
+                                onClick={() => handleStatusChange(contract.id, 'Cancelado')}
+                                disabled={contract.status === 'Cancelado' || isLocalContract(contract.id)}
+                                className="text-destructive focus:text-destructive"
+                              >
+                                <XCircle className="h-4 w-4 mr-2" />
+                                Marcar como Cancelado
+                              </DropdownMenuItem>
+                              
+                              <DropdownMenuSeparator />
+                              
                               <DropdownMenuItem disabled>
                                 <Download className="h-4 w-4 mr-2" />
                                 Baixar PDF
                               </DropdownMenuItem>
+                              
                               <DropdownMenuItem disabled>
                                 <Pencil className="h-4 w-4 mr-2" />
                                 Editar
                               </DropdownMenuItem>
+                              
                               <DropdownMenuItem
                                 onClick={() => setDeleteId(contract.id)}
+                                disabled={isLocalContract(contract.id)}
                                 className="text-destructive focus:text-destructive"
                               >
                                 <Trash2 className="h-4 w-4 mr-2" />
