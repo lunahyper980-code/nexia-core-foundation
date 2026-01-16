@@ -148,12 +148,27 @@ export interface ContractMetrics {
   totalValue: number;
 }
 
+// Status que entram no faturamento/recorrência
+export const ACTIVE_STATUSES = ['Ativo', 'Assinado'];
+
+// Status disponíveis no sistema
+export const CONTRACT_STATUSES = [
+  'Rascunho',
+  'Enviado', 
+  'Assinado',
+  'Ativo',
+  'Pausado',
+  'Cancelado',
+];
+
 /**
  * Hook para gerenciar contratos e calcular métricas
  * 
  * REGRA DE OURO:
  * - ADMIN/OWNER: Mostra contratos DEMO (apenas para visualização, NÃO afeta faturamento do dashboard)
  * - USUÁRIO COMUM: Mostra APENAS contratos REAIS do banco
+ * 
+ * STATUS QUE ENTRAM NO FATURAMENTO: "Ativo" e "Assinado"
  */
 export function useContractsMetrics() {
   const { workspace } = useWorkspace();
@@ -224,58 +239,58 @@ export function useContractsMetrics() {
     return contracts;
   }, [contracts, isAdminOrOwner, user?.id, workspace?.id]);
 
-  // Calculate metrics from signed contracts
+  // Calculate metrics from ACTIVE contracts (Ativo or Assinado)
   // IMPORTANTE: Para usuário comum, esses valores vão para o dashboard
   // Para admin, esses valores são usados apenas na tela de contratos
   const metrics = useMemo((): ContractMetrics => {
     // Usuário comum: usa seus contratos reais
     // Admin: usa apenas os contratos visíveis na lista (não afeta dashboard)
-    const contractsToCalculate = isAdminOrOwner ? contracts : contracts;
-    const signedContracts = contractsToCalculate.filter(c => c.status === 'Assinado');
+    const contractsToCalculate = contracts;
+    const activeContracts = contractsToCalculate.filter(c => ACTIVE_STATUSES.includes(c.status));
     
-    const totalRecurrence = signedContracts.reduce(
+    const totalRecurrence = activeContracts.reduce(
       (sum, c) => sum + Number(c.recurrence_value_monthly || 0),
       0
     );
     
-    const totalValue = signedContracts.reduce(
+    const totalValue = activeContracts.reduce(
       (sum, c) => sum + Number(c.value || 0),
       0
     );
     
-    const averageTicket = signedContracts.length > 0
-      ? Math.round(totalValue / signedContracts.length)
+    const averageTicket = activeContracts.length > 0
+      ? Math.round(totalValue / activeContracts.length)
       : 0;
 
     return {
       totalRecurrence,
-      activeContracts: signedContracts.length,
+      activeContracts: activeContracts.length,
       averageTicket,
       totalValue,
     };
-  }, [contracts, isAdminOrOwner]);
+  }, [contracts]);
 
   // Métricas para exibição na tela de contratos (usa effectiveContracts para admin ver demo)
   const displayMetrics = useMemo((): ContractMetrics => {
-    const signedContracts = effectiveContracts.filter(c => c.status === 'Assinado');
+    const activeContracts = effectiveContracts.filter(c => ACTIVE_STATUSES.includes(c.status));
     
-    const totalRecurrence = signedContracts.reduce(
+    const totalRecurrence = activeContracts.reduce(
       (sum, c) => sum + Number(c.recurrence_value_monthly || 0),
       0
     );
     
-    const totalValue = signedContracts.reduce(
+    const totalValue = activeContracts.reduce(
       (sum, c) => sum + Number(c.value || 0),
       0
     );
     
-    const averageTicket = signedContracts.length > 0
-      ? Math.round(totalValue / signedContracts.length)
+    const averageTicket = activeContracts.length > 0
+      ? Math.round(totalValue / activeContracts.length)
       : 0;
 
     return {
       totalRecurrence,
-      activeContracts: signedContracts.length,
+      activeContracts: activeContracts.length,
       averageTicket,
       totalValue,
     };
