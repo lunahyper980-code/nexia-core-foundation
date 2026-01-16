@@ -203,6 +203,7 @@ const App = () => (
                   <Route path="/configuracoes" element={<ProtectedRoute><Configuracoes /></ProtectedRoute>} />
                   <Route path="/creditos" element={<ProtectedRoute><Creditos /></ProtectedRoute>} />
                   <Route path="/contratos" element={<ProtectedRoute><ContratosNovo /></ProtectedRoute>} />
+                  <Route path="/contratos/novo" element={<ProtectedRoute><ContratoNexiaWizard /></ProtectedRoute>} />
                   <Route path="/admin/equipe" element={<ProtectedRoute><MinhaEquipe /></ProtectedRoute>} />
                   <Route path="/admin/usuarios" element={<ProtectedRoute><GerenciarUsuarios /></ProtectedRoute>} />
                   <Route path="/admin/*" element={<ProtectedRoute><AdminPanel /></ProtectedRoute>} />
