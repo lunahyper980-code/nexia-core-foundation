@@ -1,92 +1,113 @@
 /**
- * Mapeamento de status de contratos
+ * Mapeamento de status de contratos - MODO SIMPLES
  * 
  * O CHECK CONSTRAINT do banco (demo_contracts_status_check) aceita APENAS:
  * - 'Assinado'
  * - 'Pendente'  
  * - 'Cancelado'
  * 
- * Este módulo garante que apenas esses valores sejam persistidos
+ * Este módulo garante que apenas esses valores sejam persistidos.
+ * A UI pode exibir labels mais amigáveis, mas o banco recebe apenas os 3 valores acima.
  */
 
+// ============================================
+// TIPOS
+// ============================================
+
 // Status aceitos pelo CHECK CONSTRAINT do banco (demo_contracts_status_check)
-// IMPORTANTE: O banco usa português, não inglês!
 export type DbContractStatus = 'Assinado' | 'Pendente' | 'Cancelado';
 
-// Status exibidos na UI (extensão do que o banco aceita para UX)
-export type UiContractStatus = 
-  | 'Rascunho' 
-  | 'Enviado' 
-  | 'Assinado' 
-  | 'Ativo' 
-  | 'Pausado' 
-  | 'Cancelado'
-  | 'Pendente';
+// Labels para exibição na UI (mapeados para os status do banco)
+export type UiContractLabel = 
+  | 'Rascunho'     // -> Pendente
+  | 'Enviado'      // -> Pendente
+  | 'Assinado'     // -> Assinado
+  | 'Cancelado';   // -> Cancelado
 
-// Mapeamento: UI -> DB (converte status da UI para valores aceitos pelo banco)
-// Status que não existem no banco são mapeados para o mais próximo
-export const STATUS_UI_TO_DB: Record<UiContractStatus, DbContractStatus> = {
-  'Rascunho': 'Pendente',    // Rascunho -> Pendente (ainda não assinado)
-  'Enviado': 'Pendente',     // Enviado -> Pendente (aguardando assinatura)
-  'Assinado': 'Assinado',    // Assinado -> Assinado
-  'Ativo': 'Assinado',       // Ativo -> Assinado (contrato em vigor)
-  'Pausado': 'Pendente',     // Pausado -> Pendente (temporariamente suspenso)
-  'Cancelado': 'Cancelado',  // Cancelado -> Cancelado
-  'Pendente': 'Pendente',    // Pendente -> Pendente
+// ============================================
+// CONSTANTES
+// ============================================
+
+// Valores válidos do banco (para validação)
+export const VALID_DB_STATUSES: DbContractStatus[] = ['Assinado', 'Pendente', 'Cancelado'];
+
+// Status que entram no faturamento/recorrência
+export const ACTIVE_DB_STATUSES: DbContractStatus[] = ['Assinado'];
+
+// ============================================
+// MAPEAMENTOS
+// ============================================
+
+// UI Label -> DB Status
+const LABEL_TO_DB: Record<string, DbContractStatus> = {
+  'Rascunho': 'Pendente',
+  'Enviado': 'Pendente',
+  'Assinado': 'Assinado',
+  'Ativo': 'Assinado',       // Legado - mapeia para Assinado
+  'Pausado': 'Pendente',     // Legado - mapeia para Pendente
+  'Cancelado': 'Cancelado',
+  'Pendente': 'Pendente',
 };
 
-// Mapeamento: DB -> UI (para exibição, mantém o valor original)
-export const STATUS_DB_TO_UI: Record<DbContractStatus, UiContractStatus> = {
+// DB Status -> UI Label padrão (para exibição quando não há contexto)
+const DB_TO_LABEL: Record<DbContractStatus, UiContractLabel> = {
   'Assinado': 'Assinado',
-  'Pendente': 'Pendente',
+  'Pendente': 'Rascunho',    // Pendente exibe como Rascunho por padrão
   'Cancelado': 'Cancelado',
 };
 
-// Status que entram no faturamento/recorrência (valores do DB)
-export const ACTIVE_DB_STATUSES: DbContractStatus[] = ['Assinado'];
-
-// Status que entram no faturamento/recorrência (valores da UI)
-export const ACTIVE_UI_STATUSES: UiContractStatus[] = ['Ativo', 'Assinado'];
+// ============================================
+// FUNÇÕES
+// ============================================
 
 /**
- * Converte status da UI para o banco (respeitando o CHECK CONSTRAINT)
+ * Converte qualquer status (UI ou legado) para o valor aceito pelo banco.
+ * SEMPRE retorna um dos 3 valores válidos: 'Assinado', 'Pendente', 'Cancelado'
  */
-export function toDbStatus(uiStatus: string): DbContractStatus {
-  const mapped = STATUS_UI_TO_DB[uiStatus as UiContractStatus];
-  if (mapped) return mapped;
-  
+export function toDbStatus(status: string): DbContractStatus {
   // Se já é um status válido do banco, retorna como está
-  if (['Assinado', 'Pendente', 'Cancelado'].includes(uiStatus)) {
-    return uiStatus as DbContractStatus;
+  if (VALID_DB_STATUSES.includes(status as DbContractStatus)) {
+    return status as DbContractStatus;
   }
   
-  // Fallback para Pendente se status desconhecido
-  console.warn(`Status desconhecido: ${uiStatus}, usando 'Pendente'`);
-  return 'Pendente';
-}
-
-/**
- * Converte status do banco para a UI
- */
-export function toUiStatus(dbStatus: string): UiContractStatus {
-  const mapped = STATUS_DB_TO_UI[dbStatus as DbContractStatus];
+  // Tenta mapear do label da UI
+  const mapped = LABEL_TO_DB[status];
   if (mapped) return mapped;
   
-  // Se já é um status da UI válido, retorna como está
-  const validUiStatuses = ['Rascunho', 'Enviado', 'Assinado', 'Ativo', 'Pausado', 'Cancelado', 'Pendente'];
-  if (validUiStatuses.includes(dbStatus)) {
-    return dbStatus as UiContractStatus;
-  }
-  
   // Fallback para Pendente se status desconhecido
-  console.warn(`Status desconhecido: ${dbStatus}, usando 'Pendente'`);
+  console.warn(`[contractStatusMap] Status desconhecido: "${status}", usando 'Pendente'`);
   return 'Pendente';
 }
 
 /**
- * Verifica se um status (UI ou DB) é considerado ativo para faturamento
+ * Converte status do banco para label da UI.
+ */
+export function toUiStatus(dbStatus: string): UiContractLabel {
+  // Se é um status válido do banco, converte para label
+  if (VALID_DB_STATUSES.includes(dbStatus as DbContractStatus)) {
+    return DB_TO_LABEL[dbStatus as DbContractStatus];
+  }
+  
+  // Se já é um label válido da UI, retorna como está
+  if (['Rascunho', 'Enviado', 'Assinado', 'Cancelado'].includes(dbStatus)) {
+    return dbStatus as UiContractLabel;
+  }
+  
+  // Fallback para Rascunho
+  return 'Rascunho';
+}
+
+/**
+ * Verifica se um status é considerado ativo para faturamento/métricas
  */
 export function isActiveStatus(status: string): boolean {
-  // Status ativos: Assinado ou Ativo
-  return status === 'Assinado' || status === 'Ativo';
+  const dbStatus = toDbStatus(status);
+  return ACTIVE_DB_STATUSES.includes(dbStatus);
+}
+
+/**
+ * Verifica se um status é válido para o banco
+ */
+export function isValidDbStatus(status: string): boolean {
+  return VALID_DB_STATUSES.includes(status as DbContractStatus);
 }

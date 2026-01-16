@@ -49,11 +49,7 @@ import {
   RefreshCcw,
   CheckCircle,
   Clock,
-  Send,
-  RotateCcw,
   XCircle,
-  PlayCircle,
-  PauseCircle,
 } from 'lucide-react';
 import { useContractsMetrics, DemoContract } from '@/hooks/useContractsMetrics';
 import { NexiaLoader } from '@/components/ui/nexia-loader';
@@ -65,12 +61,11 @@ import { ptBR } from 'date-fns/locale';
 import { useNavigate } from 'react-router-dom';
 import { toDbStatus, toUiStatus } from '@/lib/contractStatusMap';
 
+// Status do banco -> configuração de exibição
+// O banco aceita APENAS: 'Assinado', 'Pendente', 'Cancelado'
 const statusConfig: Record<string, { label: string; variant: 'default' | 'secondary' | 'destructive' | 'outline' }> = {
-  'Ativo': { label: 'Ativo', variant: 'default' },
   'Assinado': { label: 'Assinado', variant: 'default' },
-  'Enviado': { label: 'Enviado', variant: 'outline' },
-  'Rascunho': { label: 'Rascunho', variant: 'outline' },
-  'Pausado': { label: 'Pausado', variant: 'secondary' },
+  'Pendente': { label: 'Pendente', variant: 'outline' },
   'Cancelado': { label: 'Cancelado', variant: 'destructive' },
 };
 
@@ -266,11 +261,8 @@ export default function ContratosNovo() {
               </SelectTrigger>
               <SelectContent>
                 <SelectItem value="all">Todos os Status</SelectItem>
-                <SelectItem value="Ativo">Ativo</SelectItem>
                 <SelectItem value="Assinado">Assinado</SelectItem>
-                <SelectItem value="Enviado">Enviado</SelectItem>
-                <SelectItem value="Rascunho">Rascunho</SelectItem>
-                <SelectItem value="Pausado">Pausado</SelectItem>
+                <SelectItem value="Pendente">Pendente</SelectItem>
                 <SelectItem value="Cancelado">Cancelado</SelectItem>
               </SelectContent>
             </Select>
@@ -365,15 +357,7 @@ export default function ContratosNovo() {
                               
                               <DropdownMenuSeparator />
                               
-                              {/* Status Change Actions */}
-                              <DropdownMenuItem 
-                                onClick={() => handleStatusChange(contract.id, 'Enviado')}
-                                disabled={contract.status === 'Enviado' || isLocalContract(contract.id)}
-                              >
-                                <Send className="h-4 w-4 mr-2 text-blue-500" />
-                                Marcar como Enviado
-                              </DropdownMenuItem>
-                              
+                              {/* Status Change Actions - APENAS valores aceitos pelo banco */}
                               <DropdownMenuItem 
                                 onClick={() => handleStatusChange(contract.id, 'Assinado')}
                                 disabled={contract.status === 'Assinado' || isLocalContract(contract.id)}
@@ -383,19 +367,11 @@ export default function ContratosNovo() {
                               </DropdownMenuItem>
                               
                               <DropdownMenuItem 
-                                onClick={() => handleStatusChange(contract.id, 'Ativo')}
-                                disabled={contract.status === 'Ativo' || isLocalContract(contract.id)}
+                                onClick={() => handleStatusChange(contract.id, 'Pendente')}
+                                disabled={contract.status === 'Pendente' || isLocalContract(contract.id)}
                               >
-                                <PlayCircle className="h-4 w-4 mr-2 text-green-500" />
-                                Ativar Recorrência
-                              </DropdownMenuItem>
-                              
-                              <DropdownMenuItem 
-                                onClick={() => handleStatusChange(contract.id, 'Pausado')}
-                                disabled={contract.status === 'Pausado' || isLocalContract(contract.id)}
-                              >
-                                <PauseCircle className="h-4 w-4 mr-2 text-yellow-500" />
-                                Pausar Recorrência
+                                <Clock className="h-4 w-4 mr-2 text-yellow-500" />
+                                Marcar como Pendente
                               </DropdownMenuItem>
                               
                               <DropdownMenuItem 
