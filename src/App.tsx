@@ -7,6 +7,7 @@ import { AuthProvider } from "@/contexts/AuthContext";
 import { WorkspaceProvider } from "@/contexts/WorkspaceContext";
 import { SidebarProvider } from "@/contexts/SidebarContext";
 import { UserRoleProvider } from "@/contexts/UserRoleContext";
+import { UserModeProvider } from "@/contexts/UserModeContext";
 import { DemoModeProvider } from "@/contexts/DemoModeContext";
 import { GlobalLoaderProvider } from "@/contexts/GlobalLoaderContext";
 import { NavigationStateProvider } from "@/contexts/NavigationStateContext";
@@ -15,9 +16,12 @@ import { PWAProvider } from "@/components/pwa";
 import { DemoModeBadge } from "@/components/DemoModeBadge";
 import { GlobalLoaderOverlay } from "@/components/GlobalLoaderOverlay";
 import { RouteLoaderWrapper } from "@/components/RouteLoaderWrapper";
+import { ModeSelectionModal } from "@/components/ModeSelectionModal";
+import { ModeAwareContent } from "@/components/ModeAwareContent";
 import Login from "./pages/Login";
 import Cadastro from "./pages/Cadastro";
 import Dashboard from "./pages/Dashboard";
+import DashboardSimples from "./pages/DashboardSimples";
 import Solucoes from "./pages/Solucoes";
 import Templates from "./pages/Templates";
 import Materializar from "./pages/Materializar";
@@ -25,6 +29,8 @@ import CriarDoZero from "./pages/CriarDoZero";
 import HyperBuild from "./pages/HyperBuild";
 import HyperBuildApp from "./pages/HyperBuildApp";
 import HyperBuildSite from "./pages/HyperBuildSite";
+import MeusProjetos from "./pages/hyperbuild/MeusProjetos";
+import Creditos from "./pages/Creditos";
 
 import ProjetoDetalhe from "./pages/hyperbuild/ProjetoDetalhe";
 import ProjetoEditar from "./pages/hyperbuild/ProjetoEditar";
@@ -104,6 +110,7 @@ const App = () => (
         <AuthProvider>
           <WorkspaceProvider>
             <UserRoleProvider>
+              <UserModeProvider>
               <DemoModeProvider>
               <NavigationStateProvider>
               <GlobalLoaderProvider>
@@ -112,6 +119,7 @@ const App = () => (
                 <GlobalLoaderOverlay />
                 <RouteLoaderWrapper>
                 <DemoModeBadge />
+                <ModeAwareContent>
                 <Routes>
                   <Route path="/" element={<Navigate to="/dashboard" replace />} />
                   <Route path="/login" element={<Login />} />
@@ -119,6 +127,7 @@ const App = () => (
                   <Route path="/instalar" element={<InstalarApp />} />
                   <Route path="/redefinir-senha" element={<RedefinirSenha />} />
                   <Route path="/dashboard" element={<ProtectedRoute><Dashboard /></ProtectedRoute>} />
+                  <Route path="/dashboard-simples" element={<ProtectedRoute><DashboardSimples /></ProtectedRoute>} />
                   <Route path="/solucoes" element={<ProtectedRoute><Solucoes /></ProtectedRoute>} />
                   <Route path="/solucoes/templates" element={<ProtectedRoute><Templates /></ProtectedRoute>} />
                   <Route path="/solucoes/materializar" element={<ProtectedRoute><Materializar /></ProtectedRoute>} />
@@ -153,6 +162,7 @@ const App = () => (
                   <Route path="/solucoes/autoridade/:id" element={<ProtectedRoute><AutoridadeDetalhe /></ProtectedRoute>} />
                   <Route path="/hyperbuild" element={<Navigate to="/solucoes" replace />} />
                   <Route path="/hyperbuild/projetos" element={<Navigate to="/solucoes" replace />} />
+                  <Route path="/hyperbuild/projetos-lista" element={<ProtectedRoute><MeusProjetos /></ProtectedRoute>} />
                   <Route path="/hyperbuild/projeto/:id" element={<ProtectedRoute><ProjetoDetalhe /></ProtectedRoute>} />
                   <Route path="/hyperbuild/projeto/:id/editar" element={<ProtectedRoute><ProjetoEditar /></ProtectedRoute>} />
                   <Route path="/hyperbuild/projeto/:id/contrato" element={<ProtectedRoute><ContratoWizard /></ProtectedRoute>} />
@@ -190,6 +200,7 @@ const App = () => (
                   <Route path="/identidade" element={<ProtectedRoute><Identidade /></ProtectedRoute>} />
                   <Route path="/historico" element={<ProtectedRoute><Historico /></ProtectedRoute>} />
                   <Route path="/configuracoes" element={<ProtectedRoute><Configuracoes /></ProtectedRoute>} />
+                  <Route path="/creditos" element={<ProtectedRoute><Creditos /></ProtectedRoute>} />
                   <Route path="/admin/equipe" element={<ProtectedRoute><MinhaEquipe /></ProtectedRoute>} />
                   <Route path="/admin/usuarios" element={<ProtectedRoute><GerenciarUsuarios /></ProtectedRoute>} />
                   <Route path="/admin/*" element={<ProtectedRoute><AdminPanel /></ProtectedRoute>} />
@@ -199,12 +210,14 @@ const App = () => (
                   <Route path="/academy/faq" element={<ProtectedRoute><AcademyFAQ /></ProtectedRoute>} />
                   <Route path="*" element={<NotFound />} />
                 </Routes>
+                </ModeAwareContent>
                 </RouteLoaderWrapper>
                 </PWAProvider>
               </SidebarProvider>
               </GlobalLoaderProvider>
               </NavigationStateProvider>
               </DemoModeProvider>
+              </UserModeProvider>
             </UserRoleProvider>
           </WorkspaceProvider>
         </AuthProvider>

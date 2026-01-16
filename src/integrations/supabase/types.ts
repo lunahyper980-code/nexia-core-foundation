@@ -1323,6 +1323,7 @@ export type Database = {
           full_name: string
           id: string
           updated_at: string
+          usage_mode: string | null
         }
         Insert: {
           access_reason?: string | null
@@ -1337,6 +1338,7 @@ export type Database = {
           full_name: string
           id: string
           updated_at?: string
+          usage_mode?: string | null
         }
         Update: {
           access_reason?: string | null
@@ -1351,6 +1353,7 @@ export type Database = {
           full_name?: string
           id?: string
           updated_at?: string
+          usage_mode?: string | null
         }
         Relationships: []
       }
