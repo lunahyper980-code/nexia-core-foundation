@@ -154,7 +154,7 @@ export default function EncontrarClientes() {
   };
 
   return (
-    <AppLayout title="Encontrar Clientes">
+    <AppLayout title="Encontrar Clientes" hideBreadcrumb>
       {showResults ? (
         // Results Screen
         <LeadsResultsScreen
@@ -167,10 +167,8 @@ export default function EncontrarClientes() {
           onNewSearch={handleNewSearch}
         />
       ) : (
-        // Search Screen
-        <div className="w-full space-y-6">
-
-          {/* Global Search Card */}
+        // Search Screen - Full viewport desktop layout
+        <div className="w-full">
           <GlobalSearchCard
             nicho={nicho}
             cidade={cidade}

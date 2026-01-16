@@ -29,7 +29,7 @@ function TechSphereVisual() {
     const ctx = canvas.getContext('2d');
     if (!ctx) return;
 
-    const size = 320;
+    const size = 400;
     canvas.width = size;
     canvas.height = size;
 
@@ -240,14 +240,14 @@ function TechSphereVisual() {
   }, []);
 
   return (
-    <div className="relative w-64 h-64 md:w-80 md:h-80">
+    <div className="relative w-[320px] h-[320px] lg:w-[400px] lg:h-[400px]">
       {/* Outer rotating ring */}
       <div 
-        className="absolute inset-[-12px] border border-dashed border-primary/15 rounded-full"
+        className="absolute inset-[-16px] border border-dashed border-primary/15 rounded-full"
         style={{ animation: 'spin 40s linear infinite' }}
       />
       <div 
-        className="absolute inset-[-6px] border border-primary/10 rounded-full"
+        className="absolute inset-[-8px] border border-primary/10 rounded-full"
         style={{ animation: 'spin 30s linear infinite reverse' }}
       />
       
@@ -259,7 +259,7 @@ function TechSphereVisual() {
       />
       
       {/* Outer glow */}
-      <div className="absolute inset-[-16px] rounded-full bg-primary/5 blur-xl -z-10" />
+      <div className="absolute inset-[-20px] rounded-full bg-primary/5 blur-xl -z-10" />
     </div>
   );
 }
@@ -277,114 +277,122 @@ export function GlobalSearchCard({
   onSearch,
 }: GlobalSearchCardProps) {
   return (
-    <div className="relative overflow-hidden rounded-2xl bg-gradient-to-br from-background via-background to-primary/5 border border-border/50 shadow-xl">
+    <div className="relative w-full min-h-[calc(100vh-120px)] flex flex-col">
       {/* Background glow effects */}
-      <div className="absolute -top-32 -right-32 w-96 h-96 bg-primary/10 rounded-full blur-3xl pointer-events-none" />
-      <div className="absolute -bottom-40 -left-32 w-[28rem] h-[28rem] bg-primary/5 rounded-full blur-3xl pointer-events-none" />
+      <div className="absolute top-0 right-0 w-[600px] h-[600px] bg-primary/8 rounded-full blur-[120px] pointer-events-none" />
+      <div className="absolute bottom-0 left-0 w-[500px] h-[500px] bg-primary/5 rounded-full blur-[100px] pointer-events-none" />
       
-      <div className="relative z-10 p-8 md:p-12">
-        {/* Feature Badges - Above title */}
-        <div className="flex flex-wrap justify-center gap-2 md:gap-3 mb-4">
-          <div className="flex items-center gap-1.5 px-3 py-1.5 rounded-full border border-primary/30 bg-primary/5 text-sm">
+      <div className="relative z-10 flex flex-col h-full pt-4 lg:pt-8">
+        {/* Feature Badges - Top aligned */}
+        <div className="flex flex-wrap justify-center gap-3 mb-6">
+          <div className="flex items-center gap-2 px-4 py-2 rounded-full border border-primary/30 bg-primary/5">
             <Globe className="h-4 w-4 text-primary" />
-            <span className="text-foreground font-medium">Alcance Mundial</span>
+            <span className="text-foreground font-medium text-sm">Alcance Mundial</span>
           </div>
-          <div className="flex items-center gap-1.5 px-3 py-1.5 rounded-full border border-border bg-background/50 text-sm">
+          <div className="flex items-center gap-2 px-4 py-2 rounded-full border border-border bg-background/50">
             <Zap className="h-4 w-4 text-primary" />
-            <span className="text-foreground font-medium">IA Avançada</span>
+            <span className="text-foreground font-medium text-sm">IA Avançada</span>
           </div>
-          <div className="flex items-center gap-1.5 px-3 py-1.5 rounded-full border border-border bg-background/50 text-sm">
+          <div className="flex items-center gap-2 px-4 py-2 rounded-full border border-border bg-background/50">
             <Sparkles className="h-4 w-4 text-primary" />
-            <span className="text-foreground font-medium">Powered by Nexia</span>
+            <span className="text-foreground font-medium text-sm">Powered by Nexia</span>
           </div>
         </div>
 
-        {/* Header Section */}
-        <div className="text-center mb-6">
-          <h2 className="text-2xl md:text-3xl font-bold text-foreground mb-2">
+        {/* Header Section - Top aligned */}
+        <div className="text-center mb-8">
+          <h1 className="text-3xl lg:text-4xl xl:text-5xl font-bold text-foreground mb-3">
             Prospectar Leads
-          </h2>
-          <p className="text-muted-foreground text-sm md:text-base max-w-lg mx-auto">
+          </h1>
+          <p className="text-muted-foreground text-base lg:text-lg max-w-2xl mx-auto">
             Descubra leads qualificados em qualquer região. Nossa IA analisa o mercado e entrega contatos prontos para prospecção.
           </p>
         </div>
 
-        {/* Tech Sphere Visual */}
-        <div className="relative flex justify-center mb-10">
+        {/* Tech Sphere Visual - Center of hero */}
+        <div className="flex-1 flex items-center justify-center min-h-[300px] lg:min-h-[400px]">
           <TechSphereVisual />
         </div>
 
-        {/* Search Form */}
-        <div className="bg-card/50 backdrop-blur-sm rounded-xl border border-border/50 p-4 md:p-6 space-y-4">
-          <div className="grid gap-4 sm:grid-cols-2">
-            <div className="space-y-2">
-              <Label htmlFor="nicho" className="flex items-center gap-2 text-foreground">
-                <Building2 className="h-4 w-4 text-primary" />
-                Nicho / Segmento
-              </Label>
-              <Input
-                id="nicho"
-                placeholder="Ex: Barbearia, Clínica, Restaurante..."
-                value={nicho}
-                onChange={(e) => onNichoChange(e.target.value)}
-                className="bg-background/50"
-              />
+        {/* Search Form - Bottom of hero, full width desktop style */}
+        <div className="w-full max-w-5xl mx-auto mt-auto pb-8">
+          <div className="bg-card/60 backdrop-blur-md rounded-2xl border border-border/50 p-6 lg:p-8 shadow-xl">
+            <div className="grid gap-6 lg:grid-cols-[1fr_1fr_auto]">
+              {/* Inputs container */}
+              <div className="space-y-2">
+                <Label htmlFor="nicho" className="flex items-center gap-2 text-foreground text-sm font-medium">
+                  <Building2 className="h-4 w-4 text-primary" />
+                  Nicho / Segmento
+                </Label>
+                <Input
+                  id="nicho"
+                  placeholder="Ex: Barbearia, Clínica, Restaurante..."
+                  value={nicho}
+                  onChange={(e) => onNichoChange(e.target.value)}
+                  className="bg-background/50 h-12 text-base"
+                />
+              </div>
+              
+              <div className="space-y-2">
+                <Label htmlFor="cidade" className="flex items-center gap-2 text-foreground text-sm font-medium">
+                  <MapPin className="h-4 w-4 text-primary" />
+                  Cidade ou Região
+                </Label>
+                <Input
+                  id="cidade"
+                  placeholder="Ex: São Paulo, Zona Sul de SP..."
+                  value={cidade}
+                  onChange={(e) => onCidadeChange(e.target.value)}
+                  className="bg-background/50 h-12 text-base"
+                />
+              </div>
+
+              {/* Button - Desktop aligned */}
+              <div className="flex items-end">
+                <Button 
+                  onClick={onSearch} 
+                  disabled={isSearching} 
+                  className="w-full lg:w-auto lg:min-w-[200px] gap-2 h-12 text-base font-semibold px-8"
+                  size="lg"
+                >
+                  <Search className="h-5 w-5" />
+                  Iniciar Busca
+                </Button>
+              </div>
             </div>
-            <div className="space-y-2">
-              <Label htmlFor="cidade" className="flex items-center gap-2 text-foreground">
-                <MapPin className="h-4 w-4 text-primary" />
-                Cidade ou Região
-              </Label>
-              <Input
-                id="cidade"
-                placeholder="Ex: São Paulo, Zona Sul de SP..."
-                value={cidade}
-                onChange={(e) => onCidadeChange(e.target.value)}
-                className="bg-background/50"
-              />
+
+            {/* Filters row */}
+            <div className="flex flex-wrap items-center gap-8 mt-6 pt-6 border-t border-border/30">
+              <div className="flex items-center gap-2">
+                <Checkbox
+                  id="possuiSite"
+                  checked={possuiSite}
+                  onCheckedChange={(checked) => onPossuiSiteChange(checked === true)}
+                />
+                <Label htmlFor="possuiSite" className="flex items-center gap-2 cursor-pointer text-muted-foreground">
+                  <Globe className="h-4 w-4 text-emerald-500" />
+                  Possui site
+                </Label>
+              </div>
+              <div className="flex items-center gap-2">
+                <Checkbox
+                  id="possuiInstagram"
+                  checked={possuiInstagram}
+                  onCheckedChange={(checked) => onPossuiInstagramChange(checked === true)}
+                />
+                <Label htmlFor="possuiInstagram" className="flex items-center gap-2 cursor-pointer text-muted-foreground">
+                  <Instagram className="h-4 w-4 text-pink-500" />
+                  Possui Instagram
+                </Label>
+              </div>
+              
+              {/* Tagline */}
+              <p className="text-xs text-muted-foreground ml-auto">
+                Prospecção inteligente com a tecnologia Nexia
+              </p>
             </div>
           </div>
-
-          <div className="flex flex-wrap gap-6">
-            <div className="flex items-center gap-2">
-              <Checkbox
-                id="possuiSite"
-                checked={possuiSite}
-                onCheckedChange={(checked) => onPossuiSiteChange(checked === true)}
-              />
-              <Label htmlFor="possuiSite" className="flex items-center gap-1.5 cursor-pointer text-muted-foreground">
-                <Globe className="h-4 w-4 text-emerald-500" />
-                Possui site
-              </Label>
-            </div>
-            <div className="flex items-center gap-2">
-              <Checkbox
-                id="possuiInstagram"
-                checked={possuiInstagram}
-                onCheckedChange={(checked) => onPossuiInstagramChange(checked === true)}
-              />
-              <Label htmlFor="possuiInstagram" className="flex items-center gap-1.5 cursor-pointer text-muted-foreground">
-                <Instagram className="h-4 w-4 text-pink-500" />
-                Possui Instagram
-              </Label>
-            </div>
-          </div>
-
-          <Button 
-            onClick={onSearch} 
-            disabled={isSearching} 
-            className="w-full gap-2 h-12 text-base font-semibold"
-            size="lg"
-          >
-            <Search className="h-5 w-5" />
-            Iniciar Busca
-          </Button>
         </div>
-
-        {/* Bottom tagline */}
-        <p className="text-center text-xs text-muted-foreground mt-4">
-          Prospecção inteligente com a tecnologia Nexia
-        </p>
       </div>
     </div>
   );
