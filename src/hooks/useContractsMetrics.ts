@@ -4,63 +4,124 @@ import { useWorkspace } from '@/contexts/WorkspaceContext';
 import { useUserRole } from '@/contexts/UserRoleContext';
 import { useAuth } from '@/contexts/AuthContext';
 
-// Demo contracts data - seeded for admins only
-const DEMO_CONTRACTS = [
+// 14 contratos demo para ADMIN - nomes únicos, valores únicos
+// Recorrência dos 9 Assinados = R$ 7.574 exatamente
+// 847 + 1.123 + 1.297 + 389 + 956 + 712 + 1.089 + 573 + 588 = 7.574
+const DEMO_CONTRACTS_V2 = [
+  // 9 ASSINADOS (soma recorrência = 7574)
   {
-    client_name: 'Oliveira do Chef',
-    project_type: 'Site',
-    value: 745,
-    recurrence_type: 'Mensal',
-    recurrence_value_monthly: 129,
-    status: 'Assinado',
-  },
-  {
-    client_name: 'Barbearia Rei do Corte',
-    project_type: 'Site',
-    value: 868,
-    recurrence_type: 'Mensal',
-    recurrence_value_monthly: 153,
-    status: 'Assinado',
-  },
-  {
-    client_name: 'Studio de Estética Bella',
-    project_type: 'Site',
-    value: 808,
-    recurrence_type: 'Mensal',
-    recurrence_value_monthly: 121,
-    status: 'Assinado',
-  },
-  {
-    client_name: 'App Delivery Centro',
+    client_name: 'Pizzaria Forno & Brasa',
     project_type: 'App Delivery',
-    value: 1940,
+    value: 4250,
     recurrence_type: 'Mensal',
-    recurrence_value_monthly: 299,
+    recurrence_value_monthly: 847,
     status: 'Assinado',
   },
   {
-    client_name: 'Landing Pro Imobiliária',
+    client_name: 'Clínica Odonto Premium',
+    project_type: 'Site Institucional',
+    value: 5680,
+    recurrence_type: 'Mensal',
+    recurrence_value_monthly: 1123,
+    status: 'Assinado',
+  },
+  {
+    client_name: 'Hamburgueria The Burger Co',
+    project_type: 'App Delivery',
+    value: 6480,
+    recurrence_type: 'Mensal',
+    recurrence_value_monthly: 1297,
+    status: 'Assinado',
+  },
+  {
+    client_name: 'Escritório Advocacia Nunes',
     project_type: 'Landing Page',
-    value: 255,
+    value: 1950,
     recurrence_type: 'Mensal',
-    recurrence_value_monthly: 79,
+    recurrence_value_monthly: 389,
     status: 'Assinado',
   },
   {
-    client_name: 'Loja Roupas Urban',
+    client_name: 'Loja TechCell Celulares',
     project_type: 'E-commerce',
-    value: 185,
+    value: 4780,
     recurrence_type: 'Mensal',
-    recurrence_value_monthly: 59,
+    recurrence_value_monthly: 956,
+    status: 'Assinado',
+  },
+  {
+    client_name: 'Studio Pilates Corpo & Mente',
+    project_type: 'Site Institucional',
+    value: 3560,
+    recurrence_type: 'Mensal',
+    recurrence_value_monthly: 712,
+    status: 'Assinado',
+  },
+  {
+    client_name: 'Restaurante Sabores do Mar',
+    project_type: 'App Delivery',
+    value: 5450,
+    recurrence_type: 'Mensal',
+    recurrence_value_monthly: 1089,
+    status: 'Assinado',
+  },
+  {
+    client_name: 'Imobiliária Casa & Lar',
+    project_type: 'Landing Page',
+    value: 2860,
+    recurrence_type: 'Mensal',
+    recurrence_value_monthly: 573,
+    status: 'Assinado',
+  },
+  {
+    client_name: 'Salão Beauty Hair Studio',
+    project_type: 'Site Institucional',
+    value: 2940,
+    recurrence_type: 'Mensal',
+    recurrence_value_monthly: 588,
+    status: 'Assinado',
+  },
+  // 3 PENDENTES
+  {
+    client_name: 'Academia FitPro Center',
+    project_type: 'App Delivery',
+    value: 5200,
+    recurrence_type: 'Mensal',
+    recurrence_value_monthly: 897,
     status: 'Pendente',
   },
   {
-    client_name: 'Clínica Sorriso',
-    project_type: 'Site',
-    value: 1134,
+    client_name: 'Consultório Dr. Marcos Lima',
+    project_type: 'Site Institucional',
+    value: 3080,
     recurrence_type: 'Mensal',
-    recurrence_value_monthly: 185,
-    status: 'Assinado',
+    recurrence_value_monthly: 617,
+    status: 'Pendente',
+  },
+  {
+    client_name: 'PetShop Amigo Peludo',
+    project_type: 'E-commerce',
+    value: 3650,
+    recurrence_type: 'Mensal',
+    recurrence_value_monthly: 729,
+    status: 'Pendente',
+  },
+  // 2 EM RENOVAÇÃO
+  {
+    client_name: 'Escola Idiomas WorldSpeak',
+    project_type: 'Landing Page',
+    value: 2150,
+    recurrence_type: 'Mensal',
+    recurrence_value_monthly: 429,
+    status: 'Em renovação',
+  },
+  {
+    client_name: 'Construtora Alicerce Forte',
+    project_type: 'Site Institucional',
+    value: 4320,
+    recurrence_type: 'Mensal',
+    recurrence_value_monthly: 863,
+    status: 'Em renovação',
   },
 ];
 
@@ -95,47 +156,43 @@ export function useContractsMetrics() {
   const [loading, setLoading] = useState(true);
   const [seeding, setSeeding] = useState(false);
 
-  // Seed demo contracts for admin if none exist
+  // Seed demo contracts for admin - delete old and insert new 14 contracts
   const seedDemoContracts = useCallback(async () => {
     if (!workspace?.id || !user?.id || !isAdminOrOwner || seeding) return;
 
     setSeeding(true);
     try {
-      // Check if demo contracts already exist
-      const { data: existing, error: checkError } = await supabase
+      // Delete existing demo contracts first (to refresh with new data)
+      const { error: deleteError } = await supabase
         .from('demo_contracts')
-        .select('id')
+        .delete()
         .eq('workspace_id', workspace.id)
-        .eq('is_demo', true)
-        .limit(1);
+        .eq('is_demo', true);
 
-      if (checkError) {
-        console.error('Error checking demo contracts:', checkError);
-        return;
+      if (deleteError) {
+        console.error('Error deleting old demo contracts:', deleteError);
       }
 
-      // If no demo contracts exist, seed them
-      if (!existing || existing.length === 0) {
-        const contractsToInsert = DEMO_CONTRACTS.map((contract, index) => ({
-          owner_user_id: user.id,
-          workspace_id: workspace.id,
-          client_name: contract.client_name,
-          project_type: contract.project_type,
-          value: contract.value,
-          recurrence_type: contract.recurrence_type,
-          recurrence_value_monthly: contract.recurrence_value_monthly,
-          status: contract.status,
-          is_demo: true,
-          start_date: new Date(Date.now() - index * 7 * 24 * 60 * 60 * 1000).toISOString().split('T')[0],
-        }));
+      // Insert the new 14 demo contracts
+      const contractsToInsert = DEMO_CONTRACTS_V2.map((contract, index) => ({
+        owner_user_id: user.id,
+        workspace_id: workspace.id,
+        client_name: contract.client_name,
+        project_type: contract.project_type,
+        value: contract.value,
+        recurrence_type: contract.recurrence_type,
+        recurrence_value_monthly: contract.recurrence_value_monthly,
+        status: contract.status,
+        is_demo: true,
+        start_date: new Date(Date.now() - index * 5 * 24 * 60 * 60 * 1000).toISOString().split('T')[0],
+      }));
 
-        const { error: insertError } = await supabase
-          .from('demo_contracts')
-          .insert(contractsToInsert);
+      const { error: insertError } = await supabase
+        .from('demo_contracts')
+        .insert(contractsToInsert);
 
-        if (insertError) {
-          console.error('Error seeding demo contracts:', insertError);
-        }
+      if (insertError) {
+        console.error('Error seeding demo contracts:', insertError);
       }
     } catch (error) {
       console.error('Error in seedDemoContracts:', error);
