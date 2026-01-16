@@ -2,13 +2,12 @@ import { useState, useEffect } from 'react';
 import { AppLayout } from '@/components/AppLayout';
 import { toast } from 'sonner';
 import { supabase } from '@/integrations/supabase/client';
-import { NeuralAnimation } from '@/components/encontrar-clientes/NeuralAnimation';
 import { Lead } from '@/components/encontrar-clientes/LeadCard';
 import { IntelligentApproachScreen } from '@/components/encontrar-clientes/IntelligentApproachScreen';
-import { GlobalSearchCard } from '@/components/encontrar-clientes/GlobalSearchCard';
+import { ProspectorSearchScreen } from '@/components/encontrar-clientes/ProspectorSearchScreen';
+import { ProspectorLoadingScreen } from '@/components/encontrar-clientes/ProspectorLoadingScreen';
 import { LeadsResultsScreen } from '@/components/encontrar-clientes/LeadsResultsScreen';
 import { useWorkspace } from '@/contexts/WorkspaceContext';
-import { NextStepCard } from '@/components/academy/NextStepCard';
 import { useModuleState } from '@/hooks/useModuleState';
 
 export default function EncontrarClientes() {
@@ -69,7 +68,7 @@ export default function EncontrarClientes() {
     setLastSearchCidade(cidade);
 
     // Minimum display time for premium experience
-    const minLoadingTime = 1800;
+    const minLoadingTime = 2500;
     const startTime = Date.now();
 
     try {
@@ -156,7 +155,6 @@ export default function EncontrarClientes() {
   return (
     <AppLayout title="Encontrar Clientes">
       {showResults ? (
-        // Results Screen
         <LeadsResultsScreen
           leads={leads}
           leadsNaoConfirmados={leadsNaoConfirmados}
@@ -167,27 +165,22 @@ export default function EncontrarClientes() {
           onNewSearch={handleNewSearch}
         />
       ) : (
-        // Search Screen
-        <div className="w-full space-y-6">
-
-          {/* Global Search Card */}
-          <GlobalSearchCard
-            nicho={nicho}
-            cidade={cidade}
-            possuiSite={possuiSite}
-            possuiInstagram={possuiInstagram}
-            isSearching={isSearching}
-            onNichoChange={setNicho}
-            onCidadeChange={setCidade}
-            onPossuiSiteChange={setPossuiSite}
-            onPossuiInstagramChange={setPossuiInstagram}
-            onSearch={handleSearch}
-          />
-        </div>
+        <ProspectorSearchScreen
+          nicho={nicho}
+          cidade={cidade}
+          possuiSite={possuiSite}
+          possuiInstagram={possuiInstagram}
+          isSearching={isSearching}
+          onNichoChange={setNicho}
+          onCidadeChange={setCidade}
+          onPossuiSiteChange={setPossuiSite}
+          onPossuiInstagramChange={setPossuiInstagram}
+          onSearch={handleSearch}
+        />
       )}
 
-      {/* Neural Animation Modal */}
-      <NeuralAnimation open={isSearching} />
+      {/* Premium Loading Screen */}
+      <ProspectorLoadingScreen open={isSearching} />
 
       {/* Intelligent Approach Screen */}
       <IntelligentApproachScreen
