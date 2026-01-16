@@ -1,10 +1,11 @@
-import { useState } from 'react';
+import { useState, useMemo } from 'react';
 import { Link } from 'react-router-dom';
 import { AppLayout } from '@/components/AppLayout';
 import { PremiumFrame } from '@/components/ui/PremiumFrame';
 import { useUserRole } from '@/contexts/UserRoleContext';
 import { useTeamMetrics } from '@/hooks/useTeamMetrics';
 import { useRevenueMetrics } from '@/hooks/useRevenueMetrics';
+import { useContractsMetrics } from '@/hooks/useContractsMetrics';
 import { 
   DollarSign, 
   TrendingUp,
@@ -17,6 +18,7 @@ import {
   Percent,
   FileText,
   Award,
+  AlertCircle,
 } from 'lucide-react';
 import { NexiaLoader } from '@/components/ui/nexia-loader';
 import { Card, CardContent } from '@/components/ui/card';
@@ -24,6 +26,7 @@ import { Button } from '@/components/ui/button';
 import { useQuery } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
 import { useWorkspace } from '@/contexts/WorkspaceContext';
+import { useAuth } from '@/contexts/AuthContext';
 import { 
   AreaChart, 
   Area, 
@@ -38,11 +41,13 @@ export default function DashboardSimples() {
   const { isAdminOrOwner, loading: roleLoading } = useUserRole();
   const { teamData } = useTeamMetrics();
   const { workspace } = useWorkspace();
+  const { user } = useAuth();
   
   // Chart period selector: 7 or 30 days
   const [chartPeriod, setChartPeriod] = useState<7 | 30>(30);
   
-  // Use the new revenue metrics hook with period filter
+  // Use the revenue metrics hook with period filter
+  // Este hook já separa admin (owner_metrics) vs usuário comum (contratos)
   const {
     periodMetrics,
     chartData,
@@ -51,9 +56,9 @@ export default function DashboardSimples() {
     loading: metricsLoading,
   } = useRevenueMetrics(chartPeriod);
 
-  // Fetch project types distribution
-  const { data: projectTypes } = useQuery({
-    queryKey: ['project-types-dashboard', workspace?.id],
+  // Fetch project types distribution (apenas projetos do usuário)
+  const { data: projectTypes, isLoading: projectsLoading } = useQuery({
+    queryKey: ['project-types-dashboard', workspace?.id, user?.id, isAdminOrOwner],
     queryFn: async () => {
       if (!workspace?.id) return [];
       
@@ -63,6 +68,11 @@ export default function DashboardSimples() {
         .eq('workspace_id', workspace.id);
 
       if (error) throw error;
+
+      // Se não há projetos reais e NÃO é admin, retorna vazio
+      if (!data?.length && !isAdminOrOwner) {
+        return [];
+      }
 
       const counts: Record<string, number> = {
         'Site institucional': 0,
@@ -83,11 +93,20 @@ export default function DashboardSimples() {
         }
       });
 
-      return [
-        { name: 'Site institucional', count: counts['Site institucional'] || 12, position: 1 },
-        { name: 'App de Delivery', count: counts['App de Delivery'] || 8, position: 2 },
-        { name: 'Landing Page', count: counts['Landing Page'] || 5, position: 3 },
-      ].sort((a, b) => b.count - a.count).slice(0, 3);
+      // Se admin sem dados reais, usar dados demo
+      if (!data?.length && isAdminOrOwner) {
+        return [
+          { name: 'Site institucional', count: 12, position: 1 },
+          { name: 'App de Delivery', count: 8, position: 2 },
+          { name: 'Landing Page', count: 5, position: 3 },
+        ];
+      }
+
+      return Object.entries(counts)
+        .map(([name, count]) => ({ name, count }))
+        .filter(item => item.count > 0)
+        .sort((a, b) => b.count - a.count)
+        .slice(0, 3);
     },
     enabled: !!workspace?.id,
   });
@@ -120,6 +139,9 @@ export default function DashboardSimples() {
   // Growth indicator
   const hasGrowth = periodMetrics.hasComparison && periodMetrics.growthPercentage !== null;
   const isPositiveGrowth = hasGrowth && periodMetrics.growthPercentage! >= 0;
+
+  // Check if user has data (for regular users)
+  const hasNoData = !isAdminOrOwner && totalRevenue === 0;
 
   const quickActions = [
     {
@@ -156,12 +178,9 @@ export default function DashboardSimples() {
     },
   ];
 
-  // Top 3 project types with positions
-  const topProjects = projectTypes || [
-    { name: 'Site institucional', count: 12, position: 1 },
-    { name: 'App de Delivery', count: 8, position: 2 },
-    { name: 'Landing Page', count: 5, position: 3 },
-  ];
+  // Top 3 project types - only show if has projects
+  const topProjects = projectTypes || [];
+  const hasProjects = topProjects.length > 0;
 
   return (
     <AppLayout title="Dashboard">
@@ -193,7 +212,7 @@ export default function DashboardSimples() {
                   </span>
                 ) : (
                   <span className="text-xs text-muted-foreground/60">
-                    Sem dados para comparação
+                    {hasNoData ? 'Sem contratos ainda' : 'Sem dados para comparação'}
                   </span>
                 )}
               </div>
@@ -218,50 +237,67 @@ export default function DashboardSimples() {
             </div>
           </div>
           <div className="h-[200px] sm:h-[280px] w-full">
-            <ResponsiveContainer width="100%" height="100%">
-              <AreaChart data={chartData} margin={{ top: 10, right: 10, left: 0, bottom: 0 }}>
-                <defs>
-                  <linearGradient id="colorValue" x1="0" y1="0" x2="0" y2="1">
-                    <stop offset="5%" stopColor="hsl(268, 65%, 58%)" stopOpacity={0.3}/>
-                    <stop offset="95%" stopColor="hsl(268, 65%, 58%)" stopOpacity={0}/>
-                  </linearGradient>
-                </defs>
-                <CartesianGrid strokeDasharray="3 3" stroke="hsl(230, 12%, 18%)" />
-                <XAxis 
-                  dataKey="date" 
-                  stroke="hsl(220, 8%, 55%)" 
-                  fontSize={11}
-                  tickLine={false}
-                  axisLine={false}
-                  interval={chartPeriod === 7 ? 0 : "preserveStartEnd"}
-                />
-                <YAxis 
-                  stroke="hsl(220, 8%, 55%)" 
-                  fontSize={11}
-                  tickLine={false}
-                  axisLine={false}
-                  tickFormatter={(value) => value >= 1000 ? `${(value / 1000).toFixed(0)}k` : `${value}`}
-                />
-                <Tooltip 
-                  contentStyle={{ 
-                    backgroundColor: 'hsl(230, 16%, 9%)',
-                    border: '1px solid hsl(230, 12%, 18%)',
-                    borderRadius: '8px',
-                    color: 'hsl(220, 15%, 92%)',
-                  }}
-                  formatter={(value: number) => [formatCurrency(value), 'Faturamento']}
-                  labelFormatter={(label) => `Data: ${label}`}
-                />
-                <Area 
-                  type="monotone" 
-                  dataKey="value" 
-                  stroke="hsl(268, 65%, 58%)" 
-                  strokeWidth={2}
-                  fillOpacity={1}
-                  fill="url(#colorValue)"
-                />
-              </AreaChart>
-            </ResponsiveContainer>
+            {hasNoData ? (
+              <div className="h-full flex flex-col items-center justify-center text-center">
+                <AlertCircle className="h-8 w-8 text-muted-foreground/40 mb-3" />
+                <p className="text-muted-foreground text-sm">
+                  Nenhum contrato assinado ainda.
+                </p>
+                <p className="text-muted-foreground/60 text-xs mt-1">
+                  Crie seu primeiro contrato para ver o gráfico.
+                </p>
+                <Link to="/contratos">
+                  <Button variant="outline" size="sm" className="mt-4">
+                    Criar Contrato
+                  </Button>
+                </Link>
+              </div>
+            ) : (
+              <ResponsiveContainer width="100%" height="100%">
+                <AreaChart data={chartData} margin={{ top: 10, right: 10, left: 0, bottom: 0 }}>
+                  <defs>
+                    <linearGradient id="colorValue" x1="0" y1="0" x2="0" y2="1">
+                      <stop offset="5%" stopColor="hsl(268, 65%, 58%)" stopOpacity={0.3}/>
+                      <stop offset="95%" stopColor="hsl(268, 65%, 58%)" stopOpacity={0}/>
+                    </linearGradient>
+                  </defs>
+                  <CartesianGrid strokeDasharray="3 3" stroke="hsl(230, 12%, 18%)" />
+                  <XAxis 
+                    dataKey="date" 
+                    stroke="hsl(220, 8%, 55%)" 
+                    fontSize={11}
+                    tickLine={false}
+                    axisLine={false}
+                    interval={chartPeriod === 7 ? 0 : "preserveStartEnd"}
+                  />
+                  <YAxis 
+                    stroke="hsl(220, 8%, 55%)" 
+                    fontSize={11}
+                    tickLine={false}
+                    axisLine={false}
+                    tickFormatter={(value) => value >= 1000 ? `${(value / 1000).toFixed(0)}k` : `${value}`}
+                  />
+                  <Tooltip 
+                    contentStyle={{ 
+                      backgroundColor: 'hsl(230, 16%, 9%)',
+                      border: '1px solid hsl(230, 12%, 18%)',
+                      borderRadius: '8px',
+                      color: 'hsl(220, 15%, 92%)',
+                    }}
+                    formatter={(value: number) => [formatCurrency(value), 'Faturamento']}
+                    labelFormatter={(label) => `Data: ${label}`}
+                  />
+                  <Area 
+                    type="monotone" 
+                    dataKey="value" 
+                    stroke="hsl(268, 65%, 58%)" 
+                    strokeWidth={2}
+                    fillOpacity={1}
+                    fill="url(#colorValue)"
+                  />
+                </AreaChart>
+              </ResponsiveContainer>
+            )}
           </div>
         </PremiumFrame>
 
@@ -277,7 +313,7 @@ export default function DashboardSimples() {
                     {formatCurrency(totalRevenue)}
                   </p>
                   <p className="text-xs text-muted-foreground/70 mt-0.5">
-                    valor acumulado
+                    {isAdminOrOwner ? 'valor acumulado' : 'contratos assinados'}
                   </p>
                 </div>
                 <div className="p-3 rounded-xl bg-emerald-500/10">
@@ -354,47 +390,49 @@ export default function DashboardSimples() {
           </div>
         </PremiumFrame>
 
-        {/* Top 3 Projects */}
-        <PremiumFrame title="Top 3 Projetos" className="fade-in mt-6" style={{ animationDelay: '0.2s' }}>
-          <div className="space-y-3">
-            {topProjects.map((project, index) => (
-              <div 
-                key={index} 
-                className="flex items-center justify-between p-4 rounded-xl bg-primary/5 border border-primary/10 hover:border-primary/20 transition-all"
-              >
-                <div className="flex items-center gap-4">
-                  <div className={`
-                    h-10 w-10 rounded-full flex items-center justify-center font-bold text-lg
-                    ${index === 0 ? 'bg-yellow-500/20 text-yellow-500' : 
-                      index === 1 ? 'bg-zinc-400/20 text-zinc-400' : 
-                      'bg-amber-700/20 text-amber-700'}
-                  `}>
-                    {index + 1}
+        {/* Top 3 Projects - ONLY show if user has projects */}
+        {hasProjects && (
+          <PremiumFrame title="Top 3 Projetos" className="fade-in mt-6" style={{ animationDelay: '0.2s' }}>
+            <div className="space-y-3">
+              {topProjects.map((project, index) => (
+                <div 
+                  key={index} 
+                  className="flex items-center justify-between p-4 rounded-xl bg-primary/5 border border-primary/10 hover:border-primary/20 transition-all"
+                >
+                  <div className="flex items-center gap-4">
+                    <div className={`
+                      h-10 w-10 rounded-full flex items-center justify-center font-bold text-lg
+                      ${index === 0 ? 'bg-yellow-500/20 text-yellow-500' : 
+                        index === 1 ? 'bg-zinc-400/20 text-zinc-400' : 
+                        'bg-amber-700/20 text-amber-700'}
+                    `}>
+                      {index + 1}
+                    </div>
+                    <div>
+                      <p className="font-semibold text-foreground">{project.name}</p>
+                      <p className="text-xs text-muted-foreground">Tipo de projeto</p>
+                    </div>
                   </div>
-                  <div>
-                    <p className="font-semibold text-foreground">{project.name}</p>
-                    <p className="text-xs text-muted-foreground">Tipo de projeto</p>
+                  <div className="flex items-center gap-2">
+                    <Award className={`h-5 w-5 ${
+                      index === 0 ? 'text-yellow-500' : 
+                      index === 1 ? 'text-zinc-400' : 
+                      'text-amber-700'
+                    }`} />
+                    <span className="text-lg font-bold text-foreground">{project.count}</span>
                   </div>
                 </div>
-                <div className="flex items-center gap-2">
-                  <Award className={`h-5 w-5 ${
-                    index === 0 ? 'text-yellow-500' : 
-                    index === 1 ? 'text-zinc-400' : 
-                    'text-amber-700'
-                  }`} />
-                  <span className="text-lg font-bold text-foreground">{project.count}</span>
-                </div>
-              </div>
-            ))}
-          </div>
-          
-          <Link 
-            to="/hyperbuild/projetos-lista" 
-            className="flex items-center justify-center gap-2 text-sm text-primary hover:underline mt-4"
-          >
-            Ver todos os projetos <ArrowRight className="h-4 w-4" />
-          </Link>
-        </PremiumFrame>
+              ))}
+            </div>
+            
+            <Link 
+              to="/hyperbuild/projetos-lista" 
+              className="flex items-center justify-center gap-2 text-sm text-primary hover:underline mt-4"
+            >
+              Ver todos os projetos <ArrowRight className="h-4 w-4" />
+            </Link>
+          </PremiumFrame>
+        )}
       </div>
     </AppLayout>
   );

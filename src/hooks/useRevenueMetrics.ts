@@ -1,5 +1,7 @@
 import { useMemo } from 'react';
 import { useContractsMetrics } from './useContractsMetrics';
+import { useOwnerMetrics } from './useOwnerMetrics';
+import { useUserRole } from '@/contexts/UserRoleContext';
 
 export interface PeriodMetrics {
   periodRevenue: number;
@@ -18,13 +20,42 @@ export interface ChartDataPoint {
 }
 
 /**
- * Hook para calcular métricas de faturamento baseadas em contratos ASSINADOS
- * - Filtra por período (7 ou 30 dias)
- * - Calcula crescimento percentual vs período anterior
- * - Apenas contratos com status "Assinado" entram no cálculo
+ * Hook para calcular métricas de faturamento
+ * 
+ * REGRA DE OURO:
+ * - ADMIN/OWNER: Usa dados do owner_metrics (simulados, crescem a cada 48h) - NUNCA altera com contratos
+ * - USUÁRIO COMUM: Usa APENAS contratos ASSINADOS reais - começa zerado
  */
 export function useRevenueMetrics(period: 7 | 30) {
-  const { contracts, metrics, loading } = useContractsMetrics();
+  const { contracts, metrics: contractMetrics, loading: contractsLoading } = useContractsMetrics();
+  const { isOwner, metrics: ownerMetrics, loading: ownerLoading } = useOwnerMetrics();
+  const { isAdminOrOwner } = useUserRole();
+
+  // ============================================
+  // LÓGICA SEPARADA: ADMIN vs USUÁRIO COMUM
+  // ============================================
+
+  // ADMIN: Usa owner_metrics (valor histórico próprio, NÃO depende de contratos)
+  // USUÁRIO: Usa soma dos contratos ASSINADOS reais
+  const totalRevenue = useMemo(() => {
+    if (isAdminOrOwner) {
+      // ADMIN: Faturamento vem do owner_metrics (cresce a cada 48h)
+      return ownerMetrics.totalPipelineValue;
+    }
+    // USUÁRIO COMUM: Soma dos contratos ASSINADOS
+    return contractMetrics.totalValue;
+  }, [isAdminOrOwner, ownerMetrics.totalPipelineValue, contractMetrics.totalValue]);
+
+  // ADMIN: Recorrência fixa de 3.223 (demo)
+  // USUÁRIO: Soma das recorrências dos contratos ASSINADOS
+  const totalRecurrence = useMemo(() => {
+    if (isAdminOrOwner) {
+      // ADMIN: Valor fixo de demo
+      return 3223;
+    }
+    // USUÁRIO COMUM: Soma real dos contratos assinados
+    return contractMetrics.totalRecurrence;
+  }, [isAdminOrOwner, contractMetrics.totalRecurrence]);
 
   // Calcular métricas do período selecionado e período anterior
   const periodMetrics = useMemo((): PeriodMetrics => {
@@ -36,6 +67,34 @@ export function useRevenueMetrics(period: 7 | 30) {
     const previousPeriodStart = new Date(periodStart);
     previousPeriodStart.setDate(previousPeriodStart.getDate() - period);
 
+    // ============================================
+    // ADMIN: Lógica de período baseada no totalRevenue (owner_metrics)
+    // ============================================
+    if (isAdminOrOwner) {
+      // Para admin, o gráfico é apenas VISUAL - NÃO redefine o faturamento total
+      // Calculamos uma fração proporcional do faturamento total para o período
+      const periodFraction = period / 30; // 7 dias = 23.3%, 30 dias = 100%
+      const periodRevenue = Math.round(totalRevenue * periodFraction * 0.4); // ~40% do proporcional
+      const previousPeriodRevenue = Math.round(periodRevenue * 0.85); // Crescimento de ~15%
+
+      const growthPercentage = previousPeriodRevenue > 0
+        ? Math.round(((periodRevenue - previousPeriodRevenue) / previousPeriodRevenue) * 100)
+        : null;
+
+      return {
+        periodRevenue,
+        previousPeriodRevenue,
+        growthPercentage,
+        hasComparison: previousPeriodRevenue > 0,
+        signedContractsInPeriod: 0,
+        recurrenceInPeriod: 0,
+      };
+    }
+
+    // ============================================
+    // USUÁRIO COMUM: Lógica baseada em contratos ASSINADOS reais
+    // ============================================
+    
     // Filtrar apenas contratos ASSINADOS
     const signedContracts = contracts.filter(c => c.status === 'Assinado');
 
@@ -97,18 +156,15 @@ export function useRevenueMetrics(period: 7 | 30) {
       signedContractsInPeriod: contractsInCurrentPeriod.length,
       recurrenceInPeriod: Math.round(currentRecurrence),
     };
-  }, [contracts, period]);
+  }, [contracts, period, isAdminOrOwner, totalRevenue]);
 
   // Gerar dados do gráfico com datas reais
   const chartData = useMemo((): ChartDataPoint[] => {
     const data: ChartDataPoint[] = [];
     const now = new Date();
     
-    // Usar o faturamento total acumulado (todos os contratos assinados) como valor final
-    const totalRevenue = metrics.totalValue;
-    
-    if (totalRevenue <= 0) {
-      // Se não há faturamento, mostrar linha zero
+    // Se não há faturamento E é usuário comum, mostrar linha zero
+    if (totalRevenue <= 0 && !isAdminOrOwner) {
       for (let i = 0; i < period; i++) {
         const date = new Date(now);
         date.setDate(date.getDate() - (period - 1 - i));
@@ -162,7 +218,7 @@ export function useRevenueMetrics(period: 7 | 30) {
     }
     
     return data;
-  }, [metrics.totalValue, period]);
+  }, [totalRevenue, period, isAdminOrOwner]);
 
   return {
     // Métricas do período selecionado
@@ -171,13 +227,16 @@ export function useRevenueMetrics(period: 7 | 30) {
     // Dados do gráfico
     chartData,
     
-    // Métricas totais (todos os contratos assinados)
-    totalRevenue: metrics.totalValue,
-    totalRecurrence: metrics.totalRecurrence,
-    activeContracts: metrics.activeContracts,
-    averageTicket: metrics.averageTicket,
+    // Métricas totais
+    totalRevenue,
+    totalRecurrence,
+    activeContracts: contractMetrics.activeContracts,
+    averageTicket: contractMetrics.averageTicket,
     
     // Loading state
-    loading,
+    loading: contractsLoading || ownerLoading,
+    
+    // Flag para indicar se é admin (para exibição condicional)
+    isAdminOrOwner,
   };
 }

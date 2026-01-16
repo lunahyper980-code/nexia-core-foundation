@@ -148,6 +148,13 @@ export interface ContractMetrics {
   totalValue: number;
 }
 
+/**
+ * Hook para gerenciar contratos e calcular métricas
+ * 
+ * REGRA DE OURO:
+ * - ADMIN/OWNER: Mostra contratos DEMO (apenas para visualização, NÃO afeta faturamento do dashboard)
+ * - USUÁRIO COMUM: Mostra APENAS contratos REAIS do banco
+ */
 export function useContractsMetrics() {
   const { workspace } = useWorkspace();
   const { isAdminOrOwner } = useUserRole();
@@ -183,27 +190,73 @@ export function useContractsMetrics() {
     }
   }, [workspace?.id, user?.id]);
 
-  // Initialize - just fetch contracts, no seeding (use local mock data instead)
+  // Initialize - just fetch contracts
   useEffect(() => {
     fetchContracts();
   }, [fetchContracts]);
 
-  // Calculate metrics from contracts (db or local mock)
-  // For admin with empty db, use local DEMO_CONTRACTS_V2 data
-  const effectiveContracts = contracts.length > 0 ? contracts : 
-    (isAdminOrOwner ? DEMO_CONTRACTS_V2.map((c, i) => ({
-      ...c,
-      id: `local-${i}`,
-      owner_user_id: user?.id || '',
-      workspace_id: workspace?.id || '',
-      start_date: new Date(Date.now() - i * 5 * 24 * 60 * 60 * 1000).toISOString(),
-      is_demo: true,
-      created_at: new Date(Date.now() - i * 5 * 24 * 60 * 60 * 1000).toISOString(),
-      updated_at: new Date().toISOString(),
-    })) : []);
+  // ============================================
+  // LÓGICA SEPARADA: ADMIN vs USUÁRIO COMUM
+  // ============================================
+  
+  // ADMIN: Se não tem contratos no DB, usa mock data para VISUALIZAÇÃO apenas
+  // USUÁRIO COMUM: Usa APENAS contratos reais do banco (pode ser vazio)
+  const effectiveContracts = useMemo(() => {
+    if (isAdminOrOwner) {
+      // ADMIN: Se tem contratos no DB, mostra eles. Senão, mostra mock
+      if (contracts.length > 0) {
+        return contracts;
+      }
+      // Mock data para admin (apenas visualização)
+      return DEMO_CONTRACTS_V2.map((c, i) => ({
+        ...c,
+        id: `local-${i}`,
+        owner_user_id: user?.id || '',
+        workspace_id: workspace?.id || '',
+        start_date: new Date(Date.now() - i * 5 * 24 * 60 * 60 * 1000).toISOString(),
+        is_demo: true,
+        created_at: new Date(Date.now() - i * 5 * 24 * 60 * 60 * 1000).toISOString(),
+        updated_at: new Date().toISOString(),
+      }));
+    }
+    
+    // USUÁRIO COMUM: Apenas contratos reais do banco
+    return contracts;
+  }, [contracts, isAdminOrOwner, user?.id, workspace?.id]);
 
   // Calculate metrics from signed contracts
+  // IMPORTANTE: Para usuário comum, esses valores vão para o dashboard
+  // Para admin, esses valores são usados apenas na tela de contratos
   const metrics = useMemo((): ContractMetrics => {
+    // Usuário comum: usa seus contratos reais
+    // Admin: usa apenas os contratos visíveis na lista (não afeta dashboard)
+    const contractsToCalculate = isAdminOrOwner ? contracts : contracts;
+    const signedContracts = contractsToCalculate.filter(c => c.status === 'Assinado');
+    
+    const totalRecurrence = signedContracts.reduce(
+      (sum, c) => sum + Number(c.recurrence_value_monthly || 0),
+      0
+    );
+    
+    const totalValue = signedContracts.reduce(
+      (sum, c) => sum + Number(c.value || 0),
+      0
+    );
+    
+    const averageTicket = signedContracts.length > 0
+      ? Math.round(totalValue / signedContracts.length)
+      : 0;
+
+    return {
+      totalRecurrence,
+      activeContracts: signedContracts.length,
+      averageTicket,
+      totalValue,
+    };
+  }, [contracts, isAdminOrOwner]);
+
+  // Métricas para exibição na tela de contratos (usa effectiveContracts para admin ver demo)
+  const displayMetrics = useMemo((): ContractMetrics => {
     const signedContracts = effectiveContracts.filter(c => c.status === 'Assinado');
     
     const totalRecurrence = signedContracts.reduce(
@@ -230,8 +283,10 @@ export function useContractsMetrics() {
 
   return {
     contracts: effectiveContracts as DemoContract[],
-    metrics,
+    metrics, // Métricas reais (usadas pelo dashboard para usuário comum)
+    displayMetrics, // Métricas de exibição (usadas na tela de contratos)
     loading,
     refetch: fetchContracts,
+    isAdminOrOwner,
   };
 }
