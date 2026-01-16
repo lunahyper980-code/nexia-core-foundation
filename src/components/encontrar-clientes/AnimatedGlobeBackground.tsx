@@ -85,7 +85,8 @@ export function AnimatedGlobeBackground() {
       const autoRotation = Date.now() * 0.0001;
 
       const centerX = width / 2;
-      const centerY = height / 2;
+      // Globe shifted down 15% to not compete with title
+      const centerY = height / 2 + height * 0.12;
 
       // Draw outer glow
       const gradient = ctx.createRadialGradient(
