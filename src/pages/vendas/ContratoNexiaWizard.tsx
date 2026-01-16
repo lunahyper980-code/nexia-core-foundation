@@ -391,39 +391,37 @@ ${formData.contractorDocument}
   };
 
   const handleGenerate = async () => {
-    if (!workspace?.id) return;
+    if (!workspace?.id || !user?.id) return;
     
     setIsGenerating(true);
     
     try {
       const contractText = generateContractText();
       
-      // Save to database
-      const { data: inserted, error } = await supabase.from('solution_contracts').insert({
+      // Mapear tipo de solução para project_type compatível com demo_contracts
+      const projectTypeMap: Record<string, string> = {
+        'app': 'App',
+        'site': 'Site',
+        'posicionamento': 'Landing Page',
+        'kit-lancamento': 'Landing Page',
+        'autoridade': 'Landing Page',
+        'organizacao': 'Sistema',
+      };
+      const projectType = projectTypeMap[formData.solutionType] || 'Site';
+      
+      // MODO SIMPLES: Salvar em demo_contracts (tabela unificada do modo simples)
+      // Isso garante que o contrato apareça na sidebar /contratos e no dashboard
+      const { data: inserted, error } = await supabase.from('demo_contracts').insert({
         workspace_id: workspace.id,
-        contractor_name: formData.contractorName,
-        contractor_document: formData.contractorDocument,
-        contractor_type: formData.contractorType,
-        contractor_city: formData.contractorCity,
-        contracted_name: formData.contractedName,
-        contracted_document: formData.contractedDocument,
-        service_description: formData.deliverables,
-        service_value: parseFloat(formData.serviceValue) || 0,
-        payment_terms: formData.paymentTerms,
-        deadline: formData.deadline,
-        platforms: formData.platforms,
-        functionalities: formData.deliverables,
-        exclusions: formData.exclusions,
-        portfolio_rights: formData.portfolioRights,
-        transfer_after_payment: formData.transferAfterPayment,
-        termination_penalty: formData.terminationPenalty,
-        include_maintenance: formData.hasMaintenance,
-        maintenance_value: formData.hasMaintenance ? parseFloat(formData.maintenanceValue) || 0 : null,
-        additional_clauses: formData.additionalClauses,
-        contract_text: contractText,
-        contract_generated_at: new Date().toISOString(),
-        status: 'completed',
-        created_by_user_id: user?.id,
+        owner_user_id: user.id,
+        client_name: formData.contractorName || 'Cliente',
+        project_type: projectType,
+        value: parseFloat(formData.serviceValue) || 0,
+        recurrence_type: formData.hasMaintenance ? 'Mensal' : 'Único',
+        recurrence_value_monthly: formData.hasMaintenance ? parseFloat(formData.maintenanceValue) || 0 : 0,
+        status: 'Rascunho', // Começa como rascunho
+        start_date: new Date().toISOString().split('T')[0],
+        is_demo: false, // Contrato real, não demo
       }).select().single();
 
       if (error) throw error;
@@ -432,8 +430,8 @@ ${formData.contractorDocument}
       await supabase.from('activity_logs').insert({
         workspace_id: workspace.id,
         type: 'CONTRACT_GENERATED',
-        message: `Contrato "${formData.projectName}" gerado`,
-        entity_type: 'solution_contract',
+        message: `Contrato "${formData.projectName}" gerado para ${formData.contractorName}`,
+        entity_type: 'demo_contract',
         entity_id: inserted?.id,
       });
 

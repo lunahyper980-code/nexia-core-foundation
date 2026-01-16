@@ -92,20 +92,21 @@ export function useRevenueMetrics(period: 7 | 30) {
     }
 
     // ============================================
-    // USUÁRIO COMUM: Lógica baseada em contratos ASSINADOS reais
+    // USUÁRIO COMUM: Lógica baseada em contratos ATIVOS reais
     // ============================================
     
-    // Filtrar apenas contratos ASSINADOS
-    const signedContracts = contracts.filter(c => c.status === 'Assinado');
+    // Filtrar apenas contratos ATIVOS (status: Ativo ou Assinado)
+    const activeStatuses = ['Ativo', 'Assinado'];
+    const activeContracts = contracts.filter(c => activeStatuses.includes(c.status));
 
-    // Contratos assinados no período atual (baseado em start_date ou created_at)
-    const contractsInCurrentPeriod = signedContracts.filter(c => {
+    // Contratos ativos no período atual (baseado em start_date ou created_at)
+    const contractsInCurrentPeriod = activeContracts.filter(c => {
       const contractDate = new Date(c.start_date || c.created_at);
       return contractDate >= periodStart && contractDate <= now;
     });
 
-    // Contratos assinados no período anterior
-    const contractsInPreviousPeriod = signedContracts.filter(c => {
+    // Contratos ativos no período anterior
+    const contractsInPreviousPeriod = activeContracts.filter(c => {
       const contractDate = new Date(c.start_date || c.created_at);
       return contractDate >= previousPeriodStart && contractDate < periodStart;
     });

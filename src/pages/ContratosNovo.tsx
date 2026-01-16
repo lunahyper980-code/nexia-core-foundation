@@ -52,6 +52,8 @@ import {
   Send,
   RotateCcw,
   XCircle,
+  PlayCircle,
+  PauseCircle,
 } from 'lucide-react';
 import { useContractsMetrics, DemoContract } from '@/hooks/useContractsMetrics';
 import { NexiaLoader } from '@/components/ui/nexia-loader';
@@ -63,12 +65,11 @@ import { ptBR } from 'date-fns/locale';
 import { useNavigate } from 'react-router-dom';
 
 const statusConfig: Record<string, { label: string; variant: 'default' | 'secondary' | 'destructive' | 'outline' }> = {
-  'Assinado': { label: 'Assinado', variant: 'default' },
   'Ativo': { label: 'Ativo', variant: 'default' },
-  'Pendente': { label: 'Pendente', variant: 'secondary' },
+  'Assinado': { label: 'Assinado', variant: 'default' },
   'Enviado': { label: 'Enviado', variant: 'outline' },
   'Rascunho': { label: 'Rascunho', variant: 'outline' },
-  'Em renovação': { label: 'Em renovação', variant: 'outline' },
+  'Pausado': { label: 'Pausado', variant: 'secondary' },
   'Cancelado': { label: 'Cancelado', variant: 'destructive' },
 };
 
@@ -193,7 +194,7 @@ export default function ContratosNovo() {
                     {formatCurrency(displayMetrics.totalRecurrence)}
                   </p>
                   <p className="text-xs text-muted-foreground/70 mt-0.5">
-                    de contratos assinados
+                    de contratos ativos
                   </p>
                 </div>
                 <div className="p-2.5 rounded-lg bg-primary/10">
@@ -212,7 +213,7 @@ export default function ContratosNovo() {
                     {displayMetrics.activeContracts}
                   </p>
                   <p className="text-xs text-muted-foreground/70 mt-0.5">
-                    status: Assinado
+                    status: Ativo ou Assinado
                   </p>
                 </div>
                 <div className="p-2.5 rounded-lg bg-success/10">
@@ -260,11 +261,11 @@ export default function ContratosNovo() {
               </SelectTrigger>
               <SelectContent>
                 <SelectItem value="all">Todos os Status</SelectItem>
+                <SelectItem value="Ativo">Ativo</SelectItem>
                 <SelectItem value="Assinado">Assinado</SelectItem>
-                <SelectItem value="Pendente">Pendente</SelectItem>
                 <SelectItem value="Enviado">Enviado</SelectItem>
                 <SelectItem value="Rascunho">Rascunho</SelectItem>
-                <SelectItem value="Em renovação">Em renovação</SelectItem>
+                <SelectItem value="Pausado">Pausado</SelectItem>
                 <SelectItem value="Cancelado">Cancelado</SelectItem>
               </SelectContent>
             </Select>
@@ -361,14 +362,6 @@ export default function ContratosNovo() {
                               
                               {/* Status Change Actions */}
                               <DropdownMenuItem 
-                                onClick={() => handleStatusChange(contract.id, 'Assinado')}
-                                disabled={contract.status === 'Assinado' || isLocalContract(contract.id)}
-                              >
-                                <CheckCircle className="h-4 w-4 mr-2 text-emerald-500" />
-                                Marcar como Assinado
-                              </DropdownMenuItem>
-                              
-                              <DropdownMenuItem 
                                 onClick={() => handleStatusChange(contract.id, 'Enviado')}
                                 disabled={contract.status === 'Enviado' || isLocalContract(contract.id)}
                               >
@@ -377,19 +370,27 @@ export default function ContratosNovo() {
                               </DropdownMenuItem>
                               
                               <DropdownMenuItem 
-                                onClick={() => handleStatusChange(contract.id, 'Pendente')}
-                                disabled={contract.status === 'Pendente' || isLocalContract(contract.id)}
+                                onClick={() => handleStatusChange(contract.id, 'Assinado')}
+                                disabled={contract.status === 'Assinado' || isLocalContract(contract.id)}
                               >
-                                <Clock className="h-4 w-4 mr-2 text-yellow-500" />
-                                Marcar como Pendente
+                                <CheckCircle className="h-4 w-4 mr-2 text-emerald-500" />
+                                Marcar como Assinado
                               </DropdownMenuItem>
                               
                               <DropdownMenuItem 
-                                onClick={() => handleStatusChange(contract.id, 'Em renovação')}
-                                disabled={contract.status === 'Em renovação' || isLocalContract(contract.id)}
+                                onClick={() => handleStatusChange(contract.id, 'Ativo')}
+                                disabled={contract.status === 'Ativo' || isLocalContract(contract.id)}
                               >
-                                <RotateCcw className="h-4 w-4 mr-2 text-purple-500" />
-                                Marcar como Em renovação
+                                <PlayCircle className="h-4 w-4 mr-2 text-green-500" />
+                                Ativar Recorrência
+                              </DropdownMenuItem>
+                              
+                              <DropdownMenuItem 
+                                onClick={() => handleStatusChange(contract.id, 'Pausado')}
+                                disabled={contract.status === 'Pausado' || isLocalContract(contract.id)}
+                              >
+                                <PauseCircle className="h-4 w-4 mr-2 text-yellow-500" />
+                                Pausar Recorrência
                               </DropdownMenuItem>
                               
                               <DropdownMenuItem 
