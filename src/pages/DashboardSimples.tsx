@@ -81,9 +81,8 @@ export default function DashboardSimples() {
     enabled: !!workspace?.id,
   });
 
-  // Generate chart data (simulated evolution based on metrics)
-  // Use fixed value for admin demo
-  const chartBaseValue = isAdminOrOwner ? 50493 : (ownerMetrics.totalPipelineValue || 10000);
+  // Generate chart data baseado nos contratos reais
+  const chartBaseValue = contractMetrics.totalValue || ownerMetrics.totalPipelineValue || 10000;
   
   const chartData = useMemo(() => {
     const days = 30;
@@ -130,18 +129,11 @@ export default function DashboardSimples() {
     }).format(value);
   };
 
-  // Valores fixos para Admin (consistentes com contratos)
-  const isAdmin = isAdminOrOwner;
-  
-  // Fixed values for admin demo - exactly matching requirements
-  const ADMIN_FIXED_REVENUE = 50493;
-  const ADMIN_FIXED_RECURRENCE = 7574;
-  const ADMIN_FIXED_COMMISSION = 3475;
-
-  // Use fixed values for admin, real values for regular users
-  const totalRevenue = isAdmin ? ADMIN_FIXED_REVENUE : (ownerMetrics.totalPipelineValue || 0);
-  const monthlyRecurrence = isAdmin ? ADMIN_FIXED_RECURRENCE : (contractMetrics.totalRecurrence || Math.round(ownerMetrics.totalPipelineValue * 0.15));
-  const commission = isAdmin ? ADMIN_FIXED_COMMISSION : Math.round((teamData?.stats.totalVolume || 0) * 0.1);
+  // Valores calculados dinamicamente a partir dos contratos
+  // Não usar valores fixos - pegar do hook de contratos para consistência
+  const totalRevenue = ownerMetrics.totalPipelineValue || contractMetrics.totalValue || 0;
+  const monthlyRecurrence = contractMetrics.totalRecurrence || 0;
+  const commission = Math.round((teamData?.stats.totalVolume || monthlyRecurrence) * 0.1);
 
   const quickActions = [
     {
