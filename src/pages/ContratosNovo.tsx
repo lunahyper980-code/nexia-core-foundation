@@ -55,9 +55,120 @@ import { toast } from 'sonner';
 import { useMutation, useQueryClient } from '@tanstack/react-query';
 import { format } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
+import { useNavigate } from 'react-router-dom';
+
+// Mock contracts for demo display when database is empty
+const MOCK_CONTRACTS: DemoContract[] = [
+  {
+    id: 'mock-1',
+    owner_user_id: '',
+    workspace_id: '',
+    client_name: 'Restaurante Sabor & Arte',
+    project_type: 'Site',
+    value: 1497,
+    recurrence_type: 'Único',
+    recurrence_value_monthly: 0,
+    status: 'Assinado',
+    start_date: new Date().toISOString(),
+    is_demo: true,
+    created_at: new Date().toISOString(),
+    updated_at: new Date().toISOString(),
+  },
+  {
+    id: 'mock-2',
+    owner_user_id: '',
+    workspace_id: '',
+    client_name: 'Clínica Vida Saudável',
+    project_type: 'App',
+    value: 2997,
+    recurrence_type: 'Único',
+    recurrence_value_monthly: 0,
+    status: 'Assinado',
+    start_date: new Date().toISOString(),
+    is_demo: true,
+    created_at: new Date().toISOString(),
+    updated_at: new Date().toISOString(),
+  },
+  {
+    id: 'mock-3',
+    owner_user_id: '',
+    workspace_id: '',
+    client_name: 'Studio Pilates Equilíbrio',
+    project_type: 'Site',
+    value: 297,
+    recurrence_type: 'Mensal',
+    recurrence_value_monthly: 297,
+    status: 'Ativo',
+    start_date: new Date().toISOString(),
+    is_demo: true,
+    created_at: new Date().toISOString(),
+    updated_at: new Date().toISOString(),
+  },
+  {
+    id: 'mock-4',
+    owner_user_id: '',
+    workspace_id: '',
+    client_name: 'Advocacia Silva & Associados',
+    project_type: 'Landing Page',
+    value: 497,
+    recurrence_type: 'Mensal',
+    recurrence_value_monthly: 497,
+    status: 'Ativo',
+    start_date: new Date().toISOString(),
+    is_demo: true,
+    created_at: new Date().toISOString(),
+    updated_at: new Date().toISOString(),
+  },
+  {
+    id: 'mock-5',
+    owner_user_id: '',
+    workspace_id: '',
+    client_name: 'Pet Shop Amigo Fiel',
+    project_type: 'App',
+    value: 1997,
+    recurrence_type: 'Único',
+    recurrence_value_monthly: 0,
+    status: 'Assinado',
+    start_date: new Date().toISOString(),
+    is_demo: true,
+    created_at: new Date().toISOString(),
+    updated_at: new Date().toISOString(),
+  },
+  {
+    id: 'mock-6',
+    owner_user_id: '',
+    workspace_id: '',
+    client_name: 'Imobiliária Lar Doce Lar',
+    project_type: 'Site',
+    value: 397,
+    recurrence_type: 'Mensal',
+    recurrence_value_monthly: 397,
+    status: 'Ativo',
+    start_date: new Date().toISOString(),
+    is_demo: true,
+    created_at: new Date().toISOString(),
+    updated_at: new Date().toISOString(),
+  },
+  {
+    id: 'mock-7',
+    owner_user_id: '',
+    workspace_id: '',
+    client_name: 'Academia Força Total',
+    project_type: 'App',
+    value: 2497,
+    recurrence_type: 'Único',
+    recurrence_value_monthly: 0,
+    status: 'Assinado',
+    start_date: new Date().toISOString(),
+    is_demo: true,
+    created_at: new Date().toISOString(),
+    updated_at: new Date().toISOString(),
+  },
+];
 
 const statusConfig: Record<string, { label: string; variant: 'default' | 'secondary' | 'destructive' }> = {
   'Assinado': { label: 'Assinado', variant: 'default' },
+  'Ativo': { label: 'Ativo', variant: 'default' },
   'Pendente': { label: 'Pendente', variant: 'secondary' },
   'Cancelado': { label: 'Cancelado', variant: 'destructive' },
 };
@@ -65,12 +176,31 @@ const statusConfig: Record<string, { label: string; variant: 'default' | 'second
 const projectTypes = ['Site', 'App', 'Landing Page', 'E-commerce', 'App Delivery', 'Sistema'];
 
 export default function ContratosNovo() {
-  const { contracts, metrics, loading, refetch } = useContractsMetrics();
+  const { contracts: dbContracts, metrics: dbMetrics, loading, refetch } = useContractsMetrics();
+  const navigate = useNavigate();
   const [searchQuery, setSearchQuery] = useState('');
   const [statusFilter, setStatusFilter] = useState<string>('all');
   const [typeFilter, setTypeFilter] = useState<string>('all');
   const [deleteId, setDeleteId] = useState<string | null>(null);
   const [viewContract, setViewContract] = useState<DemoContract | null>(null);
+
+  // Use database contracts if available, otherwise use mock data for demo
+  const contracts = dbContracts.length > 0 ? dbContracts : MOCK_CONTRACTS;
+  const isMockData = dbContracts.length === 0;
+
+  // Calculate metrics from displayed contracts
+  const metrics = isMockData ? {
+    totalRecurrence: MOCK_CONTRACTS.filter(c => c.status === 'Ativo' || c.status === 'Assinado')
+      .reduce((sum, c) => sum + c.recurrence_value_monthly, 0),
+    activeContracts: MOCK_CONTRACTS.filter(c => c.status === 'Ativo' || c.status === 'Assinado').length,
+    averageTicket: Math.round(
+      MOCK_CONTRACTS.filter(c => c.status === 'Ativo' || c.status === 'Assinado')
+        .reduce((sum, c) => sum + c.value, 0) / 
+      MOCK_CONTRACTS.filter(c => c.status === 'Ativo' || c.status === 'Assinado').length
+    ),
+    totalValue: MOCK_CONTRACTS.filter(c => c.status === 'Ativo' || c.status === 'Assinado')
+      .reduce((sum, c) => sum + c.value, 0),
+  } : dbMetrics;
 
   // Delete mutation
   const deleteMutation = useMutation({
@@ -131,7 +261,10 @@ export default function ContratosNovo() {
               Gerencie seus contratos e sua recorrência.
             </p>
           </div>
-          <Button className="gap-2" disabled>
+          <Button 
+            className="gap-2" 
+            onClick={() => navigate('/solucoes/contrato')}
+          >
             <Plus className="h-4 w-4" />
             Novo Contrato
           </Button>
@@ -216,6 +349,7 @@ export default function ContratosNovo() {
               <SelectContent>
                 <SelectItem value="all">Todos os Status</SelectItem>
                 <SelectItem value="Assinado">Assinado</SelectItem>
+                <SelectItem value="Ativo">Ativo</SelectItem>
                 <SelectItem value="Pendente">Pendente</SelectItem>
                 <SelectItem value="Cancelado">Cancelado</SelectItem>
               </SelectContent>
