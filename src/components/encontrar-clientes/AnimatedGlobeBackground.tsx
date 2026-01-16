@@ -38,8 +38,8 @@ export function AnimatedGlobeBackground() {
 
     canvas.addEventListener('mousemove', handleMouseMove);
 
-    // Globe parameters
-    const globeRadius = Math.min(width, height) * 0.35;
+    // Globe parameters - MASSIVE globe that dominates the viewport
+    const globeRadius = Math.min(width, height) * 0.55;
     const numPoints = 2000;
     const points: { phi: number; theta: number; size: number }[] = [];
     const connections: { from: number; to: number }[] = [];
