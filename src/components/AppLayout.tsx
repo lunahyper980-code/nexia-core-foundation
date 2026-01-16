@@ -11,9 +11,10 @@ import { cn } from '@/lib/utils';
 interface AppLayoutProps {
   children: ReactNode;
   title: string;
+  hideBreadcrumb?: boolean;
 }
 
-export function AppLayout({ children, title }: AppLayoutProps) {
+export function AppLayout({ children, title, hideBreadcrumb = false }: AppLayoutProps) {
   const { collapsed } = useSidebarState();
   const breakpoint = useBreakpoint();
   const [mobileDrawerOpen, setMobileDrawerOpen] = useState(false);
@@ -62,7 +63,7 @@ export function AppLayout({ children, title }: AppLayoutProps) {
           isMobile ? 'px-4 py-2' : isTablet ? 'px-6 py-2' : 'px-10 py-3'
         )}>
           {/* Global Breadcrumb */}
-          <GlobalBreadcrumb />
+          {!hideBreadcrumb && <GlobalBreadcrumb />}
           
           {children}
         </div>
