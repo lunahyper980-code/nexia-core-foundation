@@ -476,6 +476,62 @@ export type Database = {
           },
         ]
       }
+      demo_contracts: {
+        Row: {
+          client_name: string
+          created_at: string
+          id: string
+          is_demo: boolean
+          owner_user_id: string
+          project_type: string
+          recurrence_type: string
+          recurrence_value_monthly: number
+          start_date: string | null
+          status: string
+          updated_at: string
+          value: number
+          workspace_id: string
+        }
+        Insert: {
+          client_name: string
+          created_at?: string
+          id?: string
+          is_demo?: boolean
+          owner_user_id: string
+          project_type: string
+          recurrence_type: string
+          recurrence_value_monthly?: number
+          start_date?: string | null
+          status?: string
+          updated_at?: string
+          value?: number
+          workspace_id: string
+        }
+        Update: {
+          client_name?: string
+          created_at?: string
+          id?: string
+          is_demo?: boolean
+          owner_user_id?: string
+          project_type?: string
+          recurrence_type?: string
+          recurrence_value_monthly?: number
+          start_date?: string | null
+          status?: string
+          updated_at?: string
+          value?: number
+          workspace_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "demo_contracts_workspace_id_fkey"
+            columns: ["workspace_id"]
+            isOneToOne: false
+            referencedRelation: "workspaces"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       digital_diagnoses: {
         Row: {
           city_state: string | null
