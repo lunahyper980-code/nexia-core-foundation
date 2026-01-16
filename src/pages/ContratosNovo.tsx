@@ -385,14 +385,22 @@ export default function ContratosNovo() {
                               
                               <DropdownMenuSeparator />
                               
-                              <DropdownMenuItem disabled>
-                                <Download className="h-4 w-4 mr-2" />
-                                Baixar PDF
-                              </DropdownMenuItem>
-                              
-                              <DropdownMenuItem disabled>
+                              {/* Editar: habilitado apenas se status = Pendente (rascunho/enviado na UI) */}
+                              <DropdownMenuItem 
+                                onClick={() => navigate(`/contratos/novo?edit=${contract.id}`)}
+                                disabled={contract.status !== 'Pendente' || isLocalContract(contract.id)}
+                              >
                                 <Pencil className="h-4 w-4 mr-2" />
                                 Editar
+                              </DropdownMenuItem>
+                              
+                              {/* Baixar PDF: habilitado apenas se status = Assinado */}
+                              <DropdownMenuItem 
+                                onClick={() => toast.info('Funcionalidade de PDF em desenvolvimento')}
+                                disabled={contract.status !== 'Assinado' || isLocalContract(contract.id)}
+                              >
+                                <Download className="h-4 w-4 mr-2" />
+                                Baixar PDF
                               </DropdownMenuItem>
                               
                               <DropdownMenuItem
