@@ -57,123 +57,239 @@ import { format } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
 import { useNavigate } from 'react-router-dom';
 
-// Mock contracts for demo display when database is empty
+// 14 contratos fictícios para ADMIN com recorrência total ASSINADOS = R$ 7.574
+// 9 Assinados, 3 Pendentes, 2 Em renovação
+// Recorrências assinados: 997 + 1197 + 1347 + 497 + 897 + 647 + 997 + 497 + 498 = 7574
 const MOCK_CONTRACTS: DemoContract[] = [
+  // Assinados (9) - soma recorrência = R$ 7.574
   {
     id: 'mock-1',
     owner_user_id: '',
     workspace_id: '',
-    client_name: 'Restaurante Sabor & Arte',
-    project_type: 'Site',
-    value: 1497,
-    recurrence_type: 'Único',
-    recurrence_value_monthly: 0,
+    client_name: 'Restaurante Sabor da Terra',
+    project_type: 'Site Institucional',
+    value: 4980,
+    recurrence_type: 'Mensal',
+    recurrence_value_monthly: 997,
     status: 'Assinado',
-    start_date: new Date().toISOString(),
+    start_date: new Date(Date.now() - 45 * 24 * 60 * 60 * 1000).toISOString(),
     is_demo: true,
-    created_at: new Date().toISOString(),
+    created_at: new Date(Date.now() - 45 * 24 * 60 * 60 * 1000).toISOString(),
     updated_at: new Date().toISOString(),
   },
   {
     id: 'mock-2',
     owner_user_id: '',
     workspace_id: '',
-    client_name: 'Clínica Vida Saudável',
-    project_type: 'App',
-    value: 2997,
-    recurrence_type: 'Único',
-    recurrence_value_monthly: 0,
+    client_name: 'Clínica Bem Estar',
+    project_type: 'Site Institucional',
+    value: 5850,
+    recurrence_type: 'Mensal',
+    recurrence_value_monthly: 1197,
     status: 'Assinado',
-    start_date: new Date().toISOString(),
+    start_date: new Date(Date.now() - 38 * 24 * 60 * 60 * 1000).toISOString(),
     is_demo: true,
-    created_at: new Date().toISOString(),
+    created_at: new Date(Date.now() - 38 * 24 * 60 * 60 * 1000).toISOString(),
     updated_at: new Date().toISOString(),
   },
   {
     id: 'mock-3',
     owner_user_id: '',
     workspace_id: '',
-    client_name: 'Studio Pilates Equilíbrio',
-    project_type: 'Site',
-    value: 297,
+    client_name: 'Delivery Express Centro',
+    project_type: 'App Delivery',
+    value: 6800,
     recurrence_type: 'Mensal',
-    recurrence_value_monthly: 297,
-    status: 'Ativo',
-    start_date: new Date().toISOString(),
+    recurrence_value_monthly: 1347,
+    status: 'Assinado',
+    start_date: new Date(Date.now() - 30 * 24 * 60 * 60 * 1000).toISOString(),
     is_demo: true,
-    created_at: new Date().toISOString(),
+    created_at: new Date(Date.now() - 30 * 24 * 60 * 60 * 1000).toISOString(),
     updated_at: new Date().toISOString(),
   },
   {
     id: 'mock-4',
     owner_user_id: '',
     workspace_id: '',
-    client_name: 'Advocacia Silva & Associados',
+    client_name: 'Imobiliária Lar & Vida',
     project_type: 'Landing Page',
-    value: 497,
+    value: 2480,
     recurrence_type: 'Mensal',
     recurrence_value_monthly: 497,
-    status: 'Ativo',
-    start_date: new Date().toISOString(),
+    status: 'Assinado',
+    start_date: new Date(Date.now() - 25 * 24 * 60 * 60 * 1000).toISOString(),
     is_demo: true,
-    created_at: new Date().toISOString(),
+    created_at: new Date(Date.now() - 25 * 24 * 60 * 60 * 1000).toISOString(),
     updated_at: new Date().toISOString(),
   },
   {
     id: 'mock-5',
     owner_user_id: '',
     workspace_id: '',
-    client_name: 'Pet Shop Amigo Fiel',
-    project_type: 'App',
-    value: 1997,
-    recurrence_type: 'Único',
-    recurrence_value_monthly: 0,
+    client_name: 'Loja Moda Elegante',
+    project_type: 'E-commerce',
+    value: 4650,
+    recurrence_type: 'Mensal',
+    recurrence_value_monthly: 897,
     status: 'Assinado',
-    start_date: new Date().toISOString(),
+    start_date: new Date(Date.now() - 20 * 24 * 60 * 60 * 1000).toISOString(),
     is_demo: true,
-    created_at: new Date().toISOString(),
+    created_at: new Date(Date.now() - 20 * 24 * 60 * 60 * 1000).toISOString(),
     updated_at: new Date().toISOString(),
   },
   {
     id: 'mock-6',
     owner_user_id: '',
     workspace_id: '',
-    client_name: 'Imobiliária Lar Doce Lar',
-    project_type: 'Site',
-    value: 397,
+    client_name: 'Advocacia Mendes & Silva',
+    project_type: 'Site Institucional',
+    value: 3290,
     recurrence_type: 'Mensal',
-    recurrence_value_monthly: 397,
-    status: 'Ativo',
-    start_date: new Date().toISOString(),
+    recurrence_value_monthly: 647,
+    status: 'Assinado',
+    start_date: new Date(Date.now() - 15 * 24 * 60 * 60 * 1000).toISOString(),
     is_demo: true,
-    created_at: new Date().toISOString(),
+    created_at: new Date(Date.now() - 15 * 24 * 60 * 60 * 1000).toISOString(),
     updated_at: new Date().toISOString(),
   },
   {
     id: 'mock-7',
     owner_user_id: '',
     workspace_id: '',
-    client_name: 'Academia Força Total',
-    project_type: 'App',
-    value: 2497,
-    recurrence_type: 'Único',
-    recurrence_value_monthly: 0,
+    client_name: 'Pizzaria Forno a Lenha',
+    project_type: 'App Delivery',
+    value: 4980,
+    recurrence_type: 'Mensal',
+    recurrence_value_monthly: 997,
     status: 'Assinado',
-    start_date: new Date().toISOString(),
+    start_date: new Date(Date.now() - 12 * 24 * 60 * 60 * 1000).toISOString(),
     is_demo: true,
-    created_at: new Date().toISOString(),
+    created_at: new Date(Date.now() - 12 * 24 * 60 * 60 * 1000).toISOString(),
+    updated_at: new Date().toISOString(),
+  },
+  {
+    id: 'mock-8',
+    owner_user_id: '',
+    workspace_id: '',
+    client_name: 'Studio Beleza Pura',
+    project_type: 'Landing Page',
+    value: 2480,
+    recurrence_type: 'Mensal',
+    recurrence_value_monthly: 497,
+    status: 'Assinado',
+    start_date: new Date(Date.now() - 8 * 24 * 60 * 60 * 1000).toISOString(),
+    is_demo: true,
+    created_at: new Date(Date.now() - 8 * 24 * 60 * 60 * 1000).toISOString(),
+    updated_at: new Date().toISOString(),
+  },
+  {
+    id: 'mock-9',
+    owner_user_id: '',
+    workspace_id: '',
+    client_name: 'Mercado Orgânico Verde',
+    project_type: 'E-commerce',
+    value: 2490,
+    recurrence_type: 'Mensal',
+    recurrence_value_monthly: 498,
+    status: 'Assinado',
+    start_date: new Date(Date.now() - 5 * 24 * 60 * 60 * 1000).toISOString(),
+    is_demo: true,
+    created_at: new Date(Date.now() - 5 * 24 * 60 * 60 * 1000).toISOString(),
+    updated_at: new Date().toISOString(),
+  },
+  // Pendentes (3)
+  {
+    id: 'mock-10',
+    owner_user_id: '',
+    workspace_id: '',
+    client_name: 'Academia Corpo em Forma',
+    project_type: 'App Delivery',
+    value: 5100,
+    recurrence_type: 'Mensal',
+    recurrence_value_monthly: 897,
+    status: 'Pendente',
+    start_date: new Date(Date.now() - 3 * 24 * 60 * 60 * 1000).toISOString(),
+    is_demo: true,
+    created_at: new Date(Date.now() - 3 * 24 * 60 * 60 * 1000).toISOString(),
+    updated_at: new Date().toISOString(),
+  },
+  {
+    id: 'mock-11',
+    owner_user_id: '',
+    workspace_id: '',
+    client_name: 'Consultório Dr. Almeida',
+    project_type: 'Site Institucional',
+    value: 3080,
+    recurrence_type: 'Mensal',
+    recurrence_value_monthly: 597,
+    status: 'Pendente',
+    start_date: new Date(Date.now() - 2 * 24 * 60 * 60 * 1000).toISOString(),
+    is_demo: true,
+    created_at: new Date(Date.now() - 2 * 24 * 60 * 60 * 1000).toISOString(),
+    updated_at: new Date().toISOString(),
+  },
+  {
+    id: 'mock-12',
+    owner_user_id: '',
+    workspace_id: '',
+    client_name: 'Petshop Amigo Animal',
+    project_type: 'E-commerce',
+    value: 3420,
+    recurrence_type: 'Mensal',
+    recurrence_value_monthly: 697,
+    status: 'Pendente',
+    start_date: new Date(Date.now() - 1 * 24 * 60 * 60 * 1000).toISOString(),
+    is_demo: true,
+    created_at: new Date(Date.now() - 1 * 24 * 60 * 60 * 1000).toISOString(),
+    updated_at: new Date().toISOString(),
+  },
+  // Em renovação (2)
+  {
+    id: 'mock-13',
+    owner_user_id: '',
+    workspace_id: '',
+    client_name: 'Escola de Idiomas Global',
+    project_type: 'Landing Page',
+    value: 1950,
+    recurrence_type: 'Mensal',
+    recurrence_value_monthly: 397,
+    status: 'Em renovação',
+    start_date: new Date(Date.now() - 365 * 24 * 60 * 60 * 1000).toISOString(),
+    is_demo: true,
+    created_at: new Date(Date.now() - 365 * 24 * 60 * 60 * 1000).toISOString(),
+    updated_at: new Date().toISOString(),
+  },
+  {
+    id: 'mock-14',
+    owner_user_id: '',
+    workspace_id: '',
+    client_name: 'Construtora Nova Era',
+    project_type: 'Site Institucional',
+    value: 3200,
+    recurrence_type: 'Mensal',
+    recurrence_value_monthly: 647,
+    status: 'Em renovação',
+    start_date: new Date(Date.now() - 380 * 24 * 60 * 60 * 1000).toISOString(),
+    is_demo: true,
+    created_at: new Date(Date.now() - 380 * 24 * 60 * 60 * 1000).toISOString(),
     updated_at: new Date().toISOString(),
   },
 ];
 
-const statusConfig: Record<string, { label: string; variant: 'default' | 'secondary' | 'destructive' }> = {
+// Valores fixos para o Dashboard Admin
+const ADMIN_FIXED_RECURRENCE = 7574;
+const ADMIN_FIXED_REVENUE = 50493;
+const ADMIN_FIXED_COMMISSION = 3475;
+
+const statusConfig: Record<string, { label: string; variant: 'default' | 'secondary' | 'destructive' | 'outline' }> = {
   'Assinado': { label: 'Assinado', variant: 'default' },
   'Ativo': { label: 'Ativo', variant: 'default' },
   'Pendente': { label: 'Pendente', variant: 'secondary' },
+  'Em renovação': { label: 'Em renovação', variant: 'outline' },
   'Cancelado': { label: 'Cancelado', variant: 'destructive' },
 };
 
-const projectTypes = ['Site', 'App', 'Landing Page', 'E-commerce', 'App Delivery', 'Sistema'];
+const projectTypes = ['Site Institucional', 'Landing Page', 'E-commerce', 'App Delivery', 'App', 'Sistema'];
 
 export default function ContratosNovo() {
   const { contracts: dbContracts, metrics: dbMetrics, loading, refetch } = useContractsMetrics();
@@ -188,17 +304,16 @@ export default function ContratosNovo() {
   const contracts = dbContracts.length > 0 ? dbContracts : MOCK_CONTRACTS;
   const isMockData = dbContracts.length === 0;
 
-  // Calculate metrics from displayed contracts
+  // Calculate metrics from displayed contracts - use fixed value for admin demo
   const metrics = isMockData ? {
-    totalRecurrence: MOCK_CONTRACTS.filter(c => c.status === 'Ativo' || c.status === 'Assinado')
-      .reduce((sum, c) => sum + c.recurrence_value_monthly, 0),
-    activeContracts: MOCK_CONTRACTS.filter(c => c.status === 'Ativo' || c.status === 'Assinado').length,
+    totalRecurrence: ADMIN_FIXED_RECURRENCE,
+    activeContracts: MOCK_CONTRACTS.filter(c => c.status === 'Assinado').length,
     averageTicket: Math.round(
-      MOCK_CONTRACTS.filter(c => c.status === 'Ativo' || c.status === 'Assinado')
+      MOCK_CONTRACTS.filter(c => c.status === 'Assinado')
         .reduce((sum, c) => sum + c.value, 0) / 
-      MOCK_CONTRACTS.filter(c => c.status === 'Ativo' || c.status === 'Assinado').length
+      MOCK_CONTRACTS.filter(c => c.status === 'Assinado').length
     ),
-    totalValue: MOCK_CONTRACTS.filter(c => c.status === 'Ativo' || c.status === 'Assinado')
+    totalValue: MOCK_CONTRACTS.filter(c => c.status === 'Assinado')
       .reduce((sum, c) => sum + c.value, 0),
   } : dbMetrics;
 
@@ -349,8 +464,8 @@ export default function ContratosNovo() {
               <SelectContent>
                 <SelectItem value="all">Todos os Status</SelectItem>
                 <SelectItem value="Assinado">Assinado</SelectItem>
-                <SelectItem value="Ativo">Ativo</SelectItem>
                 <SelectItem value="Pendente">Pendente</SelectItem>
+                <SelectItem value="Em renovação">Em renovação</SelectItem>
                 <SelectItem value="Cancelado">Cancelado</SelectItem>
               </SelectContent>
             </Select>
