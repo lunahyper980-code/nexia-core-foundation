@@ -2,6 +2,7 @@ import { NavLink, useLocation } from 'react-router-dom';
 import { cn } from '@/lib/utils';
 import { useSidebarState } from '@/contexts/SidebarContext';
 import { useUserRole } from '@/contexts/UserRoleContext';
+import { useUserMode } from '@/contexts/UserModeContext';
 import {
   LayoutDashboard,
   Layers,
@@ -17,6 +18,10 @@ import {
   Search,
   GraduationCap,
   UsersRound,
+  Smartphone,
+  FolderOpen,
+  FileText,
+  Coins,
 } from 'lucide-react';
 import logoNexia from '@/assets/logo-nexia.png';
 import { Tooltip, TooltipContent, TooltipTrigger } from '@/components/ui/tooltip';
@@ -31,21 +36,36 @@ interface NavItem {
   icon: LucideIcon;
   badge?: string;
   adminOnly?: boolean;
+  mode?: 'simple' | 'advanced' | 'both';
 }
 
-const baseNavItems: NavItem[] = [
-  { label: 'Dashboard', path: '/dashboard', icon: LayoutDashboard },
-  { label: 'Encontrar Clientes', path: '/encontrar-clientes', icon: Search },
-  { label: 'Diagnóstico', path: '/nexia-ai', icon: Brain, badge: 'avançado' },
-  { label: 'Vendas', path: '/vendas', icon: Briefcase },
-  { label: 'Clientes', path: '/clientes', icon: Users },
-  { label: 'Soluções Digitais', path: '/solucoes', icon: Layers },
-  { label: 'Entrega', path: '/entrega', icon: Package },
-  { label: 'Identidade', path: '/identidade', icon: Fingerprint },
-  { label: 'Histórico / Atividade', path: '/historico', icon: History },
-  { label: 'Academy / Ajuda', path: '/academy', icon: GraduationCap },
-  { label: 'Minha Equipe', path: '/admin/equipe', icon: UsersRound, adminOnly: true },
-  { label: 'Configurações', path: '/configuracoes', icon: Settings },
+// Items for SIMPLE mode
+const simpleNavItems: NavItem[] = [
+  { label: 'Dashboard', path: '/dashboard', icon: LayoutDashboard, mode: 'simple' },
+  { label: 'Encontrar Clientes', path: '/encontrar-clientes', icon: Search, mode: 'simple' },
+  { label: 'Criar App / Site', path: '/solucoes', icon: Smartphone, mode: 'simple' },
+  { label: 'Meus Projetos', path: '/hyperbuild/projetos-lista', icon: FolderOpen, mode: 'simple' },
+  { label: 'Propostas', path: '/vendas/propostas', icon: FileText, mode: 'simple' },
+  { label: 'Clientes', path: '/clientes', icon: Users, mode: 'simple' },
+  { label: 'Créditos', path: '/creditos', icon: Coins, mode: 'simple' },
+  { label: 'Minha Equipe', path: '/admin/equipe', icon: UsersRound, adminOnly: true, mode: 'simple' },
+  { label: 'Configurações', path: '/configuracoes', icon: Settings, mode: 'simple' },
+];
+
+// Items for ADVANCED mode (current menu)
+const advancedNavItems: NavItem[] = [
+  { label: 'Dashboard', path: '/dashboard', icon: LayoutDashboard, mode: 'advanced' },
+  { label: 'Encontrar Clientes', path: '/encontrar-clientes', icon: Search, mode: 'advanced' },
+  { label: 'Diagnóstico', path: '/nexia-ai', icon: Brain, badge: 'avançado', mode: 'advanced' },
+  { label: 'Vendas', path: '/vendas', icon: Briefcase, mode: 'advanced' },
+  { label: 'Clientes', path: '/clientes', icon: Users, mode: 'advanced' },
+  { label: 'Soluções Digitais', path: '/solucoes', icon: Layers, mode: 'advanced' },
+  { label: 'Entrega', path: '/entrega', icon: Package, mode: 'advanced' },
+  { label: 'Identidade', path: '/identidade', icon: Fingerprint, mode: 'advanced' },
+  { label: 'Histórico / Atividade', path: '/historico', icon: History, mode: 'advanced' },
+  { label: 'Academy / Ajuda', path: '/academy', icon: GraduationCap, mode: 'advanced' },
+  { label: 'Minha Equipe', path: '/admin/equipe', icon: UsersRound, adminOnly: true, mode: 'advanced' },
+  { label: 'Configurações', path: '/configuracoes', icon: Settings, mode: 'advanced' },
 ];
 
 interface AppSidebarProps {
@@ -55,12 +75,14 @@ interface AppSidebarProps {
 export function AppSidebar({ forceCollapsed = false }: AppSidebarProps) {
   const { collapsed, toggle, setCollapsed } = useSidebarState();
   const { isAdminOrOwner } = useUserRole();
+  const { mode } = useUserMode();
   const location = useLocation();
 
-  // Filter nav items based on user role
+  // Filter nav items based on user role and mode
   const navItems = useMemo(() => {
-    return baseNavItems.filter(item => !item.adminOnly || isAdminOrOwner);
-  }, [isAdminOrOwner]);
+    const baseItems = mode === 'simple' ? simpleNavItems : advancedNavItems;
+    return baseItems.filter(item => !item.adminOnly || isAdminOrOwner);
+  }, [isAdminOrOwner, mode]);
 
   // Force collapsed state on tablet
   useEffect(() => {

@@ -6,6 +6,7 @@ import { useActivityLogs } from '@/hooks/useActivityLogs';
 import { useOwnerMetrics } from '@/hooks/useOwnerMetrics';
 import { useRealMetrics } from '@/hooks/useRealMetrics';
 import { useUserRole } from '@/contexts/UserRoleContext';
+import { useUserMode } from '@/contexts/UserModeContext';
 import { Layers, Users, ShoppingCart, Package, ArrowRight } from 'lucide-react';
 import { NexiaLoader } from '@/components/ui/nexia-loader';
 import { formatDistanceToNow } from 'date-fns';
@@ -13,6 +14,7 @@ import { ptBR } from 'date-fns/locale';
 import { StatusOperacao } from '@/components/dashboard/StatusOperacao';
 import { AtividadeComunidade } from '@/components/dashboard/AtividadeComunidade';
 import { GraficoEvolucao } from '@/components/dashboard/GraficoEvolucao';
+import DashboardSimples from './DashboardSimples';
 
 const getActivityIcon = (type: string) => {
   switch (type) {
@@ -30,6 +32,17 @@ const getActivityIcon = (type: string) => {
 };
 
 export default function Dashboard() {
+  const { mode } = useUserMode();
+  
+  // If user is in simple mode, render the simple dashboard
+  if (mode === 'simple') {
+    return <DashboardSimples />;
+  }
+
+  return <DashboardAdvanced />;
+}
+
+function DashboardAdvanced() {
   const { clients } = useClients();
   const { logs } = useActivityLogs();
   const { isOwner, metrics: ownerMetrics } = useOwnerMetrics();

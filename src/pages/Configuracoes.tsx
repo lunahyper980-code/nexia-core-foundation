@@ -9,11 +9,13 @@ import { Badge } from '@/components/ui/badge';
 import { Switch } from '@/components/ui/switch';
 import { useAuth } from '@/contexts/AuthContext';
 import { useUserRole } from '@/contexts/UserRoleContext';
+import { useUserMode } from '@/contexts/UserModeContext';
 import { useDemoMode } from '@/contexts/DemoModeContext';
 import { supabase } from '@/integrations/supabase/client';
 import { toast } from 'sonner';
-import { User, Shield, Save, Loader2, Settings2, Cog, MonitorPlay, Users } from 'lucide-react';
+import { User, Shield, Save, Loader2, Settings2, Cog, MonitorPlay, Users, Smartphone, Building2, CheckCircle2 } from 'lucide-react';
 import { NexiaLoader } from '@/components/ui/nexia-loader';
+import { cn } from '@/lib/utils';
 
 interface Profile {
   id: string;
@@ -30,8 +32,10 @@ interface Subscription {
 export default function Configuracoes() {
   const { user } = useAuth();
   const { isAdminOrOwner, isAdmin, loading: roleLoading } = useUserRole();
+  const { mode, setMode, loading: modeLoading } = useUserMode();
   const { isDemoMode, setDemoMode } = useDemoMode();
   const navigate = useNavigate();
+  const [changingMode, setChangingMode] = useState(false);
   const [profile, setProfile] = useState<Profile | null>(null);
   const [subscription, setSubscription] = useState<Subscription | null>(null);
   const [loading, setLoading] = useState(true);
@@ -110,7 +114,22 @@ export default function Configuracoes() {
     }
   };
 
-  if (loading || roleLoading) {
+  const handleModeChange = async (newMode: 'simple' | 'advanced') => {
+    if (newMode === mode) return;
+    setChangingMode(true);
+    try {
+      await setMode(newMode);
+      toast.success('Modo alterado com sucesso.', {
+        description: newMode === 'simple' ? 'Agora você está no Modo Simples.' : 'Agora você está no Modo Avançado.',
+      });
+    } catch (error) {
+      toast.error('Erro ao alterar modo');
+    } finally {
+      setChangingMode(false);
+    }
+  };
+
+  if (loading || roleLoading || modeLoading) {
     return (
       <AppLayout title="Configurações">
         <div className="flex items-center justify-center py-12">
@@ -168,6 +187,70 @@ export default function Configuracoes() {
           </CardContent>
         </Card>
 
+        {/* Mode Selection Section */}
+        <Card className="border-primary/20">
+          <CardHeader>
+            <div className="flex items-center gap-3">
+              <div className="p-2 rounded-lg bg-primary/10">
+                <Settings2 className="h-5 w-5 text-primary" />
+              </div>
+              <div>
+                <CardTitle className="text-lg">Modo de Uso</CardTitle>
+                <CardDescription>Escolha como deseja usar o Nexia</CardDescription>
+              </div>
+            </div>
+          </CardHeader>
+          <CardContent className="space-y-3">
+            <div 
+              className={cn(
+                'flex items-center justify-between p-4 rounded-lg border-2 cursor-pointer transition-all',
+                mode === 'simple' 
+                  ? 'border-primary/50 bg-primary/5' 
+                  : 'border-foreground/10 hover:border-foreground/20'
+              )}
+              onClick={() => handleModeChange('simple')}
+            >
+              <div className="flex items-center gap-3">
+                <div className="p-2 rounded-lg bg-primary/10">
+                  <Smartphone className="h-5 w-5 text-primary" />
+                </div>
+                <div>
+                  <p className="font-medium text-foreground">Modo Simples</p>
+                  <p className="text-sm text-muted-foreground">Criar e Vender Apps & Sites</p>
+                </div>
+              </div>
+              {mode === 'simple' && <CheckCircle2 className="h-5 w-5 text-primary" />}
+            </div>
+
+            <div 
+              className={cn(
+                'flex items-center justify-between p-4 rounded-lg border-2 cursor-pointer transition-all',
+                mode === 'advanced' 
+                  ? 'border-violet-500/50 bg-violet-500/5' 
+                  : 'border-foreground/10 hover:border-foreground/20'
+              )}
+              onClick={() => handleModeChange('advanced')}
+            >
+              <div className="flex items-center gap-3">
+                <div className="p-2 rounded-lg bg-violet-500/10">
+                  <Building2 className="h-5 w-5 text-violet-500" />
+                </div>
+                <div>
+                  <p className="font-medium text-foreground">Modo Avançado</p>
+                  <p className="text-sm text-muted-foreground">Agência - Gestão completa</p>
+                </div>
+              </div>
+              {mode === 'advanced' && <CheckCircle2 className="h-5 w-5 text-violet-500" />}
+            </div>
+
+            {changingMode && (
+              <div className="flex items-center justify-center py-2">
+                <Loader2 className="h-4 w-4 animate-spin text-primary" />
+              </div>
+            )}
+          </CardContent>
+        </Card>
+
         {/* Security Section */}
         <Card>
           <CardHeader>
@@ -195,9 +278,6 @@ export default function Configuracoes() {
             </div>
           </CardContent>
         </Card>
-
-
-        {/* Admin Section - Only visible to admins/owners */}
         {isAdminOrOwner && (
           <Card className="border-primary/20">
             <CardHeader>
