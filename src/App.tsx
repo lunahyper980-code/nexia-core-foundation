@@ -31,6 +31,7 @@ import HyperBuildApp from "./pages/HyperBuildApp";
 import HyperBuildSite from "./pages/HyperBuildSite";
 import MeusProjetos from "./pages/hyperbuild/MeusProjetos";
 import Creditos from "./pages/Creditos";
+import ContratosNovo from "./pages/ContratosNovo";
 
 import ProjetoDetalhe from "./pages/hyperbuild/ProjetoDetalhe";
 import ProjetoEditar from "./pages/hyperbuild/ProjetoEditar";
@@ -201,6 +202,7 @@ const App = () => (
                   <Route path="/historico" element={<ProtectedRoute><Historico /></ProtectedRoute>} />
                   <Route path="/configuracoes" element={<ProtectedRoute><Configuracoes /></ProtectedRoute>} />
                   <Route path="/creditos" element={<ProtectedRoute><Creditos /></ProtectedRoute>} />
+                  <Route path="/contratos" element={<ProtectedRoute><ContratosNovo /></ProtectedRoute>} />
                   <Route path="/admin/equipe" element={<ProtectedRoute><MinhaEquipe /></ProtectedRoute>} />
                   <Route path="/admin/usuarios" element={<ProtectedRoute><GerenciarUsuarios /></ProtectedRoute>} />
                   <Route path="/admin/*" element={<ProtectedRoute><AdminPanel /></ProtectedRoute>} />

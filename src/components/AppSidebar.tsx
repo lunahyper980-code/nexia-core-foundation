@@ -22,6 +22,7 @@ import {
   FolderOpen,
   FileText,
   Coins,
+  FileSignature,
 } from 'lucide-react';
 import logoNexia from '@/assets/logo-nexia.png';
 import { Tooltip, TooltipContent, TooltipTrigger } from '@/components/ui/tooltip';
@@ -45,6 +46,7 @@ const simpleNavItems: NavItem[] = [
   { label: 'Encontrar Clientes', path: '/encontrar-clientes', icon: Search, mode: 'simple' },
   { label: 'Criar App / Site', path: '/solucoes', icon: Smartphone, mode: 'simple' },
   { label: 'Meus Projetos', path: '/hyperbuild/projetos-lista', icon: FolderOpen, mode: 'simple' },
+  { label: 'Contratos', path: '/contratos', icon: FileSignature, mode: 'simple' },
   { label: 'Propostas', path: '/vendas/propostas', icon: FileText, mode: 'simple' },
   { label: 'Clientes', path: '/clientes', icon: Users, mode: 'simple' },
   { label: 'Créditos', path: '/creditos', icon: Coins, mode: 'simple' },
@@ -58,6 +60,7 @@ const advancedNavItems: NavItem[] = [
   { label: 'Encontrar Clientes', path: '/encontrar-clientes', icon: Search, mode: 'advanced' },
   { label: 'Diagnóstico', path: '/nexia-ai', icon: Brain, badge: 'avançado', mode: 'advanced' },
   { label: 'Vendas', path: '/vendas', icon: Briefcase, mode: 'advanced' },
+  { label: 'Contratos', path: '/contratos', icon: FileSignature, mode: 'advanced' },
   { label: 'Clientes', path: '/clientes', icon: Users, mode: 'advanced' },
   { label: 'Soluções Digitais', path: '/solucoes', icon: Layers, mode: 'advanced' },
   { label: 'Entrega', path: '/entrega', icon: Package, mode: 'advanced' },
@@ -112,7 +115,7 @@ export function AppSidebar({ forceCollapsed = false }: AppSidebarProps) {
       </div>
 
       {/* Navigation */}
-      <nav className="flex-1 overflow-y-auto p-2.5 space-y-0.5">
+      <nav className="flex-1 overflow-y-auto p-2.5 pt-4 space-y-1.5">
         {navItems.map((item) => {
           const isActive = location.pathname === item.path || location.pathname.startsWith(item.path + '/');
           const Icon = item.icon;
