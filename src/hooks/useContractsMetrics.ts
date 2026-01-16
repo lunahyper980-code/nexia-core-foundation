@@ -4,123 +4,123 @@ import { useWorkspace } from '@/contexts/WorkspaceContext';
 import { useUserRole } from '@/contexts/UserRoleContext';
 import { useAuth } from '@/contexts/AuthContext';
 
-// 14 contratos demo para ADMIN - nomes únicos, valores únicos
-// Recorrência dos 9 Assinados = R$ 7.574 exatamente
-// 847 + 1.123 + 1.297 + 389 + 956 + 712 + 1.089 + 573 + 588 = 7.574
+// 14 contratos demo para ADMIN - nomes únicos, valores realistas
+// Recorrência dos 9 Assinados = R$ 3.223 exatamente
+// 289 + 497 + 359 + 89 + 449 + 169 + 547 + 379 + 445 = 3.223
 const DEMO_CONTRACTS_V2 = [
-  // 9 ASSINADOS (soma recorrência = 7574)
+  // 9 ASSINADOS (soma recorrência = 3223)
   {
-    client_name: 'Pizzaria Forno & Brasa',
-    project_type: 'App Delivery',
-    value: 4250,
+    client_name: 'Pizzaria Bella Massa',
+    project_type: 'App',
+    value: 1450,
     recurrence_type: 'Mensal',
-    recurrence_value_monthly: 847,
+    recurrence_value_monthly: 289,
     status: 'Assinado',
   },
   {
-    client_name: 'Clínica Odonto Premium',
-    project_type: 'Site Institucional',
-    value: 5680,
+    client_name: 'Clínica Sorriso Perfeito',
+    project_type: 'Site',
+    value: 890,
     recurrence_type: 'Mensal',
-    recurrence_value_monthly: 1123,
+    recurrence_value_monthly: 497,
     status: 'Assinado',
   },
   {
-    client_name: 'Hamburgueria The Burger Co',
-    project_type: 'App Delivery',
-    value: 6480,
+    client_name: 'Burger House Express',
+    project_type: 'App',
+    value: 1680,
     recurrence_type: 'Mensal',
-    recurrence_value_monthly: 1297,
+    recurrence_value_monthly: 359,
     status: 'Assinado',
   },
   {
-    client_name: 'Escritório Advocacia Nunes',
+    client_name: 'Advocacia Silva & Matos',
     project_type: 'Landing Page',
-    value: 1950,
+    value: 350,
     recurrence_type: 'Mensal',
-    recurrence_value_monthly: 389,
+    recurrence_value_monthly: 89,
     status: 'Assinado',
   },
   {
-    client_name: 'Loja TechCell Celulares',
+    client_name: 'CellTech Store',
     project_type: 'E-commerce',
-    value: 4780,
+    value: 1280,
     recurrence_type: 'Mensal',
-    recurrence_value_monthly: 956,
+    recurrence_value_monthly: 449,
     status: 'Assinado',
   },
   {
-    client_name: 'Studio Pilates Corpo & Mente',
-    project_type: 'Site Institucional',
-    value: 3560,
+    client_name: 'Studio Forma & Saúde',
+    project_type: 'Site',
+    value: 780,
     recurrence_type: 'Mensal',
-    recurrence_value_monthly: 712,
+    recurrence_value_monthly: 169,
     status: 'Assinado',
   },
   {
-    client_name: 'Restaurante Sabores do Mar',
-    project_type: 'App Delivery',
-    value: 5450,
+    client_name: 'Sabor do Oceano Restaurante',
+    project_type: 'App',
+    value: 1890,
     recurrence_type: 'Mensal',
-    recurrence_value_monthly: 1089,
+    recurrence_value_monthly: 547,
     status: 'Assinado',
   },
   {
-    client_name: 'Imobiliária Casa & Lar',
+    client_name: 'Imóveis Prime Corretora',
     project_type: 'Landing Page',
-    value: 2860,
+    value: 420,
     recurrence_type: 'Mensal',
-    recurrence_value_monthly: 573,
+    recurrence_value_monthly: 379,
     status: 'Assinado',
   },
   {
-    client_name: 'Salão Beauty Hair Studio',
-    project_type: 'Site Institucional',
-    value: 2940,
+    client_name: 'Salão Beleza Pura',
+    project_type: 'Site',
+    value: 650,
     recurrence_type: 'Mensal',
-    recurrence_value_monthly: 588,
+    recurrence_value_monthly: 445,
     status: 'Assinado',
   },
   // 3 PENDENTES
   {
-    client_name: 'Academia FitPro Center',
-    project_type: 'App Delivery',
-    value: 5200,
+    client_name: 'Fit Center Academia',
+    project_type: 'App',
+    value: 1560,
     recurrence_type: 'Mensal',
-    recurrence_value_monthly: 897,
+    recurrence_value_monthly: 297,
     status: 'Pendente',
   },
   {
-    client_name: 'Consultório Dr. Marcos Lima',
-    project_type: 'Site Institucional',
-    value: 3080,
+    client_name: 'Dr. Carlos Mendes',
+    project_type: 'Site',
+    value: 720,
     recurrence_type: 'Mensal',
-    recurrence_value_monthly: 617,
+    recurrence_value_monthly: 129,
     status: 'Pendente',
   },
   {
-    client_name: 'PetShop Amigo Peludo',
+    client_name: 'PetLove Shop',
     project_type: 'E-commerce',
-    value: 3650,
+    value: 980,
     recurrence_type: 'Mensal',
-    recurrence_value_monthly: 729,
+    recurrence_value_monthly: 229,
     status: 'Pendente',
   },
   // 2 EM RENOVAÇÃO
   {
-    client_name: 'Escola Idiomas WorldSpeak',
+    client_name: 'WorldSpeak Idiomas',
     project_type: 'Landing Page',
-    value: 2150,
+    value: 380,
     recurrence_type: 'Mensal',
-    recurrence_value_monthly: 429,
+    recurrence_value_monthly: 79,
     status: 'Em renovação',
   },
   {
-    client_name: 'Construtora Alicerce Forte',
-    project_type: 'Site Institucional',
-    value: 4320,
+    client_name: 'Construtora Alicerce',
+    project_type: 'Site',
+    value: 920,
     recurrence_type: 'Mensal',
-    recurrence_value_monthly: 863,
+    recurrence_value_monthly: 189,
     status: 'Em renovação',
   },
 ];
@@ -154,54 +154,8 @@ export function useContractsMetrics() {
   const { user } = useAuth();
   const [contracts, setContracts] = useState<DemoContract[]>([]);
   const [loading, setLoading] = useState(true);
-  const [seeding, setSeeding] = useState(false);
 
-  // Seed demo contracts for admin - delete old and insert new 14 contracts
-  const seedDemoContracts = useCallback(async () => {
-    if (!workspace?.id || !user?.id || !isAdminOrOwner || seeding) return;
-
-    setSeeding(true);
-    try {
-      // Delete existing demo contracts first (to refresh with new data)
-      const { error: deleteError } = await supabase
-        .from('demo_contracts')
-        .delete()
-        .eq('workspace_id', workspace.id)
-        .eq('is_demo', true);
-
-      if (deleteError) {
-        console.error('Error deleting old demo contracts:', deleteError);
-      }
-
-      // Insert the new 14 demo contracts
-      const contractsToInsert = DEMO_CONTRACTS_V2.map((contract, index) => ({
-        owner_user_id: user.id,
-        workspace_id: workspace.id,
-        client_name: contract.client_name,
-        project_type: contract.project_type,
-        value: contract.value,
-        recurrence_type: contract.recurrence_type,
-        recurrence_value_monthly: contract.recurrence_value_monthly,
-        status: contract.status,
-        is_demo: true,
-        start_date: new Date(Date.now() - index * 5 * 24 * 60 * 60 * 1000).toISOString().split('T')[0],
-      }));
-
-      const { error: insertError } = await supabase
-        .from('demo_contracts')
-        .insert(contractsToInsert);
-
-      if (insertError) {
-        console.error('Error seeding demo contracts:', insertError);
-      }
-    } catch (error) {
-      console.error('Error in seedDemoContracts:', error);
-    } finally {
-      setSeeding(false);
-    }
-  }, [workspace?.id, user?.id, isAdminOrOwner, seeding]);
-
-  // Fetch contracts
+  // Fetch contracts from database
   const fetchContracts = useCallback(async () => {
     if (!workspace?.id || !user?.id) {
       setLoading(false);
@@ -217,31 +171,40 @@ export function useContractsMetrics() {
 
       if (error) {
         console.error('Error fetching contracts:', error);
-        return;
+        setContracts([]);
+      } else {
+        setContracts(data || []);
       }
-
-      setContracts(data || []);
     } catch (error) {
       console.error('Error in fetchContracts:', error);
+      setContracts([]);
     } finally {
       setLoading(false);
     }
   }, [workspace?.id, user?.id]);
 
-  // Initialize: seed for admin, then fetch
+  // Initialize - just fetch contracts, no seeding (use local mock data instead)
   useEffect(() => {
-    const init = async () => {
-      if (isAdminOrOwner) {
-        await seedDemoContracts();
-      }
-      await fetchContracts();
-    };
-    init();
-  }, [isAdminOrOwner, seedDemoContracts, fetchContracts]);
+    fetchContracts();
+  }, [fetchContracts]);
+
+  // Calculate metrics from contracts (db or local mock)
+  // For admin with empty db, use local DEMO_CONTRACTS_V2 data
+  const effectiveContracts = contracts.length > 0 ? contracts : 
+    (isAdminOrOwner ? DEMO_CONTRACTS_V2.map((c, i) => ({
+      ...c,
+      id: `local-${i}`,
+      owner_user_id: user?.id || '',
+      workspace_id: workspace?.id || '',
+      start_date: new Date(Date.now() - i * 5 * 24 * 60 * 60 * 1000).toISOString(),
+      is_demo: true,
+      created_at: new Date(Date.now() - i * 5 * 24 * 60 * 60 * 1000).toISOString(),
+      updated_at: new Date().toISOString(),
+    })) : []);
 
   // Calculate metrics from signed contracts
   const metrics = useMemo((): ContractMetrics => {
-    const signedContracts = contracts.filter(c => c.status === 'Assinado');
+    const signedContracts = effectiveContracts.filter(c => c.status === 'Assinado');
     
     const totalRecurrence = signedContracts.reduce(
       (sum, c) => sum + Number(c.recurrence_value_monthly || 0),
@@ -263,10 +226,10 @@ export function useContractsMetrics() {
       averageTicket,
       totalValue,
     };
-  }, [contracts]);
+  }, [effectiveContracts]);
 
   return {
-    contracts,
+    contracts: effectiveContracts as DemoContract[],
     metrics,
     loading,
     refetch: fetchContracts,

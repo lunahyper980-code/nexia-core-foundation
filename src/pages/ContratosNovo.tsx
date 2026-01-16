@@ -57,20 +57,20 @@ import { format } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
 import { useNavigate } from 'react-router-dom';
 
-// 14 contratos fictícios para ADMIN com recorrência total ASSINADOS = R$ 7.574
+// 14 contratos fictícios para ADMIN com recorrência total ASSINADOS = R$ 3.223
 // 9 Assinados, 3 Pendentes, 2 Em renovação
-// Recorrências assinados: 847 + 1123 + 1297 + 389 + 956 + 712 + 1089 + 573 + 588 = 7574
+// Recorrências assinados: 289 + 497 + 359 + 89 + 449 + 169 + 547 + 379 + 445 = 3.223
 const MOCK_CONTRACTS: DemoContract[] = [
-  // 9 ASSINADOS (soma recorrência = 7574)
+  // 9 ASSINADOS (soma recorrência = 3223)
   {
     id: 'mock-1',
     owner_user_id: '',
     workspace_id: '',
-    client_name: 'Pizzaria Forno & Brasa',
-    project_type: 'App Delivery',
-    value: 4250,
+    client_name: 'Pizzaria Bella Massa',
+    project_type: 'App',
+    value: 1450,
     recurrence_type: 'Mensal',
-    recurrence_value_monthly: 847,
+    recurrence_value_monthly: 289,
     status: 'Assinado',
     start_date: new Date(Date.now() - 65 * 24 * 60 * 60 * 1000).toISOString(),
     is_demo: true,
@@ -81,11 +81,11 @@ const MOCK_CONTRACTS: DemoContract[] = [
     id: 'mock-2',
     owner_user_id: '',
     workspace_id: '',
-    client_name: 'Clínica Odonto Premium',
-    project_type: 'Site Institucional',
-    value: 5680,
+    client_name: 'Clínica Sorriso Perfeito',
+    project_type: 'Site',
+    value: 890,
     recurrence_type: 'Mensal',
-    recurrence_value_monthly: 1123,
+    recurrence_value_monthly: 497,
     status: 'Assinado',
     start_date: new Date(Date.now() - 58 * 24 * 60 * 60 * 1000).toISOString(),
     is_demo: true,
@@ -96,11 +96,11 @@ const MOCK_CONTRACTS: DemoContract[] = [
     id: 'mock-3',
     owner_user_id: '',
     workspace_id: '',
-    client_name: 'Hamburgueria The Burger Co',
-    project_type: 'App Delivery',
-    value: 6480,
+    client_name: 'Burger House Express',
+    project_type: 'App',
+    value: 1680,
     recurrence_type: 'Mensal',
-    recurrence_value_monthly: 1297,
+    recurrence_value_monthly: 359,
     status: 'Assinado',
     start_date: new Date(Date.now() - 50 * 24 * 60 * 60 * 1000).toISOString(),
     is_demo: true,
@@ -111,11 +111,11 @@ const MOCK_CONTRACTS: DemoContract[] = [
     id: 'mock-4',
     owner_user_id: '',
     workspace_id: '',
-    client_name: 'Escritório Advocacia Nunes',
+    client_name: 'Advocacia Silva & Matos',
     project_type: 'Landing Page',
-    value: 1950,
+    value: 350,
     recurrence_type: 'Mensal',
-    recurrence_value_monthly: 389,
+    recurrence_value_monthly: 89,
     status: 'Assinado',
     start_date: new Date(Date.now() - 42 * 24 * 60 * 60 * 1000).toISOString(),
     is_demo: true,
@@ -126,11 +126,11 @@ const MOCK_CONTRACTS: DemoContract[] = [
     id: 'mock-5',
     owner_user_id: '',
     workspace_id: '',
-    client_name: 'Loja TechCell Celulares',
+    client_name: 'CellTech Store',
     project_type: 'E-commerce',
-    value: 4780,
+    value: 1280,
     recurrence_type: 'Mensal',
-    recurrence_value_monthly: 956,
+    recurrence_value_monthly: 449,
     status: 'Assinado',
     start_date: new Date(Date.now() - 35 * 24 * 60 * 60 * 1000).toISOString(),
     is_demo: true,
@@ -141,11 +141,11 @@ const MOCK_CONTRACTS: DemoContract[] = [
     id: 'mock-6',
     owner_user_id: '',
     workspace_id: '',
-    client_name: 'Studio Pilates Corpo & Mente',
-    project_type: 'Site Institucional',
-    value: 3560,
+    client_name: 'Studio Forma & Saúde',
+    project_type: 'Site',
+    value: 780,
     recurrence_type: 'Mensal',
-    recurrence_value_monthly: 712,
+    recurrence_value_monthly: 169,
     status: 'Assinado',
     start_date: new Date(Date.now() - 28 * 24 * 60 * 60 * 1000).toISOString(),
     is_demo: true,
@@ -156,11 +156,11 @@ const MOCK_CONTRACTS: DemoContract[] = [
     id: 'mock-7',
     owner_user_id: '',
     workspace_id: '',
-    client_name: 'Restaurante Sabores do Mar',
-    project_type: 'App Delivery',
-    value: 5450,
+    client_name: 'Sabor do Oceano Restaurante',
+    project_type: 'App',
+    value: 1890,
     recurrence_type: 'Mensal',
-    recurrence_value_monthly: 1089,
+    recurrence_value_monthly: 547,
     status: 'Assinado',
     start_date: new Date(Date.now() - 21 * 24 * 60 * 60 * 1000).toISOString(),
     is_demo: true,
@@ -171,11 +171,11 @@ const MOCK_CONTRACTS: DemoContract[] = [
     id: 'mock-8',
     owner_user_id: '',
     workspace_id: '',
-    client_name: 'Imobiliária Casa & Lar',
+    client_name: 'Imóveis Prime Corretora',
     project_type: 'Landing Page',
-    value: 2860,
+    value: 420,
     recurrence_type: 'Mensal',
-    recurrence_value_monthly: 573,
+    recurrence_value_monthly: 379,
     status: 'Assinado',
     start_date: new Date(Date.now() - 14 * 24 * 60 * 60 * 1000).toISOString(),
     is_demo: true,
@@ -186,11 +186,11 @@ const MOCK_CONTRACTS: DemoContract[] = [
     id: 'mock-9',
     owner_user_id: '',
     workspace_id: '',
-    client_name: 'Salão Beauty Hair Studio',
-    project_type: 'Site Institucional',
-    value: 2940,
+    client_name: 'Salão Beleza Pura',
+    project_type: 'Site',
+    value: 650,
     recurrence_type: 'Mensal',
-    recurrence_value_monthly: 588,
+    recurrence_value_monthly: 445,
     status: 'Assinado',
     start_date: new Date(Date.now() - 7 * 24 * 60 * 60 * 1000).toISOString(),
     is_demo: true,
@@ -202,11 +202,11 @@ const MOCK_CONTRACTS: DemoContract[] = [
     id: 'mock-10',
     owner_user_id: '',
     workspace_id: '',
-    client_name: 'Academia FitPro Center',
-    project_type: 'App Delivery',
-    value: 5200,
+    client_name: 'Fit Center Academia',
+    project_type: 'App',
+    value: 1560,
     recurrence_type: 'Mensal',
-    recurrence_value_monthly: 897,
+    recurrence_value_monthly: 297,
     status: 'Pendente',
     start_date: new Date(Date.now() - 5 * 24 * 60 * 60 * 1000).toISOString(),
     is_demo: true,
@@ -217,11 +217,11 @@ const MOCK_CONTRACTS: DemoContract[] = [
     id: 'mock-11',
     owner_user_id: '',
     workspace_id: '',
-    client_name: 'Consultório Dr. Marcos Lima',
-    project_type: 'Site Institucional',
-    value: 3080,
+    client_name: 'Dr. Carlos Mendes',
+    project_type: 'Site',
+    value: 720,
     recurrence_type: 'Mensal',
-    recurrence_value_monthly: 617,
+    recurrence_value_monthly: 129,
     status: 'Pendente',
     start_date: new Date(Date.now() - 3 * 24 * 60 * 60 * 1000).toISOString(),
     is_demo: true,
@@ -232,11 +232,11 @@ const MOCK_CONTRACTS: DemoContract[] = [
     id: 'mock-12',
     owner_user_id: '',
     workspace_id: '',
-    client_name: 'PetShop Amigo Peludo',
+    client_name: 'PetLove Shop',
     project_type: 'E-commerce',
-    value: 3650,
+    value: 980,
     recurrence_type: 'Mensal',
-    recurrence_value_monthly: 729,
+    recurrence_value_monthly: 229,
     status: 'Pendente',
     start_date: new Date(Date.now() - 2 * 24 * 60 * 60 * 1000).toISOString(),
     is_demo: true,
@@ -248,11 +248,11 @@ const MOCK_CONTRACTS: DemoContract[] = [
     id: 'mock-13',
     owner_user_id: '',
     workspace_id: '',
-    client_name: 'Escola Idiomas WorldSpeak',
+    client_name: 'WorldSpeak Idiomas',
     project_type: 'Landing Page',
-    value: 2150,
+    value: 380,
     recurrence_type: 'Mensal',
-    recurrence_value_monthly: 429,
+    recurrence_value_monthly: 79,
     status: 'Em renovação',
     start_date: new Date(Date.now() - 380 * 24 * 60 * 60 * 1000).toISOString(),
     is_demo: true,
@@ -263,11 +263,11 @@ const MOCK_CONTRACTS: DemoContract[] = [
     id: 'mock-14',
     owner_user_id: '',
     workspace_id: '',
-    client_name: 'Construtora Alicerce Forte',
-    project_type: 'Site Institucional',
-    value: 4320,
+    client_name: 'Construtora Alicerce',
+    project_type: 'Site',
+    value: 920,
     recurrence_type: 'Mensal',
-    recurrence_value_monthly: 863,
+    recurrence_value_monthly: 189,
     status: 'Em renovação',
     start_date: new Date(Date.now() - 400 * 24 * 60 * 60 * 1000).toISOString(),
     is_demo: true,
@@ -276,10 +276,8 @@ const MOCK_CONTRACTS: DemoContract[] = [
   },
 ];
 
-// Valores fixos para o Dashboard Admin
-const ADMIN_FIXED_RECURRENCE = 7574;
-const ADMIN_FIXED_REVENUE = 50493;
-const ADMIN_FIXED_COMMISSION = 3475;
+// Valor de recorrência fixo para admin = R$ 3.223
+const ADMIN_FIXED_RECURRENCE = 3223;
 
 const statusConfig: Record<string, { label: string; variant: 'default' | 'secondary' | 'destructive' | 'outline' }> = {
   'Assinado': { label: 'Assinado', variant: 'default' },
@@ -289,33 +287,16 @@ const statusConfig: Record<string, { label: string; variant: 'default' | 'second
   'Cancelado': { label: 'Cancelado', variant: 'destructive' },
 };
 
-const projectTypes = ['Site Institucional', 'Landing Page', 'E-commerce', 'App Delivery', 'App', 'Sistema'];
+const projectTypes = ['Site', 'Landing Page', 'E-commerce', 'App', 'Sistema'];
 
 export default function ContratosNovo() {
-  const { contracts: dbContracts, metrics: dbMetrics, loading, refetch } = useContractsMetrics();
+  const { contracts, metrics, loading, refetch } = useContractsMetrics();
   const navigate = useNavigate();
   const [searchQuery, setSearchQuery] = useState('');
   const [statusFilter, setStatusFilter] = useState<string>('all');
   const [typeFilter, setTypeFilter] = useState<string>('all');
   const [deleteId, setDeleteId] = useState<string | null>(null);
   const [viewContract, setViewContract] = useState<DemoContract | null>(null);
-
-  // Use database contracts if available, otherwise use mock data for demo
-  const contracts = dbContracts.length > 0 ? dbContracts : MOCK_CONTRACTS;
-  const isMockData = dbContracts.length === 0;
-
-  // Calculate metrics from displayed contracts - use fixed value for admin demo
-  const metrics = isMockData ? {
-    totalRecurrence: ADMIN_FIXED_RECURRENCE,
-    activeContracts: MOCK_CONTRACTS.filter(c => c.status === 'Assinado').length,
-    averageTicket: Math.round(
-      MOCK_CONTRACTS.filter(c => c.status === 'Assinado')
-        .reduce((sum, c) => sum + c.value, 0) / 
-      MOCK_CONTRACTS.filter(c => c.status === 'Assinado').length
-    ),
-    totalValue: MOCK_CONTRACTS.filter(c => c.status === 'Assinado')
-      .reduce((sum, c) => sum + c.value, 0),
-  } : dbMetrics;
 
   // Delete mutation
   const deleteMutation = useMutation({
