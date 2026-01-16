@@ -1,11 +1,14 @@
 import { useState, useEffect } from 'react';
+import { AppLayout } from '@/components/AppLayout';
 import { toast } from 'sonner';
 import { supabase } from '@/integrations/supabase/client';
+import { NeuralAnimation } from '@/components/encontrar-clientes/NeuralAnimation';
 import { Lead } from '@/components/encontrar-clientes/LeadCard';
 import { IntelligentApproachScreen } from '@/components/encontrar-clientes/IntelligentApproachScreen';
+import { GlobalSearchCard } from '@/components/encontrar-clientes/GlobalSearchCard';
 import { LeadsResultsScreen } from '@/components/encontrar-clientes/LeadsResultsScreen';
-import { ProspectorScreen } from '@/components/encontrar-clientes/ProspectorScreen';
 import { useWorkspace } from '@/contexts/WorkspaceContext';
+import { NextStepCard } from '@/components/academy/NextStepCard';
 import { useModuleState } from '@/hooks/useModuleState';
 
 export default function EncontrarClientes() {
@@ -66,7 +69,7 @@ export default function EncontrarClientes() {
     setLastSearchCidade(cidade);
 
     // Minimum display time for premium experience
-    const minLoadingTime = 2500;
+    const minLoadingTime = 1800;
     const startTime = Date.now();
 
     try {
@@ -150,10 +153,10 @@ export default function EncontrarClientes() {
     saveExtras({ showResults: false, leads: [], leadsNaoConfirmados: [] });
   };
 
-  // Show results screen if we have results
-  if (showResults) {
-    return (
-      <>
+  return (
+    <AppLayout title="Encontrar Clientes">
+      {showResults ? (
+        // Results Screen
         <LeadsResultsScreen
           leads={leads}
           leadsNaoConfirmados={leadsNaoConfirmados}
@@ -163,32 +166,28 @@ export default function EncontrarClientes() {
           onSaveLead={handleSaveLead}
           onNewSearch={handleNewSearch}
         />
+      ) : (
+        // Search Screen
+        <div className="w-full space-y-6">
 
-        {/* Intelligent Approach Screen */}
-        <IntelligentApproachScreen
-          open={messageModalOpen}
-          onClose={() => setMessageModalOpen(false)}
-          lead={selectedLead}
-        />
-      </>
-    );
-  }
+          {/* Global Search Card */}
+          <GlobalSearchCard
+            nicho={nicho}
+            cidade={cidade}
+            possuiSite={possuiSite}
+            possuiInstagram={possuiInstagram}
+            isSearching={isSearching}
+            onNichoChange={setNicho}
+            onCidadeChange={setCidade}
+            onPossuiSiteChange={setPossuiSite}
+            onPossuiInstagramChange={setPossuiInstagram}
+            onSearch={handleSearch}
+          />
+        </div>
+      )}
 
-  // Show premium prospector screen
-  return (
-    <>
-      <ProspectorScreen
-        nicho={nicho}
-        cidade={cidade}
-        possuiSite={possuiSite}
-        possuiInstagram={possuiInstagram}
-        isSearching={isSearching}
-        onNichoChange={setNicho}
-        onCidadeChange={setCidade}
-        onPossuiSiteChange={setPossuiSite}
-        onPossuiInstagramChange={setPossuiInstagram}
-        onSearch={handleSearch}
-      />
+      {/* Neural Animation Modal */}
+      <NeuralAnimation open={isSearching} />
 
       {/* Intelligent Approach Screen */}
       <IntelligentApproachScreen
@@ -196,6 +195,6 @@ export default function EncontrarClientes() {
         onClose={() => setMessageModalOpen(false)}
         lead={selectedLead}
       />
-    </>
+    </AppLayout>
   );
 }
