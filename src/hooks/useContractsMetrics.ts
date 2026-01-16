@@ -215,69 +215,63 @@ export function useContractsMetrics() {
   }, [fetchContracts]);
 
   // ============================================
-  // LÓGICA SEPARADA: ADMIN vs USUÁRIO COMUM
+  // CONVIVÊNCIA: CONTRATOS DEMO + CONTRATOS REAIS
   // ============================================
   
-  // ADMIN: Se não tem contratos no DB, usa mock data para VISUALIZAÇÃO apenas
-  // USUÁRIO COMUM: Usa APENAS contratos reais do banco (pode ser vazio)
+  // Gera contratos demo locais para admin
+  const demoContractsLocal = useMemo(() => {
+    if (!isAdminOrOwner) return [];
+    
+    return DEMO_CONTRACTS_V2.map((c, i) => ({
+      ...c,
+      id: `local-${i}`,
+      owner_user_id: user?.id || '',
+      workspace_id: workspace?.id || '',
+      start_date: new Date(Date.now() - (i + 10) * 5 * 24 * 60 * 60 * 1000).toISOString(),
+      is_demo: true,
+      created_at: new Date(Date.now() - (i + 10) * 5 * 24 * 60 * 60 * 1000).toISOString(),
+      updated_at: new Date().toISOString(),
+    }));
+  }, [isAdminOrOwner, user?.id, workspace?.id]);
+
+  // ADMIN: Combina contratos reais + demo (ambos aparecem juntos)
+  // USUÁRIO COMUM: Apenas contratos reais do banco
   const effectiveContracts = useMemo(() => {
+    // Separa contratos reais (is_demo = false) dos demo do banco (is_demo = true)
+    const realContracts = contracts.filter(c => !c.is_demo);
+    const dbDemoContracts = contracts.filter(c => c.is_demo);
+    
     if (isAdminOrOwner) {
-      // ADMIN: Se tem contratos no DB, mostra eles. Senão, mostra mock
-      if (contracts.length > 0) {
-        return contracts;
+      // Admin: mostra tudo junto - contratos reais + demo do banco + demo locais
+      // Evita duplicar demos: se já tem demo no banco, não adiciona local
+      const hasDemoInDb = dbDemoContracts.length > 0;
+      
+      if (hasDemoInDb) {
+        // Tem demo no banco, usa apenas eles + reais
+        return [...realContracts, ...dbDemoContracts].sort(
+          (a, b) => new Date(b.created_at).getTime() - new Date(a.created_at).getTime()
+        );
+      } else {
+        // Não tem demo no banco, usa demo locais + reais
+        return [...realContracts, ...demoContractsLocal].sort(
+          (a, b) => new Date(b.created_at).getTime() - new Date(a.created_at).getTime()
+        );
       }
-      // Mock data para admin (apenas visualização)
-      return DEMO_CONTRACTS_V2.map((c, i) => ({
-        ...c,
-        id: `local-${i}`,
-        owner_user_id: user?.id || '',
-        workspace_id: workspace?.id || '',
-        start_date: new Date(Date.now() - i * 5 * 24 * 60 * 60 * 1000).toISOString(),
-        is_demo: true,
-        created_at: new Date(Date.now() - i * 5 * 24 * 60 * 60 * 1000).toISOString(),
-        updated_at: new Date().toISOString(),
-      }));
     }
     
-    // USUÁRIO COMUM: Apenas contratos reais do banco
-    return contracts;
-  }, [contracts, isAdminOrOwner, user?.id, workspace?.id]);
+    // USUÁRIO COMUM: Apenas contratos reais do banco (exclui demo)
+    return realContracts.sort(
+      (a, b) => new Date(b.created_at).getTime() - new Date(a.created_at).getTime()
+    );
+  }, [contracts, isAdminOrOwner, demoContractsLocal]);
 
-  // Calculate metrics from ACTIVE contracts (Ativo or Assinado)
-  // IMPORTANTE: Para usuário comum, esses valores vão para o dashboard
-  // Para admin, esses valores são usados apenas na tela de contratos
+  // ============================================
+  // MÉTRICAS: TODOS OS CONTRATOS ENTRAM NO CÁLCULO
+  // ============================================
+  
+  // Métricas calculadas a partir de effectiveContracts (demo + reais juntos)
   // Usa isActiveStatus para suportar tanto valores em português quanto inglês
   const metrics = useMemo((): ContractMetrics => {
-    // Usuário comum: usa seus contratos reais
-    // Admin: usa apenas os contratos visíveis na lista (não afeta dashboard)
-    const contractsToCalculate = contracts;
-    const activeContracts = contractsToCalculate.filter(c => isActiveStatus(c.status));
-    
-    const totalRecurrence = activeContracts.reduce(
-      (sum, c) => sum + Number(c.recurrence_value_monthly || 0),
-      0
-    );
-    
-    const totalValue = activeContracts.reduce(
-      (sum, c) => sum + Number(c.value || 0),
-      0
-    );
-    
-    const averageTicket = activeContracts.length > 0
-      ? Math.round(totalValue / activeContracts.length)
-      : 0;
-
-    return {
-      totalRecurrence,
-      activeContracts: activeContracts.length,
-      averageTicket,
-      totalValue,
-    };
-  }, [contracts]);
-
-  // Métricas para exibição na tela de contratos (usa effectiveContracts para admin ver demo)
-  // Usa isActiveStatus para suportar tanto valores em português quanto inglês
-  const displayMetrics = useMemo((): ContractMetrics => {
     const activeContracts = effectiveContracts.filter(c => isActiveStatus(c.status));
     
     const totalRecurrence = activeContracts.reduce(
@@ -302,10 +296,14 @@ export function useContractsMetrics() {
     };
   }, [effectiveContracts]);
 
+  // displayMetrics agora é o mesmo que metrics (ambos usam effectiveContracts)
+  // Mantido por compatibilidade com componentes existentes
+  const displayMetrics = metrics;
+
   return {
     contracts: effectiveContracts as DemoContract[],
-    metrics, // Métricas reais (usadas pelo dashboard para usuário comum)
-    displayMetrics, // Métricas de exibição (usadas na tela de contratos)
+    metrics, // Métricas combinadas (demo + reais)
+    displayMetrics, // Mesmo que metrics (mantido por compatibilidade)
     loading,
     refetch: fetchContracts,
     isAdminOrOwner,
