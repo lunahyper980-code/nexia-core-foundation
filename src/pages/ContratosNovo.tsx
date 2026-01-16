@@ -63,6 +63,7 @@ import { useMutation, useQueryClient } from '@tanstack/react-query';
 import { format } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
 import { useNavigate } from 'react-router-dom';
+import { toDbStatus, toUiStatus } from '@/lib/contractStatusMap';
 
 const statusConfig: Record<string, { label: string; variant: 'default' | 'secondary' | 'destructive' | 'outline' }> = {
   'Ativo': { label: 'Ativo', variant: 'default' },
@@ -105,6 +106,7 @@ export default function ContratosNovo() {
   });
 
   // Update status mutation
+  // IMPORTANTE: Converte status da UI (português) para o banco (inglês)
   const updateStatusMutation = useMutation({
     mutationFn: async ({ id, status }: { id: string; status: string }) => {
       // Don't update demo/local contracts
@@ -112,9 +114,12 @@ export default function ContratosNovo() {
         throw new Error('Não é possível alterar contratos de demonstração');
       }
       
+      // Converter status da UI para o formato do banco
+      const dbStatus = toDbStatus(status);
+      
       const { error } = await supabase
         .from('demo_contracts')
-        .update({ status, updated_at: new Date().toISOString() })
+        .update({ status: dbStatus, updated_at: new Date().toISOString() })
         .eq('id', id);
       if (error) throw error;
     },

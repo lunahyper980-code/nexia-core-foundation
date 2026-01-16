@@ -2,6 +2,7 @@ import { useMemo } from 'react';
 import { useContractsMetrics } from './useContractsMetrics';
 import { useOwnerMetrics } from './useOwnerMetrics';
 import { useUserRole } from '@/contexts/UserRoleContext';
+import { isActiveStatus } from '@/lib/contractStatusMap';
 
 export interface PeriodMetrics {
   periodRevenue: number;
@@ -93,11 +94,11 @@ export function useRevenueMetrics(period: 7 | 30) {
 
     // ============================================
     // USUÁRIO COMUM: Lógica baseada em contratos ATIVOS reais
+    // Usa isActiveStatus para suportar status em português e inglês
     // ============================================
     
-    // Filtrar apenas contratos ATIVOS (status: Ativo ou Assinado)
-    const activeStatuses = ['Ativo', 'Assinado'];
-    const activeContracts = contracts.filter(c => activeStatuses.includes(c.status));
+    // Filtrar apenas contratos ATIVOS (status: Ativo/active ou Assinado/signed)
+    const activeContracts = contracts.filter(c => isActiveStatus(c.status));
 
     // Contratos ativos no período atual (baseado em start_date ou created_at)
     const contractsInCurrentPeriod = activeContracts.filter(c => {
