@@ -100,8 +100,12 @@ export function AnimatedGlobeBackground() {
       // SIDEBAR-AWARE CENTER: Calculate center considering sidebar offset
       const contentWidth = width - sidebarWidth;
       const centerX = sidebarWidth + (contentWidth / 2);
-      // Globe positioned slightly ABOVE center for hero visual feel
-      const centerY = height * 0.45;
+      
+      // VERTICAL SPACING: Push globe down to avoid overlapping with title/subtitle
+      // Added 48px offset to create breathing room below header text
+      // Globe positioned at center with vertical offset for text clearance
+      // 0.52 = slightly below center + ensures no overlap with title area
+      const centerY = height * 0.52;
 
       // === COLOR PALETTE: More neutral, less purple, technical feel ===
       // Primary: Cool gray-blue (desaturated, technical)
