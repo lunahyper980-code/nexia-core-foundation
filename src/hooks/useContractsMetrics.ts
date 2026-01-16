@@ -3,6 +3,7 @@ import { supabase } from '@/integrations/supabase/client';
 import { useWorkspace } from '@/contexts/WorkspaceContext';
 import { useUserRole } from '@/contexts/UserRoleContext';
 import { useAuth } from '@/contexts/AuthContext';
+import { toUiStatus, isActiveStatus, ACTIVE_DB_STATUSES } from '@/lib/contractStatusMap';
 
 // 14 contratos demo para ADMIN - nomes únicos, valores realistas
 // Recorrência dos 9 Assinados = R$ 3.223 exatamente
@@ -148,10 +149,10 @@ export interface ContractMetrics {
   totalValue: number;
 }
 
-// Status que entram no faturamento/recorrência
+// Status que entram no faturamento/recorrência (UI)
 export const ACTIVE_STATUSES = ['Ativo', 'Assinado'];
 
-// Status disponíveis no sistema
+// Status disponíveis no sistema (UI - português)
 export const CONTRACT_STATUSES = [
   'Rascunho',
   'Enviado', 
@@ -160,6 +161,9 @@ export const CONTRACT_STATUSES = [
   'Pausado',
   'Cancelado',
 ];
+
+// Re-exportar do contractStatusMap para compatibilidade
+export { ACTIVE_DB_STATUSES } from '@/lib/contractStatusMap';
 
 /**
  * Hook para gerenciar contratos e calcular métricas
@@ -242,11 +246,12 @@ export function useContractsMetrics() {
   // Calculate metrics from ACTIVE contracts (Ativo or Assinado)
   // IMPORTANTE: Para usuário comum, esses valores vão para o dashboard
   // Para admin, esses valores são usados apenas na tela de contratos
+  // Usa isActiveStatus para suportar tanto valores em português quanto inglês
   const metrics = useMemo((): ContractMetrics => {
     // Usuário comum: usa seus contratos reais
     // Admin: usa apenas os contratos visíveis na lista (não afeta dashboard)
     const contractsToCalculate = contracts;
-    const activeContracts = contractsToCalculate.filter(c => ACTIVE_STATUSES.includes(c.status));
+    const activeContracts = contractsToCalculate.filter(c => isActiveStatus(c.status));
     
     const totalRecurrence = activeContracts.reduce(
       (sum, c) => sum + Number(c.recurrence_value_monthly || 0),
@@ -271,8 +276,9 @@ export function useContractsMetrics() {
   }, [contracts]);
 
   // Métricas para exibição na tela de contratos (usa effectiveContracts para admin ver demo)
+  // Usa isActiveStatus para suportar tanto valores em português quanto inglês
   const displayMetrics = useMemo((): ContractMetrics => {
-    const activeContracts = effectiveContracts.filter(c => ACTIVE_STATUSES.includes(c.status));
+    const activeContracts = effectiveContracts.filter(c => isActiveStatus(c.status));
     
     const totalRecurrence = activeContracts.reduce(
       (sum, c) => sum + Number(c.recurrence_value_monthly || 0),
