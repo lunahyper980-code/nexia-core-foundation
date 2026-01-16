@@ -1,77 +1,76 @@
 import { describe, it, expect } from 'vitest';
 import {
-  STATUS_UI_TO_DB,
-  STATUS_DB_TO_UI,
-  ACTIVE_DB_STATUSES,
-  ACTIVE_UI_STATUSES,
   toDbStatus,
   toUiStatus,
   isActiveStatus,
+  isValidDbStatus,
+  VALID_DB_STATUSES,
+  ACTIVE_DB_STATUSES,
+  type DbContractStatus,
 } from './contractStatusMap';
 
+/**
+ * Testes para o módulo contractStatusMap
+ * 
+ * O banco aceita APENAS: 'Assinado', 'Pendente', 'Cancelado'
+ */
 describe('contractStatusMap', () => {
-  // Valores aceitos pelo CHECK CONSTRAINT do banco
-  const VALID_DB_STATUSES = ['Assinado', 'Pendente', 'Cancelado'];
-
-  describe('STATUS_UI_TO_DB mapping', () => {
-    it('should map all UI statuses to valid DB statuses', () => {
-      expect(STATUS_UI_TO_DB['Rascunho']).toBe('Pendente');
-      expect(STATUS_UI_TO_DB['Enviado']).toBe('Pendente');
-      expect(STATUS_UI_TO_DB['Assinado']).toBe('Assinado');
-      expect(STATUS_UI_TO_DB['Ativo']).toBe('Assinado');
-      expect(STATUS_UI_TO_DB['Pausado']).toBe('Pendente');
-      expect(STATUS_UI_TO_DB['Cancelado']).toBe('Cancelado');
-      expect(STATUS_UI_TO_DB['Pendente']).toBe('Pendente');
-    });
-
-    it('all mapped values should be valid for CHECK CONSTRAINT', () => {
-      Object.values(STATUS_UI_TO_DB).forEach((dbStatus) => {
-        expect(VALID_DB_STATUSES).toContain(dbStatus);
-      });
+  
+  describe('VALID_DB_STATUSES', () => {
+    it('deve conter exatamente os 3 status aceitos pelo banco', () => {
+      expect(VALID_DB_STATUSES).toEqual(['Assinado', 'Pendente', 'Cancelado']);
     });
   });
 
-  describe('STATUS_DB_TO_UI mapping', () => {
-    it('should map all DB statuses to UI statuses', () => {
-      expect(STATUS_DB_TO_UI['Assinado']).toBe('Assinado');
-      expect(STATUS_DB_TO_UI['Pendente']).toBe('Pendente');
-      expect(STATUS_DB_TO_UI['Cancelado']).toBe('Cancelado');
-    });
-
-    it('should have exactly 3 DB status mappings', () => {
-      expect(Object.keys(STATUS_DB_TO_UI)).toHaveLength(3);
+  describe('ACTIVE_DB_STATUSES', () => {
+    it('deve conter apenas Assinado como status ativo', () => {
+      expect(ACTIVE_DB_STATUSES).toEqual(['Assinado']);
     });
   });
 
   describe('toDbStatus', () => {
-    it('should convert UI statuses to valid DB statuses', () => {
+    it('deve retornar Pendente para Rascunho', () => {
       expect(toDbStatus('Rascunho')).toBe('Pendente');
+    });
+    
+    it('deve retornar Pendente para Enviado', () => {
       expect(toDbStatus('Enviado')).toBe('Pendente');
+    });
+    
+    it('deve retornar Assinado para Assinado', () => {
       expect(toDbStatus('Assinado')).toBe('Assinado');
+    });
+    
+    it('deve retornar Assinado para Ativo (legado)', () => {
       expect(toDbStatus('Ativo')).toBe('Assinado');
+    });
+    
+    it('deve retornar Pendente para Pausado (legado)', () => {
       expect(toDbStatus('Pausado')).toBe('Pendente');
-      expect(toDbStatus('Cancelado')).toBe('Cancelado');
-      expect(toDbStatus('Pendente')).toBe('Pendente');
     });
-
-    it('should return the same value if already a valid DB status', () => {
-      expect(toDbStatus('Assinado')).toBe('Assinado');
-      expect(toDbStatus('Pendente')).toBe('Pendente');
+    
+    it('deve retornar Cancelado para Cancelado', () => {
       expect(toDbStatus('Cancelado')).toBe('Cancelado');
     });
-
-    it('should fallback to Pendente for unknown status', () => {
-      expect(toDbStatus('unknown')).toBe('Pendente');
+    
+    it('deve retornar Pendente para Pendente', () => {
+      expect(toDbStatus('Pendente')).toBe('Pendente');
+    });
+    
+    it('deve retornar Pendente para status desconhecido', () => {
+      expect(toDbStatus('invalid')).toBe('Pendente');
       expect(toDbStatus('')).toBe('Pendente');
+      expect(toDbStatus('xyz')).toBe('Pendente');
     });
-
-    it('all outputs should be valid for CHECK CONSTRAINT', () => {
+    
+    it('TODOS os retornos devem ser válidos para o CHECK CONSTRAINT', () => {
       const testInputs = [
         'Rascunho', 'Enviado', 'Assinado', 'Ativo', 
-        'Pausado', 'Cancelado', 'Pendente', 'unknown', ''
+        'Pausado', 'Cancelado', 'Pendente', 
+        'invalid', '', 'xyz', 'draft', 'sent'
       ];
       
-      testInputs.forEach((input) => {
+      testInputs.forEach(input => {
         const result = toDbStatus(input);
         expect(VALID_DB_STATUSES).toContain(result);
       });
@@ -79,70 +78,90 @@ describe('contractStatusMap', () => {
   });
 
   describe('toUiStatus', () => {
-    it('should convert DB statuses to UI statuses', () => {
+    it('deve retornar Assinado para Assinado', () => {
       expect(toUiStatus('Assinado')).toBe('Assinado');
-      expect(toUiStatus('Pendente')).toBe('Pendente');
+    });
+    
+    it('deve retornar Rascunho para Pendente', () => {
+      expect(toUiStatus('Pendente')).toBe('Rascunho');
+    });
+    
+    it('deve retornar Cancelado para Cancelado', () => {
       expect(toUiStatus('Cancelado')).toBe('Cancelado');
     });
-
-    it('should return the same value for valid UI statuses', () => {
+    
+    it('deve retornar o próprio valor se for um label válido', () => {
       expect(toUiStatus('Rascunho')).toBe('Rascunho');
       expect(toUiStatus('Enviado')).toBe('Enviado');
-      expect(toUiStatus('Ativo')).toBe('Ativo');
-      expect(toUiStatus('Pausado')).toBe('Pausado');
     });
-
-    it('should fallback to Pendente for unknown status', () => {
-      expect(toUiStatus('unknown')).toBe('Pendente');
-      expect(toUiStatus('')).toBe('Pendente');
-    });
-  });
-
-  describe('ACTIVE_STATUSES', () => {
-    it('should have correct DB active statuses', () => {
-      expect(ACTIVE_DB_STATUSES).toContain('Assinado');
-      expect(ACTIVE_DB_STATUSES).toHaveLength(1);
-    });
-
-    it('should have correct UI active statuses', () => {
-      expect(ACTIVE_UI_STATUSES).toContain('Ativo');
-      expect(ACTIVE_UI_STATUSES).toContain('Assinado');
-      expect(ACTIVE_UI_STATUSES).toHaveLength(2);
+    
+    it('deve retornar Rascunho para status desconhecido', () => {
+      expect(toUiStatus('invalid')).toBe('Rascunho');
     });
   });
 
   describe('isActiveStatus', () => {
-    it('should return true for active statuses', () => {
-      expect(isActiveStatus('Ativo')).toBe(true);
+    it('deve retornar true para Assinado', () => {
       expect(isActiveStatus('Assinado')).toBe(true);
     });
-
-    it('should return false for inactive statuses', () => {
-      expect(isActiveStatus('Rascunho')).toBe(false);
-      expect(isActiveStatus('Enviado')).toBe(false);
-      expect(isActiveStatus('Pausado')).toBe(false);
-      expect(isActiveStatus('Cancelado')).toBe(false);
+    
+    it('deve retornar true para Ativo (mapeia para Assinado)', () => {
+      expect(isActiveStatus('Ativo')).toBe(true);
+    });
+    
+    it('deve retornar false para Pendente', () => {
       expect(isActiveStatus('Pendente')).toBe(false);
     });
-
-    it('should return false for unknown statuses', () => {
-      expect(isActiveStatus('unknown')).toBe(false);
-      expect(isActiveStatus('')).toBe(false);
+    
+    it('deve retornar false para Rascunho', () => {
+      expect(isActiveStatus('Rascunho')).toBe(false);
+    });
+    
+    it('deve retornar false para Cancelado', () => {
+      expect(isActiveStatus('Cancelado')).toBe(false);
     });
   });
 
-  describe('CHECK CONSTRAINT compatibility', () => {
-    it('toDbStatus should NEVER return a value outside the constraint', () => {
-      // Test with many different inputs
-      const inputs = [
-        'Rascunho', 'Enviado', 'Assinado', 'Ativo', 'Pausado', 
-        'Cancelado', 'Pendente', 'draft', 'active', 'signed',
-        'invalid', '', undefined, null
+  describe('isValidDbStatus', () => {
+    it('deve retornar true para status válidos do banco', () => {
+      expect(isValidDbStatus('Assinado')).toBe(true);
+      expect(isValidDbStatus('Pendente')).toBe(true);
+      expect(isValidDbStatus('Cancelado')).toBe(true);
+    });
+    
+    it('deve retornar false para labels da UI', () => {
+      expect(isValidDbStatus('Rascunho')).toBe(false);
+      expect(isValidDbStatus('Enviado')).toBe(false);
+      expect(isValidDbStatus('Ativo')).toBe(false);
+    });
+    
+    it('deve retornar false para valores inválidos', () => {
+      expect(isValidDbStatus('invalid')).toBe(false);
+      expect(isValidDbStatus('')).toBe(false);
+    });
+  });
+  
+  describe('Compatibilidade com demo_contracts_status_check', () => {
+    it('toDbStatus NUNCA deve retornar valor fora do CHECK CONSTRAINT', () => {
+      // Lista exaustiva de possíveis inputs
+      const allPossibleInputs = [
+        // Status válidos
+        'Assinado', 'Pendente', 'Cancelado',
+        // Labels da UI
+        'Rascunho', 'Enviado',
+        // Legados
+        'Ativo', 'Pausado',
+        // Inválidos
+        '', 'null', 'undefined', 'draft', 'sent', 'signed', 'active',
+        // Caso extremo
+        '   ', 'ASSINADO', 'assinado'
       ];
-
-      inputs.forEach((input) => {
-        const result = toDbStatus(input as string);
-        expect(VALID_DB_STATUSES).toContain(result);
+      
+      const validDbValues: DbContractStatus[] = ['Assinado', 'Pendente', 'Cancelado'];
+      
+      allPossibleInputs.forEach(input => {
+        const result = toDbStatus(input);
+        expect(validDbValues).toContain(result);
       });
     });
   });

@@ -412,7 +412,10 @@ ${formData.contractorDocument}
       
       // MODO SIMPLES: Salvar em demo_contracts (tabela unificada do modo simples)
       // Isso garante que o contrato apareça na sidebar /contratos e no dashboard
-      // IMPORTANTE: Usar toDbStatus para converter para valor aceito pelo CHECK CONSTRAINT
+      // IMPORTANTE: O banco aceita APENAS 'Assinado', 'Pendente', 'Cancelado'
+      // 'Rascunho' é convertido para 'Pendente' pelo toDbStatus
+      const dbStatus = toDbStatus('Rascunho'); // Retorna 'Pendente'
+      
       const { data: inserted, error } = await supabase.from('demo_contracts').insert({
         workspace_id: workspace.id,
         owner_user_id: user.id,
@@ -421,7 +424,7 @@ ${formData.contractorDocument}
         value: parseFloat(formData.serviceValue) || 0,
         recurrence_type: formData.hasMaintenance ? 'Mensal' : 'Único',
         recurrence_value_monthly: formData.hasMaintenance ? parseFloat(formData.maintenanceValue) || 0 : 0,
-        status: toDbStatus('Rascunho'), // Converte para 'draft' (aceito pelo banco)
+        status: dbStatus, // 'Pendente' - aceito pelo CHECK CONSTRAINT
         start_date: new Date().toISOString().split('T')[0],
         is_demo: false, // Contrato real, não demo
       }).select().single();
