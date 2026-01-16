@@ -1,59 +1,68 @@
 /**
  * Mapeamento de status de contratos
  * 
- * O frontend usa labels em português para UX
- * O banco aceita apenas valores em inglês (CHECK CONSTRAINT)
+ * O CHECK CONSTRAINT do banco (demo_contracts_status_check) aceita APENAS:
+ * - 'Assinado'
+ * - 'Pendente'  
+ * - 'Cancelado'
  * 
- * Este módulo garante a conversão correta entre os dois
+ * Este módulo garante que apenas esses valores sejam persistidos
  */
 
 // Status aceitos pelo CHECK CONSTRAINT do banco (demo_contracts_status_check)
-export type DbContractStatus = 'draft' | 'sent' | 'signed' | 'active' | 'paused' | 'cancelled';
+// IMPORTANTE: O banco usa português, não inglês!
+export type DbContractStatus = 'Assinado' | 'Pendente' | 'Cancelado';
 
-// Status exibidos na UI em português
-export type UiContractStatus = 'Rascunho' | 'Enviado' | 'Assinado' | 'Ativo' | 'Pausado' | 'Cancelado';
+// Status exibidos na UI (extensão do que o banco aceita para UX)
+export type UiContractStatus = 
+  | 'Rascunho' 
+  | 'Enviado' 
+  | 'Assinado' 
+  | 'Ativo' 
+  | 'Pausado' 
+  | 'Cancelado'
+  | 'Pendente';
 
-// Mapeamento: UI (português) -> DB (inglês)
+// Mapeamento: UI -> DB (converte status da UI para valores aceitos pelo banco)
+// Status que não existem no banco são mapeados para o mais próximo
 export const STATUS_UI_TO_DB: Record<UiContractStatus, DbContractStatus> = {
-  'Rascunho': 'draft',
-  'Enviado': 'sent',
-  'Assinado': 'signed',
-  'Ativo': 'active',
-  'Pausado': 'paused',
-  'Cancelado': 'cancelled',
+  'Rascunho': 'Pendente',    // Rascunho -> Pendente (ainda não assinado)
+  'Enviado': 'Pendente',     // Enviado -> Pendente (aguardando assinatura)
+  'Assinado': 'Assinado',    // Assinado -> Assinado
+  'Ativo': 'Assinado',       // Ativo -> Assinado (contrato em vigor)
+  'Pausado': 'Pendente',     // Pausado -> Pendente (temporariamente suspenso)
+  'Cancelado': 'Cancelado',  // Cancelado -> Cancelado
+  'Pendente': 'Pendente',    // Pendente -> Pendente
 };
 
-// Mapeamento: DB (inglês) -> UI (português)
+// Mapeamento: DB -> UI (para exibição, mantém o valor original)
 export const STATUS_DB_TO_UI: Record<DbContractStatus, UiContractStatus> = {
-  'draft': 'Rascunho',
-  'sent': 'Enviado',
-  'signed': 'Assinado',
-  'active': 'Ativo',
-  'paused': 'Pausado',
-  'cancelled': 'Cancelado',
+  'Assinado': 'Assinado',
+  'Pendente': 'Pendente',
+  'Cancelado': 'Cancelado',
 };
 
 // Status que entram no faturamento/recorrência (valores do DB)
-export const ACTIVE_DB_STATUSES: DbContractStatus[] = ['active', 'signed'];
+export const ACTIVE_DB_STATUSES: DbContractStatus[] = ['Assinado'];
 
 // Status que entram no faturamento/recorrência (valores da UI)
 export const ACTIVE_UI_STATUSES: UiContractStatus[] = ['Ativo', 'Assinado'];
 
 /**
- * Converte status da UI para o banco
+ * Converte status da UI para o banco (respeitando o CHECK CONSTRAINT)
  */
 export function toDbStatus(uiStatus: string): DbContractStatus {
   const mapped = STATUS_UI_TO_DB[uiStatus as UiContractStatus];
   if (mapped) return mapped;
   
-  // Se já é um status do banco, retorna como está
-  if (Object.keys(STATUS_DB_TO_UI).includes(uiStatus)) {
+  // Se já é um status válido do banco, retorna como está
+  if (['Assinado', 'Pendente', 'Cancelado'].includes(uiStatus)) {
     return uiStatus as DbContractStatus;
   }
   
-  // Fallback para draft se status desconhecido
-  console.warn(`Status desconhecido: ${uiStatus}, usando 'draft'`);
-  return 'draft';
+  // Fallback para Pendente se status desconhecido
+  console.warn(`Status desconhecido: ${uiStatus}, usando 'Pendente'`);
+  return 'Pendente';
 }
 
 /**
@@ -63,20 +72,21 @@ export function toUiStatus(dbStatus: string): UiContractStatus {
   const mapped = STATUS_DB_TO_UI[dbStatus as DbContractStatus];
   if (mapped) return mapped;
   
-  // Se já é um status da UI, retorna como está
-  if (Object.keys(STATUS_UI_TO_DB).includes(dbStatus)) {
+  // Se já é um status da UI válido, retorna como está
+  const validUiStatuses = ['Rascunho', 'Enviado', 'Assinado', 'Ativo', 'Pausado', 'Cancelado', 'Pendente'];
+  if (validUiStatuses.includes(dbStatus)) {
     return dbStatus as UiContractStatus;
   }
   
-  // Fallback para Rascunho se status desconhecido
-  console.warn(`Status desconhecido: ${dbStatus}, usando 'Rascunho'`);
-  return 'Rascunho';
+  // Fallback para Pendente se status desconhecido
+  console.warn(`Status desconhecido: ${dbStatus}, usando 'Pendente'`);
+  return 'Pendente';
 }
 
 /**
  * Verifica se um status (UI ou DB) é considerado ativo para faturamento
  */
 export function isActiveStatus(status: string): boolean {
-  const uiStatus = toUiStatus(status);
-  return ACTIVE_UI_STATUSES.includes(uiStatus);
+  // Status ativos: Assinado ou Ativo
+  return status === 'Assinado' || status === 'Ativo';
 }
