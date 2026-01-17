@@ -1,18 +1,41 @@
 import { NavLink, useLocation } from 'react-router-dom';
 import { cn } from '@/lib/utils';
+import { useUserMode } from '@/contexts/UserModeContext';
+import { useUserRole } from '@/contexts/UserRoleContext';
+import { useMemo } from 'react';
 import {
   LayoutDashboard,
   Search,
   Brain,
-  Briefcase,
+  Users,
+  History,
   Menu,
+  User,
 } from 'lucide-react';
+import { LucideIcon } from 'lucide-react';
 
-const navItems = [
-  { label: 'Dashboard', path: '/dashboard', icon: LayoutDashboard },
-  { label: 'Buscar', path: '/encontrar-clientes', icon: Search },
-  { label: 'Diagnóstico', path: '/nexia-ai', icon: Brain },
-  { label: 'Vendas', path: '/vendas', icon: Briefcase },
+interface NavItem {
+  label: string;
+  path: string;
+  icon: LucideIcon;
+  mode: 'simple' | 'advanced' | 'both';
+  adminOnly?: boolean;
+}
+
+// SIMPLE mode: Dashboard, Buscar, Clientes, Histórico, Perfil
+const simpleNavItems: NavItem[] = [
+  { label: 'Dashboard', path: '/dashboard', icon: LayoutDashboard, mode: 'simple' },
+  { label: 'Buscar', path: '/encontrar-clientes', icon: Search, mode: 'simple' },
+  { label: 'Clientes', path: '/clientes', icon: Users, mode: 'simple' },
+  { label: 'Histórico', path: '/historico', icon: History, mode: 'simple' },
+];
+
+// ADVANCED mode: Dashboard, Buscar, Diagnóstico, Clientes, Perfil
+const advancedNavItems: NavItem[] = [
+  { label: 'Dashboard', path: '/dashboard', icon: LayoutDashboard, mode: 'advanced' },
+  { label: 'Buscar', path: '/encontrar-clientes', icon: Search, mode: 'advanced' },
+  { label: 'Diagnóstico', path: '/nexia-ai', icon: Brain, mode: 'advanced', adminOnly: true },
+  { label: 'Clientes', path: '/clientes', icon: Users, mode: 'advanced' },
 ];
 
 interface MobileBottomNavProps {
@@ -21,6 +44,15 @@ interface MobileBottomNavProps {
 
 export function MobileBottomNav({ onMenuClick }: MobileBottomNavProps) {
   const location = useLocation();
+  const { mode } = useUserMode();
+  const { isAdminOrOwner } = useUserRole();
+
+  // Filter nav items based on mode and user role
+  const navItems = useMemo(() => {
+    const baseItems = mode === 'simple' ? simpleNavItems : advancedNavItems;
+    // Filter out admin-only items for non-admin users
+    return baseItems.filter(item => !item.adminOnly || isAdminOrOwner);
+  }, [mode, isAdminOrOwner]);
 
   return (
     <nav className="fixed bottom-0 left-0 right-0 z-50 bg-background/95 backdrop-blur-md border-t border-border safe-area-pb">

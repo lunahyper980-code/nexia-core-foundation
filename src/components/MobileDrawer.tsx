@@ -2,6 +2,9 @@ import { NavLink, useLocation } from 'react-router-dom';
 import { cn } from '@/lib/utils';
 import { Sheet, SheetContent, SheetHeader, SheetTitle } from '@/components/ui/sheet';
 import { ScrollArea } from '@/components/ui/scroll-area';
+import { useUserRole } from '@/contexts/UserRoleContext';
+import { useUserMode } from '@/contexts/UserModeContext';
+import { useMemo } from 'react';
 import {
   LayoutDashboard,
   Layers,
@@ -15,32 +18,53 @@ import {
   Search,
   GraduationCap,
   UsersRound,
+  Smartphone,
+  FolderOpen,
+  Coins,
+  FileSignature,
 } from 'lucide-react';
 import { Badge } from '@/components/ui/badge';
-import { useUserRole } from '@/contexts/UserRoleContext';
 import logoNexia from '@/assets/logo-nexia.png';
+import { LucideIcon } from 'lucide-react';
 
 interface NavItem {
   label: string;
   path: string;
-  icon: React.ComponentType<{ className?: string }>;
+  icon: LucideIcon;
   badge?: string;
   adminOnly?: boolean;
+  mode: 'simple' | 'advanced' | 'both';
 }
 
-const navItems: NavItem[] = [
-  { label: 'Dashboard', path: '/dashboard', icon: LayoutDashboard },
-  { label: 'Encontrar Clientes', path: '/encontrar-clientes', icon: Search },
-  { label: 'Diagnóstico', path: '/nexia-ai', icon: Brain, badge: 'avançado' },
-  { label: 'Vendas', path: '/vendas', icon: Briefcase },
-  { label: 'Clientes', path: '/clientes', icon: Users },
-  { label: 'Soluções Digitais', path: '/solucoes', icon: Layers },
-  { label: 'Entrega', path: '/entrega', icon: Package },
-  { label: 'Identidade', path: '/identidade', icon: Fingerprint },
-  { label: 'Histórico / Atividade', path: '/historico', icon: History },
-  { label: 'Minha Equipe', path: '/admin/minha-equipe', icon: UsersRound, adminOnly: true },
-  { label: 'Academy / Ajuda', path: '/academy', icon: GraduationCap },
-  { label: 'Configurações', path: '/configuracoes', icon: Settings },
+// Items for SIMPLE mode
+const simpleNavItems: NavItem[] = [
+  { label: 'Dashboard', path: '/dashboard', icon: LayoutDashboard, mode: 'simple' },
+  { label: 'Encontrar Clientes', path: '/encontrar-clientes', icon: Search, mode: 'simple' },
+  { label: 'Criar App / Site', path: '/solucoes', icon: Smartphone, mode: 'simple' },
+  { label: 'Meus Projetos', path: '/hyperbuild/projetos-lista', icon: FolderOpen, mode: 'simple' },
+  { label: 'Contratos', path: '/contratos', icon: FileSignature, mode: 'simple' },
+  { label: 'Clientes', path: '/clientes', icon: Users, mode: 'simple' },
+  { label: 'Histórico / Atividade', path: '/historico', icon: History, mode: 'simple' },
+  { label: 'Créditos', path: '/creditos', icon: Coins, mode: 'simple' },
+  { label: 'Minha Equipe', path: '/admin/equipe', icon: UsersRound, adminOnly: true, mode: 'simple' },
+  { label: 'Configurações', path: '/configuracoes', icon: Settings, mode: 'simple' },
+];
+
+// Items for ADVANCED mode
+const advancedNavItems: NavItem[] = [
+  { label: 'Dashboard', path: '/dashboard', icon: LayoutDashboard, mode: 'advanced' },
+  { label: 'Encontrar Clientes', path: '/encontrar-clientes', icon: Search, mode: 'advanced' },
+  { label: 'Diagnóstico', path: '/nexia-ai', icon: Brain, badge: 'avançado', adminOnly: true, mode: 'advanced' },
+  { label: 'Vendas', path: '/vendas', icon: Briefcase, mode: 'advanced' },
+  { label: 'Contratos', path: '/contratos', icon: FileSignature, mode: 'advanced' },
+  { label: 'Clientes', path: '/clientes', icon: Users, mode: 'advanced' },
+  { label: 'Soluções Digitais', path: '/solucoes', icon: Layers, adminOnly: true, mode: 'advanced' },
+  { label: 'Entrega', path: '/entrega', icon: Package, adminOnly: true, mode: 'advanced' },
+  { label: 'Identidade', path: '/identidade', icon: Fingerprint, mode: 'advanced' },
+  { label: 'Histórico / Atividade', path: '/historico', icon: History, mode: 'advanced' },
+  { label: 'Academy / Ajuda', path: '/academy', icon: GraduationCap, mode: 'advanced' },
+  { label: 'Minha Equipe', path: '/admin/equipe', icon: UsersRound, adminOnly: true, mode: 'advanced' },
+  { label: 'Configurações', path: '/configuracoes', icon: Settings, mode: 'advanced' },
 ];
 
 interface MobileDrawerProps {
@@ -51,8 +75,14 @@ interface MobileDrawerProps {
 export function MobileDrawer({ open, onOpenChange }: MobileDrawerProps) {
   const location = useLocation();
   const { isAdminOrOwner } = useUserRole();
+  const { mode } = useUserMode();
 
-  const filteredNavItems = navItems.filter(item => !item.adminOnly || isAdminOrOwner);
+  // Filter nav items based on mode and user role
+  const navItems = useMemo(() => {
+    const baseItems = mode === 'simple' ? simpleNavItems : advancedNavItems;
+    // Filter out admin-only items for non-admin users
+    return baseItems.filter(item => !item.adminOnly || isAdminOrOwner);
+  }, [mode, isAdminOrOwner]);
 
   return (
     <Sheet open={open} onOpenChange={onOpenChange}>
@@ -68,7 +98,7 @@ export function MobileDrawer({ open, onOpenChange }: MobileDrawerProps) {
         
         <ScrollArea className="flex-1 h-[calc(100vh-80px)]">
           <nav className="p-3 space-y-1">
-            {filteredNavItems.map((item) => {
+            {navItems.map((item) => {
               const isActive = location.pathname === item.path || location.pathname.startsWith(item.path + '/');
               const Icon = item.icon;
               const hasBadge = 'badge' in item && item.badge;
