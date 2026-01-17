@@ -1,9 +1,10 @@
-import { Search, Globe, Sparkles, Building2, MapPin, Instagram, Zap } from 'lucide-react';
+import { Search, Globe, Sparkles, Building2, MapPin, Instagram, Zap, Loader2 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Checkbox } from '@/components/ui/checkbox';
 import { AnimatedGlobeBackground } from './AnimatedGlobeBackground';
+import { cn } from '@/lib/utils';
 
 interface GlobalSearchCardProps {
   nicho: string;
@@ -35,20 +36,80 @@ export function GlobalSearchCard({
       {/* ========== LAYER 0: Globe Canvas ========== */}
       {/* Desktop: Full opacity normal | Mobile: Decorative, scaled, faded */}
       
-      {/* Desktop Globe - Full visibility */}
-      <div className="hidden md:block fixed inset-0 z-0">
-        <AnimatedGlobeBackground />
+      {/* Desktop Globe - Full visibility with analyzing state */}
+      <div className={cn(
+        "hidden md:block fixed inset-0 z-0 transition-transform duration-1000 ease-out",
+        isSearching && "scale-105"
+      )}>
+        <AnimatedGlobeBackground isAnalyzing={isSearching} />
       </div>
       
       {/* Mobile Globe - Decorative, reduced opacity, scaled, with fade mask */}
       <div 
-        className="md:hidden fixed inset-0 z-0 opacity-35 scale-[0.65] -translate-y-[15%] blur-[2px]"
+        className={cn(
+          "md:hidden fixed inset-0 z-0 opacity-35 scale-[0.65] -translate-y-[15%] blur-[2px] transition-all duration-1000 ease-out",
+          isSearching && "opacity-50 scale-[0.75]"
+        )}
         style={{
           maskImage: 'linear-gradient(to bottom, black 40%, transparent 85%)',
           WebkitMaskImage: 'linear-gradient(to bottom, black 40%, transparent 85%)',
         }}
       >
-        <AnimatedGlobeBackground />
+        <AnimatedGlobeBackground isAnalyzing={isSearching} />
+      </div>
+
+      {/* ========== LAYER 0.5: Analyzing Overlay ========== */}
+      <div 
+        className={cn(
+          "fixed inset-0 z-[5] flex flex-col items-center justify-center transition-all duration-500 pointer-events-none",
+          isSearching 
+            ? "opacity-100 backdrop-blur-sm" 
+            : "opacity-0"
+        )}
+        style={{
+          background: isSearching 
+            ? 'radial-gradient(circle at center, rgba(0,0,0,0.3) 0%, rgba(0,0,0,0.6) 100%)' 
+            : 'transparent'
+        }}
+      >
+        {isSearching && (
+          <div className="flex flex-col items-center gap-6 px-6 text-center animate-fade-in">
+            {/* Pulsing icon */}
+            <div className="relative">
+              <div className="absolute inset-0 animate-ping opacity-30">
+                <Sparkles className="h-10 w-10 md:h-12 md:w-12 text-primary" />
+              </div>
+              <Sparkles className="h-10 w-10 md:h-12 md:w-12 text-primary animate-pulse" />
+            </div>
+            
+            {/* Main text */}
+            <div className="space-y-2">
+              <h2 
+                className="text-xl md:text-2xl font-semibold text-foreground"
+                style={{ textShadow: '0 2px 20px rgba(0,0,0,0.8)' }}
+              >
+                Analisando o mercado...
+              </h2>
+              <p 
+                className="text-sm md:text-base text-muted-foreground/90 max-w-md"
+                style={{ textShadow: '0 1px 10px rgba(0,0,0,0.6)' }}
+              >
+                Nossa IA está buscando leads qualificados na sua região
+              </p>
+            </div>
+            
+            {/* Progress bar */}
+            <div className="w-64 md:w-80 h-1.5 bg-muted/30 rounded-full overflow-hidden">
+              <div 
+                className="h-full bg-gradient-to-r from-primary via-primary/80 to-primary rounded-full animate-progress-bar"
+                style={{
+                  width: '100%',
+                  animation: 'progressBar 2s ease-in-out infinite',
+                }}
+              />
+            </div>
+          </div>
+        )}
       </div>
 
       {/* ========== LAYER 1: Subtle Top Gradient for Depth & Readability ========== */}
@@ -156,11 +217,25 @@ export function GlobalSearchCard({
                 <Button 
                   onClick={onSearch} 
                   disabled={isSearching} 
-                  className="w-full md:w-auto md:min-w-[180px] gap-2 h-12 md:h-11 text-base md:text-sm font-semibold px-6 transition-all duration-200 hover:shadow-primary/25 hover:shadow-lg"
+                  className={cn(
+                    "w-full md:w-auto md:min-w-[180px] gap-2 h-12 md:h-11 text-base md:text-sm font-semibold px-6 transition-all duration-300",
+                    isSearching 
+                      ? "opacity-80" 
+                      : "hover:shadow-primary/25 hover:shadow-lg"
+                  )}
                   size="lg"
                 >
-                  <Search className="h-4 w-4" />
-                  Iniciar Busca
+                  {isSearching ? (
+                    <>
+                      <Loader2 className="h-4 w-4 animate-spin" />
+                      Iniciando análise...
+                    </>
+                  ) : (
+                    <>
+                      <Search className="h-4 w-4" />
+                      Iniciar Busca
+                    </>
+                  )}
                 </Button>
               </div>
 
