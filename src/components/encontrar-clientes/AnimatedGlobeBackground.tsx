@@ -296,6 +296,22 @@ export function AnimatedGlobeBackground({ isSearching = false }: AnimatedGlobeBa
       ctx.arc(centerX, centerY, globeRadius, 0, Math.PI * 2);
       ctx.fill();
 
+      // Bottom grounding shadow - gives the globe a "seated" appearance
+      const groundShadow = ctx.createRadialGradient(
+        centerX,
+        centerY + globeRadius * 0.85,
+        0,
+        centerX,
+        centerY + globeRadius * 0.85,
+        globeRadius * 0.8
+      );
+      const groundingIntensity = isZooming ? 0.25 : 0.15;
+      groundShadow.addColorStop(0, `rgba(0, 0, 0, ${groundingIntensity})`);
+      groundShadow.addColorStop(0.5, `rgba(0, 0, 0, ${groundingIntensity * 0.4})`);
+      groundShadow.addColorStop(1, 'rgba(0, 0, 0, 0)');
+      ctx.fillStyle = groundShadow;
+      ctx.fillRect(centerX - globeRadius, centerY + globeRadius * 0.5, globeRadius * 2, globeRadius * 0.8);
+
       animationId = requestAnimationFrame(animate);
     };
 

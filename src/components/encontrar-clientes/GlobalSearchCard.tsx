@@ -214,42 +214,45 @@ export function GlobalSearchCard({
         </div>
       </div>
 
-      {/* ========== LAYER 3: Search Loading Overlay - Positioned relative to globe ========== */}
+      {/* ========== LAYER 3: Search Loading - Unified container with globe ========== */}
       <div 
-        className={`fixed inset-0 z-20 pointer-events-none transition-all duration-700 ${
+        className={`fixed inset-0 z-20 pointer-events-none flex items-center justify-center transition-all duration-700 ${
           isSearching ? 'opacity-100' : 'opacity-0'
         }`}
       >
-        {/* Container positioned relative to globe center - 60% down from top */}
-        <div 
-          className="absolute left-0 right-0 flex flex-col items-center gap-4 px-6"
-          style={{ 
-            top: '68%', // Position below globe center (globe is at ~52%)
-            transform: 'translateY(-50%)'
-          }}
-        >
-          {/* Status text with elegant breathing animation */}
-          <p 
-            className="text-foreground/90 text-sm sm:text-base font-light tracking-wider text-center"
-            style={{ 
-              textShadow: '0 2px 25px rgba(0,0,0,0.7), 0 0 40px rgba(139, 92, 246, 0.2)',
-              animation: 'breathe-text 3s ease-in-out infinite',
-              letterSpacing: '0.05em'
-            }}
-          >
-            Encontrando oportunidades na sua região…
-          </p>
+        {/* Single unified container - globe area + text + bar as one unit */}
+        <div className="flex flex-col items-center justify-center w-full h-full">
+          {/* Spacer to position content below globe visual center (globe is at 52% height) */}
+          <div className="flex-1" style={{ minHeight: '58%' }} />
           
-          {/* Minimal indeterminate progress bar - Nexia purple */}
-          <div className="w-48 sm:w-64 h-0.5 bg-muted/15 rounded-full overflow-hidden backdrop-blur-sm">
-            <div 
-              className="h-full rounded-full"
-              style={{
-                background: 'linear-gradient(90deg, rgba(139,92,246,0.4), rgba(139,92,246,0.9), rgba(139,92,246,0.4))',
-                animation: 'indeterminate-progress 2s ease-in-out infinite',
+          {/* Text + Bar container - immediately below globe */}
+          <div className="flex flex-col items-center gap-3 px-6 pb-8">
+            {/* Status text - elegant, secondary hierarchy */}
+            <p 
+              className="text-foreground/80 text-xs sm:text-sm font-light tracking-widest text-center uppercase"
+              style={{ 
+                textShadow: '0 2px 20px rgba(0,0,0,0.8), 0 0 30px rgba(139, 92, 246, 0.15)',
+                animation: 'breathe-text 3.5s ease-in-out infinite',
+                letterSpacing: '0.12em'
               }}
-            />
+            >
+              Encontrando oportunidades na sua região…
+            </p>
+            
+            {/* Minimal progress bar - discrete, short, support visual */}
+            <div className="w-32 sm:w-40 h-[2px] bg-muted/10 rounded-full overflow-hidden">
+              <div 
+                className="h-full rounded-full"
+                style={{
+                  background: 'linear-gradient(90deg, transparent, rgba(139,92,246,0.7), transparent)',
+                  animation: 'indeterminate-progress 2.2s ease-in-out infinite',
+                }}
+              />
+            </div>
           </div>
+          
+          {/* Bottom spacer */}
+          <div className="h-12 sm:h-16" />
         </div>
       </div>
 
@@ -258,24 +261,31 @@ export function GlobalSearchCard({
           0% {
             width: 0%;
             margin-left: 0%;
+            opacity: 0;
+          }
+          15% {
+            opacity: 1;
           }
           50% {
-            width: 40%;
-            margin-left: 30%;
+            width: 60%;
+            margin-left: 20%;
+            opacity: 1;
+          }
+          85% {
+            opacity: 1;
           }
           100% {
             width: 0%;
             margin-left: 100%;
+            opacity: 0;
           }
         }
         @keyframes breathe-text {
           0%, 100% {
-            opacity: 0.7;
-            transform: scale(1);
+            opacity: 0.55;
           }
           50% {
-            opacity: 1;
-            transform: scale(1.01);
+            opacity: 0.95;
           }
         }
       `}</style>
