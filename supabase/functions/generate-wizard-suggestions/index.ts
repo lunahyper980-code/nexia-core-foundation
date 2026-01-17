@@ -13,9 +13,13 @@ interface Field {
 
 interface RequestBody {
   projectType: 'app' | 'site';
-  step: number;
-  fields: Field[];
+  step?: number;
+  fields?: Field[];
   context: Record<string, any>;
+  // Single field mode
+  mode?: 'single-field';
+  fieldId?: string;
+  fieldLabel?: string;
 }
 
 interface Suggestion {
@@ -32,7 +36,8 @@ serve(async (req) => {
   }
 
   try {
-    const { projectType, step, fields, context } = await req.json() as RequestBody;
+    const body = await req.json() as RequestBody;
+    const { projectType, context, mode, fieldId, fieldLabel, step, fields } = body;
     
     const LOVABLE_API_KEY = Deno.env.get('LOVABLE_API_KEY');
     if (!LOVABLE_API_KEY) {
@@ -40,17 +45,111 @@ serve(async (req) => {
     }
 
     // Build context description
-    const contextDescription = Object.entries(context)
+    const contextDescription = Object.entries(context || {})
       .filter(([_, value]) => value)
       .map(([key, value]) => `- ${key}: ${value}`)
       .join('\n');
+
+    const projectTypeLabel = projectType === 'app' ? 'aplicativo/SaaS' : 'site/página web';
+
+    // Single field mode - simpler, faster response
+    if (mode === 'single-field' && fieldId && fieldLabel) {
+      console.log('Single field mode for:', fieldId, fieldLabel);
+
+      const systemPrompt = `Você é um especialista em criação de ${projectTypeLabel}s. 
+Gere 3 sugestões curtas e variadas para o campo solicitado.
+
+REGRAS:
+1. Cada sugestão deve ter no máximo 60 caracteres
+2. Sugestões devem ser específicas e não genéricas
+3. Considere o contexto já preenchido
+4. Use linguagem profissional e direta`;
+
+      const userPrompt = `Contexto do projeto:
+${contextDescription || 'Novo projeto'}
+
+Campo para sugerir: "${fieldLabel}"
+
+Responda APENAS com um JSON:
+{
+  "suggestions": [
+    {"id": "1", "value": "sugestão curta 1"},
+    {"id": "2", "value": "sugestão curta 2"},
+    {"id": "3", "value": "sugestão curta 3"}
+  ]
+}`;
+
+      const response = await fetch('https://ai.gateway.lovable.dev/v1/chat/completions', {
+        method: 'POST',
+        headers: {
+          'Authorization': `Bearer ${LOVABLE_API_KEY}`,
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          model: 'google/gemini-3-flash-preview',
+          messages: [
+            { role: 'system', content: systemPrompt },
+            { role: 'user', content: userPrompt }
+          ],
+          temperature: 0.9,
+        }),
+      });
+
+      if (!response.ok) {
+        const errorText = await response.text();
+        console.error('AI Gateway error:', response.status, errorText);
+        
+        if (response.status === 429) {
+          return new Response(JSON.stringify({ error: 'Limite de requisições atingido.' }), {
+            status: 429,
+            headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+          });
+        }
+        
+        if (response.status === 402) {
+          return new Response(JSON.stringify({ error: 'Créditos insuficientes.' }), {
+            status: 402,
+            headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+          });
+        }
+        
+        throw new Error(`AI Gateway error: ${response.status}`);
+      }
+
+      const aiResponse = await response.json();
+      const content = aiResponse.choices?.[0]?.message?.content;
+
+      if (!content) {
+        throw new Error('No content in AI response');
+      }
+
+      let jsonContent = content;
+      const jsonMatch = content.match(/```(?:json)?\s*([\s\S]*?)```/);
+      if (jsonMatch) {
+        jsonContent = jsonMatch[1];
+      }
+
+      const parsed = JSON.parse(jsonContent.trim());
+      const suggestions = (parsed.suggestions || []).slice(0, 3);
+
+      console.log(`Generated ${suggestions.length} single-field suggestions`);
+
+      return new Response(JSON.stringify({ suggestions }), {
+        headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+      });
+    }
+
+    // Multi-field mode (legacy)
+    if (!fields || fields.length === 0) {
+      return new Response(JSON.stringify({ suggestions: [] }), {
+        headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+      });
+    }
 
     // Build fields description
     const fieldsDescription = fields
       .map(f => `- Campo "${f.label}" (id: ${f.id})${f.currentValue ? ` [valor atual: ${f.currentValue}]` : ''}`)
       .join('\n');
-
-    const projectTypeLabel = projectType === 'app' ? 'aplicativo/SaaS' : 'site/página web';
 
     const systemPrompt = `Você é um especialista em criação de ${projectTypeLabel}s profissionais. 
 Sua tarefa é gerar sugestões criativas e úteis para ajudar o usuário a preencher os campos do formulário.
