@@ -549,23 +549,6 @@ Foco total em CONVERSÃO e EXPERIÊNCIA DO USUÁRIO.
         const currentFields = getCurrentFields();
         return (
           <div className="space-y-6">
-            {/* AI Suggest Button */}
-            <div className="flex justify-end">
-              <AISuggestButton
-                onClick={handleGenerateSuggestions}
-                isLoading={isLoadingSuggestions}
-              />
-            </div>
-
-            {/* AI Suggestions Panel */}
-            <AISuggestionsPanel
-              suggestions={suggestions}
-              appliedSuggestions={appliedSuggestions}
-              onApply={handleApplySuggestion}
-              onClose={closeSuggestions}
-              isVisible={isSuggestionsVisible}
-            />
-
             <div className="text-center mb-8">
               <div className="w-16 h-16 rounded-2xl bg-emerald-500/10 flex items-center justify-center mx-auto mb-4">
                 <Target className="h-8 w-8 text-emerald-500" />
