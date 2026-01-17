@@ -34,7 +34,7 @@ export function GlobalSearchCard({
     <div className="relative w-full h-[calc(100vh-80px)] overflow-hidden">
       {/* ========== LAYER 0: Globe Canvas - Fullscreen Background ========== */}
       <div className="fixed inset-0 z-0">
-        <AnimatedGlobeBackground />
+        <AnimatedGlobeBackground isSearching={isSearching} />
       </div>
 
       {/* ========== LAYER 1: Subtle Top Gradient for Depth & Readability ========== */}
