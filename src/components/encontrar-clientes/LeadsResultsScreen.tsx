@@ -15,6 +15,7 @@ import {
   MapPin
 } from 'lucide-react';
 import { LeadCard, Lead } from './LeadCard';
+import { useUserMode } from '@/contexts/UserModeContext';
 
 interface LeadsResultsScreenProps {
   leads: Lead[];
@@ -37,6 +38,9 @@ export function LeadsResultsScreen({
 }: LeadsResultsScreenProps) {
   const navigate = useNavigate();
   const [showUnconfirmed, setShowUnconfirmed] = useState(false);
+  const { mode } = useUserMode();
+  
+  const isSimpleMode = mode === 'simple';
 
   return (
     <div className="w-full space-y-6 animate-fade-in">
@@ -80,26 +84,30 @@ export function LeadsResultsScreen({
           <div className="flex items-start gap-3 p-4 rounded-xl bg-background/60 backdrop-blur-sm border border-border/50">
             <Lightbulb className="h-5 w-5 text-primary shrink-0 mt-0.5" />
             <p className="text-sm text-muted-foreground">
-              <span className="font-medium text-foreground">Dica:</span> Para telefone e fotos oficiais, toque em "Ampliar mapa" dentro do card do lead.
+              <span className="font-medium text-foreground">Dica:</span> {isSimpleMode 
+                ? 'Clique em "Ampliar mapa" para ver telefone e fotos do estabelecimento.'
+                : 'Para telefone e fotos oficiais, toque em "Ampliar mapa" dentro do card do lead.'}
             </p>
           </div>
         </div>
       </div>
 
-      {/* Briefing reminder */}
-      <Alert className="border-primary/30 bg-primary/5">
-        <ClipboardList className="h-4 w-4 text-primary" />
-        <AlertDescription className="text-foreground">
-          <strong>Próximo passo:</strong> Após o primeiro contato positivo com o cliente, gere o{' '}
-          <button 
-            onClick={() => navigate('/briefing-rapido')}
-            className="font-semibold text-primary underline underline-offset-2 hover:text-primary/80"
-          >
-            Briefing Rápido
-          </button>
-          {' '}antes de avançar para o diagnóstico ou planejamento.
-        </AlertDescription>
-      </Alert>
+      {/* Briefing reminder - Only show in advanced/professional mode */}
+      {!isSimpleMode && (
+        <Alert className="border-primary/30 bg-primary/5">
+          <ClipboardList className="h-4 w-4 text-primary" />
+          <AlertDescription className="text-foreground">
+            <strong>Próximo passo:</strong> Após o primeiro contato positivo com o cliente, gere o{' '}
+            <button 
+              onClick={() => navigate('/briefing-rapido')}
+              className="font-semibold text-primary underline underline-offset-2 hover:text-primary/80"
+            >
+              Briefing Rápido
+            </button>
+            {' '}antes de avançar para o diagnóstico ou planejamento.
+          </AlertDescription>
+        </Alert>
+      )}
 
       {/* Leads grid */}
       <div className="grid gap-4 sm:grid-cols-2">
