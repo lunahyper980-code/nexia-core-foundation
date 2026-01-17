@@ -55,17 +55,24 @@ export function GlobalSearchCard({
         }}
       />
 
-      {/* ========== LAYER 2: Content - Hidden when searching ========== */}
+      {/* ========== LAYER 2: Content - Stagger animation when searching ========== */}
       <div 
-        className={`relative z-10 flex flex-col h-full transition-all duration-500 ${
-          isSearching ? 'opacity-0 pointer-events-none scale-95' : 'opacity-100'
+        className={`relative z-10 flex flex-col h-full ${
+          isSearching ? 'pointer-events-none' : ''
         }`}
       >
         
         {/* Top Section - Title & Badges */}
         <div className="pt-6 lg:pt-8 px-8 lg:px-16">
-          {/* Feature Badges */}
-          <div className="flex flex-wrap justify-center gap-4 mb-5">
+          {/* Feature Badges - Stagger delay 0ms */}
+          <div 
+            className={`flex flex-wrap justify-center gap-4 mb-5 transition-all duration-500 ease-out ${
+              isSearching 
+                ? 'opacity-0 -translate-y-8 scale-90' 
+                : 'opacity-100 translate-y-0 scale-100'
+            }`}
+            style={{ transitionDelay: isSearching ? '0ms' : '300ms' }}
+          >
             <div className="flex items-center gap-2 px-4 py-1.5 rounded-full border border-primary/25 bg-primary/5 backdrop-blur-sm">
               <Globe className="h-3.5 w-3.5 text-primary" />
               <span className="text-foreground/90 font-medium text-xs tracking-wide">Alcance Mundial</span>
@@ -80,8 +87,15 @@ export function GlobalSearchCard({
             </div>
           </div>
 
-          {/* Header */}
-          <div className="text-center">
+          {/* Header - Stagger delay 80ms */}
+          <div 
+            className={`text-center transition-all duration-500 ease-out ${
+              isSearching 
+                ? 'opacity-0 -translate-y-6 scale-95' 
+                : 'opacity-100 translate-y-0 scale-100'
+            }`}
+            style={{ transitionDelay: isSearching ? '80ms' : '220ms' }}
+          >
             <h1 
               className="text-4xl lg:text-5xl xl:text-6xl font-bold text-foreground mb-3 tracking-tight"
               style={{ textShadow: '0 2px 30px rgba(0,0,0,0.6)' }}
@@ -100,8 +114,15 @@ export function GlobalSearchCard({
         {/* Spacer - Globe visual dominates this area */}
         <div className="flex-1" />
 
-        {/* Bottom Section - Floating HUD Search Panel */}
-        <div className="px-8 lg:px-16 pb-6 lg:pb-10">
+        {/* Bottom Section - Floating HUD Search Panel - Stagger delay 160ms */}
+        <div 
+          className={`px-8 lg:px-16 pb-6 lg:pb-10 transition-all duration-600 ease-out ${
+            isSearching 
+              ? 'opacity-0 translate-y-12 scale-90' 
+              : 'opacity-100 translate-y-0 scale-100'
+          }`}
+          style={{ transitionDelay: isSearching ? '160ms' : '100ms' }}
+        >
           <div className="w-full max-w-5xl mx-auto">
             <div 
               className="rounded-xl p-5 lg:p-6"
