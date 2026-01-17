@@ -54,15 +54,16 @@ const simpleNavItems: NavItem[] = [
 ];
 
 // Items for ADVANCED mode (current menu)
+// Note: Diagnóstico, Soluções Digitais, Entrega are admin-only
 const advancedNavItems: NavItem[] = [
   { label: 'Dashboard', path: '/dashboard', icon: LayoutDashboard, mode: 'advanced' },
   { label: 'Encontrar Clientes', path: '/encontrar-clientes', icon: Search, mode: 'advanced' },
-  { label: 'Diagnóstico', path: '/nexia-ai', icon: Brain, badge: 'avançado', mode: 'advanced' },
+  { label: 'Diagnóstico', path: '/nexia-ai', icon: Brain, badge: 'avançado', adminOnly: true, mode: 'advanced' },
   { label: 'Vendas', path: '/vendas', icon: Briefcase, mode: 'advanced' },
   { label: 'Contratos', path: '/contratos', icon: FileSignature, mode: 'advanced' },
   { label: 'Clientes', path: '/clientes', icon: Users, mode: 'advanced' },
-  { label: 'Soluções Digitais', path: '/solucoes', icon: Layers, mode: 'advanced' },
-  { label: 'Entrega', path: '/entrega', icon: Package, mode: 'advanced' },
+  { label: 'Soluções Digitais', path: '/solucoes', icon: Layers, adminOnly: true, mode: 'advanced' },
+  { label: 'Entrega', path: '/entrega', icon: Package, adminOnly: true, mode: 'advanced' },
   { label: 'Identidade', path: '/identidade', icon: Fingerprint, mode: 'advanced' },
   { label: 'Histórico / Atividade', path: '/historico', icon: History, mode: 'advanced' },
   { label: 'Academy / Ajuda', path: '/academy', icon: GraduationCap, mode: 'advanced' },
