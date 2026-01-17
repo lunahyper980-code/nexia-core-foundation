@@ -31,9 +31,26 @@ export function GlobalSearchCard({
   onSearch,
 }: GlobalSearchCardProps) {
   return (
-    <div className="relative w-full h-[calc(100vh-80px)] overflow-hidden">
-      {/* ========== LAYER 0: Globe Canvas - Fullscreen Background ========== */}
-      <div className="fixed inset-0 z-0">
+    <div className="relative w-full min-h-[calc(100vh-80px)] md:h-[calc(100vh-80px)] overflow-hidden">
+      {/* ========== LAYER 0: Globe Canvas ========== */}
+      {/* Desktop: Fixed fullscreen | Mobile: Decorative, scaled, positioned at top */}
+      <div 
+        className="
+          fixed inset-0 z-0
+          md:opacity-100
+          opacity-35
+          md:scale-100
+          scale-[0.65]
+          md:translate-y-0
+          -translate-y-[15%]
+          md:blur-0
+          blur-[2px]
+        "
+        style={{
+          maskImage: 'linear-gradient(to bottom, black 40%, transparent 85%)',
+          WebkitMaskImage: 'linear-gradient(to bottom, black 40%, transparent 85%)',
+        }}
+      >
         <AnimatedGlobeBackground />
       </div>
 
@@ -54,12 +71,12 @@ export function GlobalSearchCard({
       />
 
       {/* ========== LAYER 2: Content - Floating HUD Style ========== */}
-      <div className="relative z-10 flex flex-col h-full">
+      <div className="relative z-10 flex flex-col h-full md:h-full min-h-full">
         
-        {/* Top Section - Title & Badges (closer to top, floating above globe) */}
-        <div className="pt-6 lg:pt-8 px-8 lg:px-16">
-          {/* Feature Badges - Lighter, more subtle */}
-          <div className="flex flex-wrap justify-center gap-4 mb-5">
+        {/* Top Section - Title & Badges */}
+        <div className="pt-4 md:pt-6 lg:pt-8 px-4 md:px-8 lg:px-16">
+          {/* Feature Badges - Hidden on mobile for cleaner UX */}
+          <div className="hidden md:flex flex-wrap justify-center gap-4 mb-5">
             <div className="flex items-center gap-2 px-4 py-1.5 rounded-full border border-primary/25 bg-primary/5 backdrop-blur-sm">
               <Globe className="h-3.5 w-3.5 text-primary" />
               <span className="text-foreground/90 font-medium text-xs tracking-wide">Alcance Mundial</span>
@@ -77,13 +94,13 @@ export function GlobalSearchCard({
           {/* Header - Primary focus, floating above globe */}
           <div className="text-center">
             <h1 
-              className="text-4xl lg:text-5xl xl:text-6xl font-bold text-foreground mb-3 tracking-tight"
+              className="text-2xl md:text-4xl lg:text-5xl xl:text-6xl font-bold text-foreground mb-2 md:mb-3 tracking-tight leading-tight"
               style={{ textShadow: '0 2px 30px rgba(0,0,0,0.6)' }}
             >
               Prospectar Leads
             </h1>
             <p 
-              className="text-muted-foreground/90 text-base lg:text-lg max-w-xl mx-auto leading-relaxed"
+              className="text-muted-foreground/90 text-sm md:text-base lg:text-lg max-w-xl mx-auto leading-relaxed px-2"
               style={{ textShadow: '0 1px 15px rgba(0,0,0,0.5)' }}
             >
               Descubra leads qualificados em qualquer região. Nossa IA analisa o mercado e entrega contatos prontos para prospecção.
@@ -91,22 +108,23 @@ export function GlobalSearchCard({
           </div>
         </div>
 
-        {/* Spacer - Globe visual dominates this area */}
-        <div className="flex-1" />
+        {/* Spacer - Desktop: Globe visual dominates | Mobile: Minimal */}
+        <div className="flex-1 min-h-8 md:min-h-0" />
 
-        {/* Bottom Section - Floating HUD Search Panel (lighter, more tech feel) */}
-        <div className="px-8 lg:px-16 pb-6 lg:pb-10">
+        {/* Bottom Section - Floating HUD Search Panel */}
+        <div className="px-4 md:px-8 lg:px-16 pb-24 md:pb-6 lg:pb-10">
           <div className="w-full max-w-5xl mx-auto">
             <div 
-              className="rounded-xl p-5 lg:p-6"
+              className="rounded-xl p-4 md:p-5 lg:p-6"
               style={{
-                background: 'rgba(8, 8, 12, 0.65)',
+                background: 'rgba(8, 8, 12, 0.75)',
                 backdropFilter: 'blur(16px)',
-                border: '1px solid rgba(255,255,255,0.06)',
+                border: '1px solid rgba(255,255,255,0.08)',
                 boxShadow: '0 4px 24px rgba(0,0,0,0.25), inset 0 1px 0 rgba(255,255,255,0.03)'
               }}
             >
-              <div className="grid gap-5 lg:gap-6 lg:grid-cols-[1fr_1fr_auto] items-end">
+              {/* Mobile: Stack inputs | Desktop: Grid layout */}
+              <div className="flex flex-col gap-4 md:grid md:gap-5 lg:gap-6 md:grid-cols-[1fr_1fr_auto] md:items-end">
                 {/* Input: Nicho */}
                 <div className="space-y-1.5">
                   <Label htmlFor="nicho" className="flex items-center gap-2 text-foreground/80 text-xs font-medium tracking-wide uppercase">
@@ -118,7 +136,7 @@ export function GlobalSearchCard({
                     placeholder="Ex: Barbearia, Clínica, Restaurante..."
                     value={nicho}
                     onChange={(e) => onNichoChange(e.target.value)}
-                    className="bg-background/40 h-11 text-sm border-border/30 focus:border-primary/40 placeholder:text-muted-foreground/50"
+                    className="bg-background/40 h-12 md:h-11 text-base md:text-sm border-border/30 focus:border-primary/40 placeholder:text-muted-foreground/50 w-full"
                   />
                 </div>
                 
@@ -133,15 +151,15 @@ export function GlobalSearchCard({
                     placeholder="Ex: São Paulo, Zona Sul de SP..."
                     value={cidade}
                     onChange={(e) => onCidadeChange(e.target.value)}
-                    className="bg-background/40 h-11 text-sm border-border/30 focus:border-primary/40 placeholder:text-muted-foreground/50"
+                    className="bg-background/40 h-12 md:h-11 text-base md:text-sm border-border/30 focus:border-primary/40 placeholder:text-muted-foreground/50 w-full"
                   />
                 </div>
 
-                {/* Button - Subtle glow, not overpowering */}
+                {/* Button - Full width on mobile */}
                 <Button 
                   onClick={onSearch} 
                   disabled={isSearching} 
-                  className="w-full lg:w-auto lg:min-w-[180px] gap-2 h-11 text-sm font-semibold px-6 transition-all duration-200 hover:shadow-primary/25 hover:shadow-lg"
+                  className="w-full md:w-auto md:min-w-[180px] gap-2 h-12 md:h-11 text-base md:text-sm font-semibold px-6 transition-all duration-200 hover:shadow-primary/25 hover:shadow-lg"
                   size="lg"
                 >
                   <Search className="h-4 w-4" />
@@ -149,14 +167,14 @@ export function GlobalSearchCard({
                 </Button>
               </div>
 
-              {/* Filters row - Cleaner, more minimal */}
-              <div className="flex flex-wrap items-center gap-6 lg:gap-10 mt-5 pt-4 border-t border-border/15">
+              {/* Filters row - Stacked on mobile */}
+              <div className="flex flex-col md:flex-row md:flex-wrap items-start md:items-center gap-4 md:gap-6 lg:gap-10 mt-4 md:mt-5 pt-4 border-t border-border/15">
                 <div className="flex items-center gap-2">
                   <Checkbox
                     id="possuiSite"
                     checked={possuiSite}
                     onCheckedChange={(checked) => onPossuiSiteChange(checked === true)}
-                    className="border-border/40"
+                    className="border-border/40 h-5 w-5 md:h-4 md:w-4"
                   />
                   <Label htmlFor="possuiSite" className="flex items-center gap-1.5 cursor-pointer text-muted-foreground/80 text-sm hover:text-foreground/90 transition-colors">
                     <Globe className="h-3.5 w-3.5 text-emerald-500/80" />
@@ -168,7 +186,7 @@ export function GlobalSearchCard({
                     id="possuiInstagram"
                     checked={possuiInstagram}
                     onCheckedChange={(checked) => onPossuiInstagramChange(checked === true)}
-                    className="border-border/40"
+                    className="border-border/40 h-5 w-5 md:h-4 md:w-4"
                   />
                   <Label htmlFor="possuiInstagram" className="flex items-center gap-1.5 cursor-pointer text-muted-foreground/80 text-sm hover:text-foreground/90 transition-colors">
                     <Instagram className="h-3.5 w-3.5 text-pink-500/80" />
@@ -176,8 +194,8 @@ export function GlobalSearchCard({
                   </Label>
                 </div>
                 
-                {/* Tagline - Very subtle */}
-                <p className="text-[11px] text-muted-foreground/50 ml-auto tracking-wide">
+                {/* Tagline - Hidden on mobile */}
+                <p className="hidden md:block text-[11px] text-muted-foreground/50 ml-auto tracking-wide">
                   Prospecção inteligente com a tecnologia Nexia
                 </p>
               </div>
