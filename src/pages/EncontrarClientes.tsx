@@ -4,11 +4,10 @@ import { toast } from 'sonner';
 import { supabase } from '@/integrations/supabase/client';
 import { NeuralAnimation } from '@/components/encontrar-clientes/NeuralAnimation';
 import { Lead } from '@/components/encontrar-clientes/LeadCard';
-import { IntelligentApproachScreen } from '@/components/encontrar-clientes/IntelligentApproachScreen';
+import { ApproachModal } from '@/components/encontrar-clientes/ApproachModal';
 import { GlobalSearchCard } from '@/components/encontrar-clientes/GlobalSearchCard';
 import { LeadsResultsScreen } from '@/components/encontrar-clientes/LeadsResultsScreen';
 import { useWorkspace } from '@/contexts/WorkspaceContext';
-import { NextStepCard } from '@/components/academy/NextStepCard';
 import { useModuleState } from '@/hooks/useModuleState';
 
 export default function EncontrarClientes() {
@@ -187,10 +186,10 @@ export default function EncontrarClientes() {
       {/* Neural Animation Modal */}
       <NeuralAnimation open={isSearching} />
 
-      {/* Intelligent Approach Screen */}
-      <IntelligentApproachScreen
+      {/* Approach Modal */}
+      <ApproachModal
         open={messageModalOpen}
-        onClose={() => setMessageModalOpen(false)}
+        onOpenChange={setMessageModalOpen}
         lead={selectedLead}
       />
     </AppLayout>
