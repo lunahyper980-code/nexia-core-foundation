@@ -31,15 +31,15 @@ export function GlobalSearchCard({
   onSearch,
 }: GlobalSearchCardProps) {
   return (
-    <div className="relative w-full min-h-[calc(100vh-80px)] overflow-hidden">
-      {/* ========== LAYER 0: Globe Canvas - Within content area ========== */}
-      <div className="absolute inset-0 z-0">
+    <div className="relative w-full h-[calc(100vh-80px)] overflow-hidden">
+      {/* ========== LAYER 0: Globe Canvas - Fullscreen Background ========== */}
+      <div className="fixed inset-0 z-0">
         <AnimatedGlobeBackground isSearching={isSearching} />
       </div>
 
       {/* ========== LAYER 1: Subtle Top Gradient for Depth & Readability ========== */}
       <div 
-        className={`absolute inset-0 z-[1] pointer-events-none transition-opacity duration-500 ${
+        className={`fixed inset-0 z-[1] pointer-events-none transition-opacity duration-500 ${
           isSearching ? 'opacity-0' : 'opacity-100'
         }`}
         style={{
@@ -213,14 +213,14 @@ export function GlobalSearchCard({
         </div>
       </div>
 
-      {/* ========== LAYER 3: Search Loading Overlay - Centered in content area ========== */}
+      {/* ========== LAYER 3: Search Loading Overlay - Only visible when searching ========== */}
       <div 
-        className={`absolute inset-0 z-20 flex flex-col items-center justify-center transition-all duration-700 ${
+        className={`fixed inset-0 z-20 flex items-center justify-center transition-all duration-700 ${
           isSearching ? 'opacity-100' : 'opacity-0 pointer-events-none'
         }`}
       >
-        {/* Centered content - positioned below center for globe visibility */}
-        <div className="flex flex-col items-center gap-5 px-6 mt-[25vh] sm:mt-[30vh]">
+        {/* Centered content below globe area */}
+        <div className="absolute bottom-24 sm:bottom-32 left-0 right-0 flex flex-col items-center gap-5 px-6">
           {/* Status text */}
           <p 
             className="text-foreground/90 text-base sm:text-lg font-medium tracking-wide text-center"
