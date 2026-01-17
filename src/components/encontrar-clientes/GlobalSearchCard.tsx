@@ -1,14 +1,9 @@
-import { Search, Globe, Sparkles, Building2, MapPin, Instagram, Zap, Loader2 } from 'lucide-react';
+import { Search, Globe, Sparkles, Building2, MapPin, Instagram, Zap } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Checkbox } from '@/components/ui/checkbox';
 import { AnimatedGlobeBackground } from './AnimatedGlobeBackground';
-import { cn } from '@/lib/utils';
-
-// Sparkles icon is still imported but not used in loading state for cleaner UX
-// eslint-disable-next-line @typescript-eslint/no-unused-vars
-const _Sparkles = Sparkles;
 
 interface GlobalSearchCardProps {
   nicho: string;
@@ -36,63 +31,10 @@ export function GlobalSearchCard({
   onSearch,
 }: GlobalSearchCardProps) {
   return (
-    <div className="relative w-full min-h-[calc(100vh-80px)] md:h-[calc(100vh-80px)] overflow-hidden">
-      {/* ========== LAYER 0: Globe Canvas ========== */}
-      {/* MESMO globo reutilizado - apenas altera rotação e zoom suave */}
-      
-      {/* Desktop Globe - Zoom suave durante busca */}
-      <div className={cn(
-        "hidden md:block fixed inset-0 z-0 transition-transform duration-[2000ms] ease-in-out origin-center",
-        isSearching && "scale-[1.15]"
-      )}>
-        <AnimatedGlobeBackground isAnalyzing={isSearching} />
-      </div>
-      
-      {/* Mobile Globe - Zoom proporcional durante busca */}
-      <div 
-        className={cn(
-          "md:hidden fixed inset-0 z-0 transition-all duration-[2000ms] ease-in-out origin-center",
-          isSearching 
-            ? "opacity-60 scale-[0.8]" 
-            : "opacity-40 scale-[0.7] -translate-y-[10%]"
-        )}
-        style={{
-          maskImage: 'linear-gradient(to bottom, black 50%, transparent 90%)',
-          WebkitMaskImage: 'linear-gradient(to bottom, black 50%, transparent 90%)',
-        }}
-      >
-        <AnimatedGlobeBackground isAnalyzing={isSearching} />
-      </div>
-
-      {/* ========== LAYER 0.5: Loading Status (discreto, abaixo do globo) ========== */}
-      <div 
-        className={cn(
-          "fixed inset-x-0 bottom-[35%] md:bottom-[28%] z-[5] flex flex-col items-center justify-center transition-all duration-700 pointer-events-none",
-          isSearching ? "opacity-100 translate-y-0" : "opacity-0 translate-y-4"
-        )}
-      >
-        {isSearching && (
-          <div className="flex flex-col items-center gap-4 px-6 text-center">
-            {/* Texto único e discreto */}
-            <p 
-              className="text-sm md:text-base text-muted-foreground/80 font-medium animate-pulse-subtle"
-              style={{ textShadow: '0 2px 12px rgba(0,0,0,0.8)' }}
-            >
-              Encontrando oportunidades na sua região…
-            </p>
-            
-            {/* Barra de progresso minimalista */}
-            <div className="w-48 md:w-64 h-1 bg-muted/20 rounded-full overflow-hidden">
-              <div 
-                className="h-full bg-gradient-to-r from-transparent via-primary/70 to-transparent rounded-full"
-                style={{
-                  width: '50%',
-                  animation: 'progressSlide 1.5s ease-in-out infinite',
-                }}
-              />
-            </div>
-          </div>
-        )}
+    <div className="relative w-full h-[calc(100vh-80px)] overflow-hidden">
+      {/* ========== LAYER 0: Globe Canvas - Fullscreen Background ========== */}
+      <div className="fixed inset-0 z-0">
+        <AnimatedGlobeBackground />
       </div>
 
       {/* ========== LAYER 1: Subtle Top Gradient for Depth & Readability ========== */}
@@ -112,12 +54,12 @@ export function GlobalSearchCard({
       />
 
       {/* ========== LAYER 2: Content - Floating HUD Style ========== */}
-      <div className="relative z-10 flex flex-col h-full md:h-full min-h-full">
+      <div className="relative z-10 flex flex-col h-full">
         
-        {/* Top Section - Title & Badges */}
-        <div className="pt-4 md:pt-6 lg:pt-8 px-4 md:px-8 lg:px-16">
-          {/* Feature Badges - Hidden on mobile for cleaner UX */}
-          <div className="hidden md:flex flex-wrap justify-center gap-4 mb-5">
+        {/* Top Section - Title & Badges (closer to top, floating above globe) */}
+        <div className="pt-6 lg:pt-8 px-8 lg:px-16">
+          {/* Feature Badges - Lighter, more subtle */}
+          <div className="flex flex-wrap justify-center gap-4 mb-5">
             <div className="flex items-center gap-2 px-4 py-1.5 rounded-full border border-primary/25 bg-primary/5 backdrop-blur-sm">
               <Globe className="h-3.5 w-3.5 text-primary" />
               <span className="text-foreground/90 font-medium text-xs tracking-wide">Alcance Mundial</span>
@@ -135,13 +77,13 @@ export function GlobalSearchCard({
           {/* Header - Primary focus, floating above globe */}
           <div className="text-center">
             <h1 
-              className="text-2xl md:text-4xl lg:text-5xl xl:text-6xl font-bold text-foreground mb-2 md:mb-3 tracking-tight leading-tight"
+              className="text-4xl lg:text-5xl xl:text-6xl font-bold text-foreground mb-3 tracking-tight"
               style={{ textShadow: '0 2px 30px rgba(0,0,0,0.6)' }}
             >
               Prospectar Leads
             </h1>
             <p 
-              className="text-muted-foreground/90 text-sm md:text-base lg:text-lg max-w-xl mx-auto leading-relaxed px-2"
+              className="text-muted-foreground/90 text-base lg:text-lg max-w-xl mx-auto leading-relaxed"
               style={{ textShadow: '0 1px 15px rgba(0,0,0,0.5)' }}
             >
               Descubra leads qualificados em qualquer região. Nossa IA analisa o mercado e entrega contatos prontos para prospecção.
@@ -149,23 +91,22 @@ export function GlobalSearchCard({
           </div>
         </div>
 
-        {/* Spacer - Desktop: Globe visual dominates | Mobile: Minimal */}
-        <div className="flex-1 min-h-8 md:min-h-0" />
+        {/* Spacer - Globe visual dominates this area */}
+        <div className="flex-1" />
 
-        {/* Bottom Section - Floating HUD Search Panel */}
-        <div className="px-4 md:px-8 lg:px-16 pb-24 md:pb-6 lg:pb-10">
+        {/* Bottom Section - Floating HUD Search Panel (lighter, more tech feel) */}
+        <div className="px-8 lg:px-16 pb-6 lg:pb-10">
           <div className="w-full max-w-5xl mx-auto">
             <div 
-              className="rounded-xl p-4 md:p-5 lg:p-6"
+              className="rounded-xl p-5 lg:p-6"
               style={{
-                background: 'rgba(8, 8, 12, 0.75)',
+                background: 'rgba(8, 8, 12, 0.65)',
                 backdropFilter: 'blur(16px)',
-                border: '1px solid rgba(255,255,255,0.08)',
+                border: '1px solid rgba(255,255,255,0.06)',
                 boxShadow: '0 4px 24px rgba(0,0,0,0.25), inset 0 1px 0 rgba(255,255,255,0.03)'
               }}
             >
-              {/* Mobile: Stack inputs | Desktop: Grid layout */}
-              <div className="flex flex-col gap-4 md:grid md:gap-5 lg:gap-6 md:grid-cols-[1fr_1fr_auto] md:items-end">
+              <div className="grid gap-5 lg:gap-6 lg:grid-cols-[1fr_1fr_auto] items-end">
                 {/* Input: Nicho */}
                 <div className="space-y-1.5">
                   <Label htmlFor="nicho" className="flex items-center gap-2 text-foreground/80 text-xs font-medium tracking-wide uppercase">
@@ -177,7 +118,7 @@ export function GlobalSearchCard({
                     placeholder="Ex: Barbearia, Clínica, Restaurante..."
                     value={nicho}
                     onChange={(e) => onNichoChange(e.target.value)}
-                    className="bg-background/40 h-12 md:h-11 text-base md:text-sm border-border/30 focus:border-primary/40 placeholder:text-muted-foreground/50 w-full"
+                    className="bg-background/40 h-11 text-sm border-border/30 focus:border-primary/40 placeholder:text-muted-foreground/50"
                   />
                 </div>
                 
@@ -192,44 +133,30 @@ export function GlobalSearchCard({
                     placeholder="Ex: São Paulo, Zona Sul de SP..."
                     value={cidade}
                     onChange={(e) => onCidadeChange(e.target.value)}
-                    className="bg-background/40 h-12 md:h-11 text-base md:text-sm border-border/30 focus:border-primary/40 placeholder:text-muted-foreground/50 w-full"
+                    className="bg-background/40 h-11 text-sm border-border/30 focus:border-primary/40 placeholder:text-muted-foreground/50"
                   />
                 </div>
 
-                {/* Button - Full width on mobile */}
+                {/* Button - Subtle glow, not overpowering */}
                 <Button 
                   onClick={onSearch} 
                   disabled={isSearching} 
-                  className={cn(
-                    "w-full md:w-auto md:min-w-[180px] gap-2 h-12 md:h-11 text-base md:text-sm font-semibold px-6 transition-all duration-300",
-                    isSearching 
-                      ? "opacity-80" 
-                      : "hover:shadow-primary/25 hover:shadow-lg"
-                  )}
+                  className="w-full lg:w-auto lg:min-w-[180px] gap-2 h-11 text-sm font-semibold px-6 transition-all duration-200 hover:shadow-primary/25 hover:shadow-lg"
                   size="lg"
                 >
-                  {isSearching ? (
-                    <>
-                      <Loader2 className="h-4 w-4 animate-spin" />
-                      Iniciando análise...
-                    </>
-                  ) : (
-                    <>
-                      <Search className="h-4 w-4" />
-                      Iniciar Busca
-                    </>
-                  )}
+                  <Search className="h-4 w-4" />
+                  Iniciar Busca
                 </Button>
               </div>
 
-              {/* Filters row - Stacked on mobile */}
-              <div className="flex flex-col md:flex-row md:flex-wrap items-start md:items-center gap-4 md:gap-6 lg:gap-10 mt-4 md:mt-5 pt-4 border-t border-border/15">
+              {/* Filters row - Cleaner, more minimal */}
+              <div className="flex flex-wrap items-center gap-6 lg:gap-10 mt-5 pt-4 border-t border-border/15">
                 <div className="flex items-center gap-2">
                   <Checkbox
                     id="possuiSite"
                     checked={possuiSite}
                     onCheckedChange={(checked) => onPossuiSiteChange(checked === true)}
-                    className="border-border/40 h-5 w-5 md:h-4 md:w-4"
+                    className="border-border/40"
                   />
                   <Label htmlFor="possuiSite" className="flex items-center gap-1.5 cursor-pointer text-muted-foreground/80 text-sm hover:text-foreground/90 transition-colors">
                     <Globe className="h-3.5 w-3.5 text-emerald-500/80" />
@@ -241,7 +168,7 @@ export function GlobalSearchCard({
                     id="possuiInstagram"
                     checked={possuiInstagram}
                     onCheckedChange={(checked) => onPossuiInstagramChange(checked === true)}
-                    className="border-border/40 h-5 w-5 md:h-4 md:w-4"
+                    className="border-border/40"
                   />
                   <Label htmlFor="possuiInstagram" className="flex items-center gap-1.5 cursor-pointer text-muted-foreground/80 text-sm hover:text-foreground/90 transition-colors">
                     <Instagram className="h-3.5 w-3.5 text-pink-500/80" />
@@ -249,8 +176,8 @@ export function GlobalSearchCard({
                   </Label>
                 </div>
                 
-                {/* Tagline - Hidden on mobile */}
-                <p className="hidden md:block text-[11px] text-muted-foreground/50 ml-auto tracking-wide">
+                {/* Tagline - Very subtle */}
+                <p className="text-[11px] text-muted-foreground/50 ml-auto tracking-wide">
                   Prospecção inteligente com a tecnologia Nexia
                 </p>
               </div>

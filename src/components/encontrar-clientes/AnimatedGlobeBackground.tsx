@@ -2,11 +2,7 @@ import { useEffect, useRef } from 'react';
 import { useSidebarState } from '@/contexts/SidebarContext';
 import { useBreakpoint } from '@/hooks/use-breakpoint';
 
-interface AnimatedGlobeBackgroundProps {
-  isAnalyzing?: boolean;
-}
-
-export function AnimatedGlobeBackground({ isAnalyzing = false }: AnimatedGlobeBackgroundProps) {
+export function AnimatedGlobeBackground() {
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const { collapsed } = useSidebarState();
   const breakpoint = useBreakpoint();
@@ -55,15 +51,7 @@ export function AnimatedGlobeBackground({ isAnalyzing = false }: AnimatedGlobeBa
     // Size: ~55-60% of available content height for balanced proportions
     const availableHeight = height * 0.55;
     const availableContentWidth = width - sidebarWidth;
-    const baseGlobeRadius = Math.min(availableContentWidth * 0.35, availableHeight * 0.5);
-    
-    // Analyzing state variables with smooth transitions
-    let currentScale = 1;
-    let targetScale = 1;
-    let currentBrightness = 1;
-    let targetBrightness = 1;
-    let rotationSpeedMultiplier = 1;
-    let targetRotationSpeed = 1;
+    const globeRadius = Math.min(availableContentWidth * 0.35, availableHeight * 0.5);
     
     const numPoints = 1200; // Reduced for cleaner look
     const points: { phi: number; theta: number; size: number }[] = [];
@@ -95,19 +83,6 @@ export function AnimatedGlobeBackground({ isAnalyzing = false }: AnimatedGlobeBa
     const animate = () => {
       ctx.clearRect(0, 0, width, height);
 
-      // Update analyzing state transitions
-      targetScale = isAnalyzing ? 1.15 : 1;
-      targetBrightness = isAnalyzing ? 1.4 : 1;
-      targetRotationSpeed = isAnalyzing ? 0.25 : 1;
-      
-      // Smooth transitions
-      currentScale += (targetScale - currentScale) * 0.02;
-      currentBrightness += (targetBrightness - currentBrightness) * 0.03;
-      rotationSpeedMultiplier += (targetRotationSpeed - rotationSpeedMultiplier) * 0.015;
-      
-      // Apply dynamic globe radius
-      const globeRadius = baseGlobeRadius * currentScale;
-
       // Smooth mouse following
       mouseX += (targetMouseX - mouseX) * 0.03;
       mouseY += (targetMouseY - mouseY) * 0.03;
@@ -119,8 +94,8 @@ export function AnimatedGlobeBackground({ isAnalyzing = false }: AnimatedGlobeBa
       rotationY += (targetRotationY - rotationY) * 0.015;
       rotationX += (targetRotationX - rotationX) * 0.015;
 
-      // Auto rotation - SLOWER during analysis
-      const autoRotation = Date.now() * 0.00006 * rotationSpeedMultiplier;
+      // Auto rotation - SLOWER: reduced by ~40% for premium feel
+      const autoRotation = Date.now() * 0.00006;
 
       // SIDEBAR-AWARE CENTER: Calculate center considering sidebar offset
       const contentWidth = width - sidebarWidth;
@@ -133,21 +108,20 @@ export function AnimatedGlobeBackground({ isAnalyzing = false }: AnimatedGlobeBa
       const centerY = height * 0.52;
 
       // === COLOR PALETTE: More neutral, less purple, technical feel ===
-      // Primary: Cool gray-blue (desaturated, technical) - enhanced during analysis
-      const brightnessBoost = currentBrightness;
-      const primaryR = Math.min(255, Math.round(140 * brightnessBoost));
-      const primaryG = Math.min(255, Math.round(150 * brightnessBoost));
-      const primaryB = Math.min(255, Math.round(180 * brightnessBoost));
+      // Primary: Cool gray-blue (desaturated, technical)
+      const primaryR = 140;
+      const primaryG = 150;
+      const primaryB = 180;
       
-      // Accent: Very subtle purple-gray - enhanced during analysis
-      const accentR = Math.min(255, Math.round(160 * brightnessBoost));
-      const accentG = Math.min(255, Math.round(155 * brightnessBoost));
-      const accentB = Math.min(255, Math.round(190 * brightnessBoost));
+      // Accent: Very subtle purple-gray
+      const accentR = 160;
+      const accentG = 155;
+      const accentB = 190;
       
-      // Highlight: Soft white-blue - enhanced during analysis
-      const highlightR = Math.min(255, Math.round(200 * brightnessBoost));
-      const highlightG = Math.min(255, Math.round(210 * brightnessBoost));
-      const highlightB = Math.min(255, Math.round(230 * brightnessBoost));
+      // Highlight: Soft white-blue
+      const highlightR = 200;
+      const highlightG = 210;
+      const highlightB = 230;
 
       // Draw subtle outer glow - very muted
       const gradient = ctx.createRadialGradient(
@@ -315,7 +289,7 @@ export function AnimatedGlobeBackground({ isAnalyzing = false }: AnimatedGlobeBa
       window.removeEventListener('resize', handleResize);
       canvas.removeEventListener('mousemove', handleMouseMove);
     };
-  }, [sidebarWidth, isAnalyzing]);
+  }, [sidebarWidth]);
 
   return (
     <canvas
