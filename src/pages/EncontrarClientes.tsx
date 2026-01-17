@@ -2,7 +2,6 @@ import { useState, useEffect } from 'react';
 import { AppLayout } from '@/components/AppLayout';
 import { toast } from 'sonner';
 import { supabase } from '@/integrations/supabase/client';
-import { SearchLoadingOverlay } from '@/components/encontrar-clientes/SearchLoadingOverlay';
 import { Lead } from '@/components/encontrar-clientes/LeadCard';
 import { IntelligentApproachScreen } from '@/components/encontrar-clientes/IntelligentApproachScreen';
 import { GlobalSearchCard } from '@/components/encontrar-clientes/GlobalSearchCard';
@@ -183,9 +182,6 @@ export default function EncontrarClientes() {
           />
         </div>
       )}
-
-      {/* Search Loading Overlay - minimal text + progress on existing globe */}
-      <SearchLoadingOverlay open={isSearching} />
 
       {/* Intelligent Approach Screen */}
       <IntelligentApproachScreen

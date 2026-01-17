@@ -39,7 +39,9 @@ export function GlobalSearchCard({
 
       {/* ========== LAYER 1: Subtle Top Gradient for Depth & Readability ========== */}
       <div 
-        className="fixed inset-0 z-[1] pointer-events-none"
+        className={`fixed inset-0 z-[1] pointer-events-none transition-opacity duration-500 ${
+          isSearching ? 'opacity-0' : 'opacity-100'
+        }`}
         style={{
           background: `
             linear-gradient(to bottom, 
@@ -53,12 +55,16 @@ export function GlobalSearchCard({
         }}
       />
 
-      {/* ========== LAYER 2: Content - Floating HUD Style ========== */}
-      <div className="relative z-10 flex flex-col h-full">
+      {/* ========== LAYER 2: Content - Hidden when searching ========== */}
+      <div 
+        className={`relative z-10 flex flex-col h-full transition-all duration-500 ${
+          isSearching ? 'opacity-0 pointer-events-none scale-95' : 'opacity-100'
+        }`}
+      >
         
-        {/* Top Section - Title & Badges (closer to top, floating above globe) */}
+        {/* Top Section - Title & Badges */}
         <div className="pt-6 lg:pt-8 px-8 lg:px-16">
-          {/* Feature Badges - Lighter, more subtle */}
+          {/* Feature Badges */}
           <div className="flex flex-wrap justify-center gap-4 mb-5">
             <div className="flex items-center gap-2 px-4 py-1.5 rounded-full border border-primary/25 bg-primary/5 backdrop-blur-sm">
               <Globe className="h-3.5 w-3.5 text-primary" />
@@ -74,7 +80,7 @@ export function GlobalSearchCard({
             </div>
           </div>
 
-          {/* Header - Primary focus, floating above globe */}
+          {/* Header */}
           <div className="text-center">
             <h1 
               className="text-4xl lg:text-5xl xl:text-6xl font-bold text-foreground mb-3 tracking-tight"
@@ -94,7 +100,7 @@ export function GlobalSearchCard({
         {/* Spacer - Globe visual dominates this area */}
         <div className="flex-1" />
 
-        {/* Bottom Section - Floating HUD Search Panel (lighter, more tech feel) */}
+        {/* Bottom Section - Floating HUD Search Panel */}
         <div className="px-8 lg:px-16 pb-6 lg:pb-10">
           <div className="w-full max-w-5xl mx-auto">
             <div 
@@ -137,7 +143,7 @@ export function GlobalSearchCard({
                   />
                 </div>
 
-                {/* Button - Subtle glow, not overpowering */}
+                {/* Button */}
                 <Button 
                   onClick={onSearch} 
                   disabled={isSearching} 
@@ -149,7 +155,7 @@ export function GlobalSearchCard({
                 </Button>
               </div>
 
-              {/* Filters row - Cleaner, more minimal */}
+              {/* Filters row */}
               <div className="flex flex-wrap items-center gap-6 lg:gap-10 mt-5 pt-4 border-t border-border/15">
                 <div className="flex items-center gap-2">
                   <Checkbox
@@ -176,7 +182,7 @@ export function GlobalSearchCard({
                   </Label>
                 </div>
                 
-                {/* Tagline - Very subtle */}
+                {/* Tagline */}
                 <p className="text-[11px] text-muted-foreground/50 ml-auto tracking-wide">
                   Prospecção inteligente com a tecnologia Nexia
                 </p>
@@ -185,6 +191,62 @@ export function GlobalSearchCard({
           </div>
         </div>
       </div>
+
+      {/* ========== LAYER 3: Search Loading Overlay - Only visible when searching ========== */}
+      <div 
+        className={`fixed inset-0 z-20 flex items-center justify-center transition-all duration-700 ${
+          isSearching ? 'opacity-100' : 'opacity-0 pointer-events-none'
+        }`}
+      >
+        {/* Centered content below globe area */}
+        <div className="absolute bottom-24 sm:bottom-32 left-0 right-0 flex flex-col items-center gap-5 px-6">
+          {/* Status text */}
+          <p 
+            className="text-foreground/90 text-base sm:text-lg font-medium tracking-wide text-center"
+            style={{ 
+              textShadow: '0 2px 20px rgba(0,0,0,0.6)',
+              animation: 'pulse-text 2s ease-in-out infinite'
+            }}
+          >
+            Encontrando oportunidades na sua região…
+          </p>
+          
+          {/* Minimal indeterminate progress bar */}
+          <div className="w-64 sm:w-80 h-1 bg-muted/20 rounded-full overflow-hidden backdrop-blur-sm">
+            <div 
+              className="h-full bg-gradient-to-r from-primary/60 via-primary to-primary/60 rounded-full"
+              style={{
+                animation: 'indeterminate-progress 1.8s ease-in-out infinite',
+              }}
+            />
+          </div>
+        </div>
+      </div>
+
+      <style>{`
+        @keyframes indeterminate-progress {
+          0% {
+            width: 0%;
+            margin-left: 0%;
+          }
+          50% {
+            width: 50%;
+            margin-left: 25%;
+          }
+          100% {
+            width: 0%;
+            margin-left: 100%;
+          }
+        }
+        @keyframes pulse-text {
+          0%, 100% {
+            opacity: 0.85;
+          }
+          50% {
+            opacity: 1;
+          }
+        }
+      `}</style>
     </div>
   );
 }
