@@ -36,6 +36,8 @@ import {
 } from '@/data/siteTypeFields';
 import { useModuleState } from '@/hooks/useModuleState';
 import { ResumeSessionBanner } from '@/components/ResumeSessionBanner';
+import { AISuggestButton, AISuggestionsPanel, type Suggestion } from '@/components/ai-suggest';
+import { useAISuggestions } from '@/hooks/useAISuggestions';
 
 const TOTAL_STEPS = 5;
 
@@ -93,6 +95,18 @@ export default function HyperBuildSite() {
   const [showResumeBanner, setShowResumeBanner] = useState(false);
   
   const { getSavedState, saveStep, saveFormData, clearState } = useModuleState('criar-site');
+  
+  // AI Suggestions hook
+  const {
+    isLoading: isLoadingSuggestions,
+    suggestions,
+    isVisible: isSuggestionsVisible,
+    appliedSuggestions,
+    generateSuggestions,
+    applySuggestion,
+    closeSuggestions,
+    clearSuggestions
+  } = useAISuggestions({ projectType: 'site' });
   
   // Parse Nexia data from URL
   const nexiaData = parseNexiaParams(searchParams);
@@ -216,6 +230,52 @@ export default function HyperBuildSite() {
 
   const getCurrentFields = () => {
     return fieldsByType[data.siteType] || fieldsByType['outro'];
+  };
+
+  // Get fields for current step for AI suggestions
+  const getStepFields = () => {
+    switch (currentStep) {
+      case 1:
+        return [
+          { id: 'siteName', label: 'Nome do site', currentValue: data.siteName },
+          { id: 'businessDescription', label: 'Descrição do negócio', currentValue: data.businessDescription },
+          { id: 'targetAudience', label: 'Público-alvo', currentValue: data.targetAudience },
+        ];
+      case 2:
+        const currentFields = getCurrentFields();
+        return currentFields.map(f => ({
+          id: f.id,
+          label: f.label,
+          currentValue: data.dynamicFields[f.id] || ''
+        }));
+      default:
+        return [];
+    }
+  };
+
+  const handleGenerateSuggestions = () => {
+    clearSuggestions();
+    generateSuggestions({
+      step: currentStep,
+      fields: getStepFields(),
+      context: {
+        siteName: data.siteName,
+        siteType: getSiteTypeLabel(),
+        businessDescription: data.businessDescription,
+        targetAudience: data.targetAudience,
+        dynamicFields: data.dynamicFields,
+      }
+    });
+  };
+
+  const handleApplySuggestion = (suggestion: Suggestion) => {
+    const value = applySuggestion(suggestion);
+    if (currentStep === 1) {
+      updateData(suggestion.fieldId as keyof WizardData, value);
+    } else if (currentStep === 2) {
+      updateDynamicField(suggestion.fieldId, value);
+    }
+    toast.success('Sugestão aplicada!');
   };
 
   const generatePrompt = async () => {
@@ -414,6 +474,23 @@ Foco total em CONVERSÃO e EXPERIÊNCIA DO USUÁRIO.
       case 1:
         return (
           <div className="space-y-6">
+            {/* AI Suggest Button */}
+            <div className="flex justify-end">
+              <AISuggestButton
+                onClick={handleGenerateSuggestions}
+                isLoading={isLoadingSuggestions}
+              />
+            </div>
+
+            {/* AI Suggestions Panel */}
+            <AISuggestionsPanel
+              suggestions={suggestions}
+              appliedSuggestions={appliedSuggestions}
+              onApply={handleApplySuggestion}
+              onClose={closeSuggestions}
+              isVisible={isSuggestionsVisible}
+            />
+
             {/* Resume Session Banner */}
             {showResumeBanner && (
               <ResumeSessionBanner
@@ -513,6 +590,23 @@ Foco total em CONVERSÃO e EXPERIÊNCIA DO USUÁRIO.
         const currentFields = getCurrentFields();
         return (
           <div className="space-y-6">
+            {/* AI Suggest Button */}
+            <div className="flex justify-end">
+              <AISuggestButton
+                onClick={handleGenerateSuggestions}
+                isLoading={isLoadingSuggestions}
+              />
+            </div>
+
+            {/* AI Suggestions Panel */}
+            <AISuggestionsPanel
+              suggestions={suggestions}
+              appliedSuggestions={appliedSuggestions}
+              onApply={handleApplySuggestion}
+              onClose={closeSuggestions}
+              isVisible={isSuggestionsVisible}
+            />
+
             <div className="text-center mb-8">
               <div className="w-16 h-16 rounded-2xl bg-emerald-500/10 flex items-center justify-center mx-auto mb-4">
                 <Target className="h-8 w-8 text-emerald-500" />
