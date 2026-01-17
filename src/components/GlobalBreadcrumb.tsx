@@ -47,94 +47,94 @@ const BREADCRUMB_CONFIG: Record<string, BreadcrumbItem[]> = {
     { label: 'Diagnóstico Avançado' },
   ],
 
-  // Soluções Digitais
-  '/solucoes': [{ label: 'Soluções Digitais' }],
+  // Criar
+  '/solucoes': [{ label: 'Criar' }],
   '/solucoes/criar/app': [
-    { label: 'Soluções Digitais', href: '/solucoes' },
-    { label: 'App / SaaS' },
+    { label: 'Criar', href: '/solucoes' },
+    { label: 'Aplicativo' },
   ],
   '/solucoes/criar/app/novo': [
-    { label: 'Soluções Digitais', href: '/solucoes' },
-    { label: 'App / SaaS', href: '/solucoes/criar/app' },
-    { label: 'Criar App' },
+    { label: 'Criar', href: '/solucoes' },
+    { label: 'Aplicativo', href: '/solucoes/criar/app' },
+    { label: 'Novo App' },
   ],
   '/solucoes/criar/site': [
-    { label: 'Soluções Digitais', href: '/solucoes' },
-    { label: 'Site / Página' },
+    { label: 'Criar', href: '/solucoes' },
+    { label: 'Site' },
   ],
   '/solucoes/criar/site/novo': [
-    { label: 'Soluções Digitais', href: '/solucoes' },
-    { label: 'Site / Página', href: '/solucoes/criar/site' },
-    { label: 'Criar Site' },
+    { label: 'Criar', href: '/solucoes' },
+    { label: 'Site', href: '/solucoes/criar/site' },
+    { label: 'Novo Site' },
   ],
   '/solucoes/templates': [
-    { label: 'Soluções Digitais', href: '/solucoes' },
+    { label: 'Criar', href: '/solucoes' },
     { label: 'Templates' },
   ],
   '/solucoes/diagnostico': [
-    { label: 'Soluções Digitais', href: '/solucoes' },
+    { label: 'Criar', href: '/solucoes' },
     { label: 'Diagnóstico Digital' },
   ],
   '/solucoes/diagnostico/novo': [
-    { label: 'Soluções Digitais', href: '/solucoes' },
+    { label: 'Criar', href: '/solucoes' },
     { label: 'Diagnóstico Digital', href: '/solucoes/diagnostico' },
     { label: 'Novo Diagnóstico' },
   ],
   '/solucoes/posicionamento': [
-    { label: 'Soluções Digitais', href: '/solucoes' },
+    { label: 'Criar', href: '/solucoes' },
     { label: 'Posicionamento Digital' },
   ],
   '/solucoes/posicionamento/novo': [
-    { label: 'Soluções Digitais', href: '/solucoes' },
+    { label: 'Criar', href: '/solucoes' },
     { label: 'Posicionamento Digital', href: '/solucoes/posicionamento' },
     { label: 'Novo Posicionamento' },
   ],
   '/solucoes/organizacao': [
-    { label: 'Soluções Digitais', href: '/solucoes' },
+    { label: 'Criar', href: '/solucoes' },
     { label: 'Organização de Processos' },
   ],
   '/solucoes/organizacao/novo': [
-    { label: 'Soluções Digitais', href: '/solucoes' },
+    { label: 'Criar', href: '/solucoes' },
     { label: 'Organização de Processos', href: '/solucoes/organizacao' },
     { label: 'Nova Organização' },
   ],
   '/solucoes/kit-lancamento': [
-    { label: 'Soluções Digitais', href: '/solucoes' },
+    { label: 'Criar', href: '/solucoes' },
     { label: 'Kit de Lançamento' },
   ],
   '/solucoes/kit-lancamento/novo': [
-    { label: 'Soluções Digitais', href: '/solucoes' },
+    { label: 'Criar', href: '/solucoes' },
     { label: 'Kit de Lançamento', href: '/solucoes/kit-lancamento' },
     { label: 'Novo Kit' },
   ],
   '/solucoes/autoridade': [
-    { label: 'Soluções Digitais', href: '/solucoes' },
+    { label: 'Criar', href: '/solucoes' },
     { label: 'Autoridade Digital' },
   ],
   '/solucoes/autoridade/novo': [
-    { label: 'Soluções Digitais', href: '/solucoes' },
+    { label: 'Criar', href: '/solucoes' },
     { label: 'Autoridade Digital', href: '/solucoes/autoridade' },
     { label: 'Nova Estratégia' },
   ],
   '/solucoes/proposta': [
-    { label: 'Soluções Digitais', href: '/solucoes' },
+    { label: 'Criar', href: '/solucoes' },
     { label: 'Proposta' },
   ],
   '/solucoes/contrato': [
-    { label: 'Soluções Digitais', href: '/solucoes' },
+    { label: 'Criar', href: '/solucoes' },
     { label: 'Contrato' },
   ],
 
   // Materializar
   '/solucoes/materializar': [
-    { label: 'Soluções Digitais', href: '/solucoes' },
+    { label: 'Criar', href: '/solucoes' },
     { label: 'Materializar Projeto' },
   ],
 
   // Criar do Zero
   '/solucoes/criar': [
-    { label: 'Soluções Digitais', href: '/solucoes' },
-    { label: 'Criar do Zero' },
+    { label: 'Criar', href: '/solucoes' },
+    { label: 'Do Zero' },
   ],
 
   // Contratos (Modo simples)
@@ -226,7 +226,7 @@ function findBreadcrumbForPath(pathname: string): BreadcrumbItem[] | null {
     {
       pattern: /^\/hyperbuild\/projeto\/([^/]+)$/,
       breadcrumb: [
-        { label: 'Soluções Digitais', href: '/solucoes' },
+        { label: 'Criar', href: '/solucoes' },
         { label: 'Projeto selecionado' },
       ],
     },
@@ -234,7 +234,7 @@ function findBreadcrumbForPath(pathname: string): BreadcrumbItem[] | null {
     {
       pattern: /^\/hyperbuild\/projeto\/([^/]+)\/editar$/,
       breadcrumb: [
-        { label: 'Soluções Digitais', href: '/solucoes' },
+        { label: 'Criar', href: '/solucoes' },
         { label: 'Projeto', href: '/solucoes' },
         { label: 'Editar' },
       ],
@@ -243,7 +243,7 @@ function findBreadcrumbForPath(pathname: string): BreadcrumbItem[] | null {
     {
       pattern: /^\/hyperbuild\/projeto\/([^/]+)\/contrato$/,
       breadcrumb: [
-        { label: 'Soluções Digitais', href: '/solucoes' },
+        { label: 'Criar', href: '/solucoes' },
         { label: 'Projeto', href: '/solucoes' },
         { label: 'Contrato' },
       ],
@@ -270,7 +270,7 @@ function findBreadcrumbForPath(pathname: string): BreadcrumbItem[] | null {
     {
       pattern: /^\/solucoes\/diagnostico\/([^/]+)$/,
       breadcrumb: [
-        { label: 'Soluções Digitais', href: '/solucoes' },
+        { label: 'Criar', href: '/solucoes' },
         { label: 'Diagnóstico Digital', href: '/solucoes/diagnostico' },
         { label: 'Detalhes' },
       ],
@@ -279,7 +279,7 @@ function findBreadcrumbForPath(pathname: string): BreadcrumbItem[] | null {
     {
       pattern: /^\/solucoes\/posicionamento\/([^/]+)$/,
       breadcrumb: [
-        { label: 'Soluções Digitais', href: '/solucoes' },
+        { label: 'Criar', href: '/solucoes' },
         { label: 'Posicionamento Digital', href: '/solucoes/posicionamento' },
         { label: 'Detalhes' },
       ],
@@ -288,7 +288,7 @@ function findBreadcrumbForPath(pathname: string): BreadcrumbItem[] | null {
     {
       pattern: /^\/solucoes\/organizacao\/([^/]+)$/,
       breadcrumb: [
-        { label: 'Soluções Digitais', href: '/solucoes' },
+        { label: 'Criar', href: '/solucoes' },
         { label: 'Organização de Processos', href: '/solucoes/organizacao' },
         { label: 'Detalhes' },
       ],
@@ -297,7 +297,7 @@ function findBreadcrumbForPath(pathname: string): BreadcrumbItem[] | null {
     {
       pattern: /^\/solucoes\/kit-lancamento\/([^/]+)$/,
       breadcrumb: [
-        { label: 'Soluções Digitais', href: '/solucoes' },
+        { label: 'Criar', href: '/solucoes' },
         { label: 'Kit de Lançamento', href: '/solucoes/kit-lancamento' },
         { label: 'Detalhes' },
       ],
@@ -306,7 +306,7 @@ function findBreadcrumbForPath(pathname: string): BreadcrumbItem[] | null {
     {
       pattern: /^\/solucoes\/autoridade\/([^/]+)$/,
       breadcrumb: [
-        { label: 'Soluções Digitais', href: '/solucoes' },
+        { label: 'Criar', href: '/solucoes' },
         { label: 'Autoridade Digital', href: '/solucoes/autoridade' },
         { label: 'Detalhes' },
       ],
@@ -323,7 +323,7 @@ function findBreadcrumbForPath(pathname: string): BreadcrumbItem[] | null {
     {
       pattern: /^\/solucoes\/contrato\/([^/]+)$/,
       breadcrumb: [
-        { label: 'Soluções Digitais', href: '/solucoes' },
+        { label: 'Criar', href: '/solucoes' },
         { label: 'Contrato' },
       ],
     },
