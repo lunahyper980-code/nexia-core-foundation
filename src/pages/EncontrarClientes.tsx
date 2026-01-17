@@ -153,7 +153,7 @@ export default function EncontrarClientes() {
   };
 
   return (
-    <AppLayout title="Encontrar Clientes" hideBreadcrumb>
+    <AppLayout title="Encontrar Clientes" hideBreadcrumb hideNavigation={isSearching}>
       {showResults ? (
         // Results Screen
         <LeadsResultsScreen
