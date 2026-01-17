@@ -45,6 +45,9 @@ verify_jwt = false
 [functions.generate-whatsapp-messages]
 verify_jwt = false
 
+[functions.generate-wizard-suggestions]
+verify_jwt = false
+
 [functions.nexia-ai]
 verify_jwt = false
 
