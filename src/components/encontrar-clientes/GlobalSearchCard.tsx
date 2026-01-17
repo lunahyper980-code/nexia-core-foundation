@@ -33,19 +33,16 @@ export function GlobalSearchCard({
   return (
     <div className="relative w-full min-h-[calc(100vh-80px)] md:h-[calc(100vh-80px)] overflow-hidden">
       {/* ========== LAYER 0: Globe Canvas ========== */}
-      {/* Desktop: Fixed fullscreen | Mobile: Decorative, scaled, positioned at top */}
+      {/* Desktop: Full opacity normal | Mobile: Decorative, scaled, faded */}
+      
+      {/* Desktop Globe - Full visibility */}
+      <div className="hidden md:block fixed inset-0 z-0">
+        <AnimatedGlobeBackground />
+      </div>
+      
+      {/* Mobile Globe - Decorative, reduced opacity, scaled, with fade mask */}
       <div 
-        className="
-          fixed inset-0 z-0
-          md:opacity-100
-          opacity-35
-          md:scale-100
-          scale-[0.65]
-          md:translate-y-0
-          -translate-y-[15%]
-          md:blur-0
-          blur-[2px]
-        "
+        className="md:hidden fixed inset-0 z-0 opacity-35 scale-[0.65] -translate-y-[15%] blur-[2px]"
         style={{
           maskImage: 'linear-gradient(to bottom, black 40%, transparent 85%)',
           WebkitMaskImage: 'linear-gradient(to bottom, black 40%, transparent 85%)',
