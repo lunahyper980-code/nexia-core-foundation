@@ -12,9 +12,10 @@ interface AppLayoutProps {
   children: ReactNode;
   title: string;
   hideBreadcrumb?: boolean;
+  hideNavigation?: boolean;
 }
 
-export function AppLayout({ children, title, hideBreadcrumb = false }: AppLayoutProps) {
+export function AppLayout({ children, title, hideBreadcrumb = false, hideNavigation = false }: AppLayoutProps) {
   const { collapsed } = useSidebarState();
   const breakpoint = useBreakpoint();
   const [mobileDrawerOpen, setMobileDrawerOpen] = useState(false);
@@ -24,34 +25,41 @@ export function AppLayout({ children, title, hideBreadcrumb = false }: AppLayout
 
   return (
     <div className="min-h-screen bg-background w-full max-w-full overflow-x-hidden">
-      {/* Desktop/Tablet Sidebar */}
-      {!isMobile && <AppSidebar forceCollapsed={isTablet} />}
+      {/* Desktop/Tablet Sidebar - Hidden when hideNavigation is true */}
+      <div className={`transition-all duration-500 ${hideNavigation ? 'opacity-0 pointer-events-none -translate-x-full' : 'opacity-100'}`}>
+        {!isMobile && <AppSidebar forceCollapsed={isTablet} />}
+      </div>
 
-      {/* Mobile Drawer */}
-      {isMobile && (
+      {/* Mobile Drawer - Blocked when hideNavigation is true */}
+      {isMobile && !hideNavigation && (
         <MobileDrawer 
           open={mobileDrawerOpen} 
           onOpenChange={setMobileDrawerOpen} 
         />
       )}
 
-      {/* Header */}
-      <AppHeader 
-        title={title} 
-        isMobile={isMobile}
-        onMenuClick={() => setMobileDrawerOpen(true)}
-      />
+      {/* Header - Hidden when hideNavigation is true */}
+      <div className={`transition-all duration-500 ${hideNavigation ? 'opacity-0 pointer-events-none -translate-y-full' : 'opacity-100'}`}>
+        <AppHeader 
+          title={title} 
+          isMobile={isMobile}
+          onMenuClick={() => setMobileDrawerOpen(true)}
+        />
+      </div>
 
       {/* Main Content */}
       <main
         className={cn(
-          'pt-16 min-h-screen transition-all duration-300 w-full overflow-x-hidden',
-          // Mobile: full width, bottom padding for nav
-          isMobile && 'pl-0 pb-20',
+          'pt-16 min-h-screen transition-all duration-500 w-full overflow-x-hidden',
+          // When navigation is hidden, remove padding
+          hideNavigation && 'pl-0 pt-0',
+          // Mobile: full width, bottom padding for nav (unless hidden)
+          isMobile && !hideNavigation && 'pl-0 pb-20',
+          isMobile && hideNavigation && 'pl-0 pb-0',
           // Tablet: collapsed sidebar padding
-          isTablet && 'pl-16',
+          !hideNavigation && isTablet && 'pl-16',
           // Desktop: dynamic sidebar padding
-          !isMobile && !isTablet && (collapsed ? 'pl-16' : 'pl-64')
+          !hideNavigation && !isMobile && !isTablet && (collapsed ? 'pl-16' : 'pl-64')
         )}
       >
         {/* Full-width centered container for SaaS premium layout */}
@@ -69,10 +77,12 @@ export function AppLayout({ children, title, hideBreadcrumb = false }: AppLayout
         </div>
       </main>
 
-      {/* Mobile Bottom Navigation */}
-      {isMobile && (
-        <MobileBottomNav onMenuClick={() => setMobileDrawerOpen(true)} />
-      )}
+      {/* Mobile Bottom Navigation - Hidden when hideNavigation is true */}
+      <div className={`transition-all duration-500 ${hideNavigation ? 'opacity-0 pointer-events-none translate-y-full' : 'opacity-100'}`}>
+        {isMobile && (
+          <MobileBottomNav onMenuClick={() => setMobileDrawerOpen(true)} />
+        )}
+      </div>
     </div>
   );
 }

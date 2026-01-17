@@ -16,6 +16,7 @@ interface GlobalSearchCardProps {
   onPossuiSiteChange: (value: boolean) => void;
   onPossuiInstagramChange: (value: boolean) => void;
   onSearch: () => void;
+  onSearchingChange?: (isSearching: boolean) => void;
 }
 
 export function GlobalSearchCard({
@@ -213,31 +214,39 @@ export function GlobalSearchCard({
         </div>
       </div>
 
-      {/* ========== LAYER 3: Search Loading Overlay - Only visible when searching ========== */}
+      {/* ========== LAYER 3: Search Loading Overlay - Positioned relative to globe ========== */}
       <div 
-        className={`fixed inset-0 z-20 flex items-center justify-center transition-all duration-700 ${
-          isSearching ? 'opacity-100' : 'opacity-0 pointer-events-none'
+        className={`fixed inset-0 z-20 pointer-events-none transition-all duration-700 ${
+          isSearching ? 'opacity-100' : 'opacity-0'
         }`}
       >
-        {/* Centered content below globe area */}
-        <div className="absolute bottom-24 sm:bottom-32 left-0 right-0 flex flex-col items-center gap-5 px-6">
-          {/* Status text */}
+        {/* Container positioned relative to globe center - 60% down from top */}
+        <div 
+          className="absolute left-0 right-0 flex flex-col items-center gap-4 px-6"
+          style={{ 
+            top: '68%', // Position below globe center (globe is at ~52%)
+            transform: 'translateY(-50%)'
+          }}
+        >
+          {/* Status text with elegant breathing animation */}
           <p 
-            className="text-foreground/90 text-base sm:text-lg font-medium tracking-wide text-center"
+            className="text-foreground/90 text-sm sm:text-base font-light tracking-wider text-center"
             style={{ 
-              textShadow: '0 2px 20px rgba(0,0,0,0.6)',
-              animation: 'pulse-text 2s ease-in-out infinite'
+              textShadow: '0 2px 25px rgba(0,0,0,0.7), 0 0 40px rgba(139, 92, 246, 0.2)',
+              animation: 'breathe-text 3s ease-in-out infinite',
+              letterSpacing: '0.05em'
             }}
           >
             Encontrando oportunidades na sua região…
           </p>
           
-          {/* Minimal indeterminate progress bar */}
-          <div className="w-64 sm:w-80 h-1 bg-muted/20 rounded-full overflow-hidden backdrop-blur-sm">
+          {/* Minimal indeterminate progress bar - Nexia purple */}
+          <div className="w-48 sm:w-64 h-0.5 bg-muted/15 rounded-full overflow-hidden backdrop-blur-sm">
             <div 
-              className="h-full bg-gradient-to-r from-primary/60 via-primary to-primary/60 rounded-full"
+              className="h-full rounded-full"
               style={{
-                animation: 'indeterminate-progress 1.8s ease-in-out infinite',
+                background: 'linear-gradient(90deg, rgba(139,92,246,0.4), rgba(139,92,246,0.9), rgba(139,92,246,0.4))',
+                animation: 'indeterminate-progress 2s ease-in-out infinite',
               }}
             />
           </div>
@@ -251,20 +260,22 @@ export function GlobalSearchCard({
             margin-left: 0%;
           }
           50% {
-            width: 50%;
-            margin-left: 25%;
+            width: 40%;
+            margin-left: 30%;
           }
           100% {
             width: 0%;
             margin-left: 100%;
           }
         }
-        @keyframes pulse-text {
+        @keyframes breathe-text {
           0%, 100% {
-            opacity: 0.85;
+            opacity: 0.7;
+            transform: scale(1);
           }
           50% {
             opacity: 1;
+            transform: scale(1.01);
           }
         }
       `}</style>

@@ -136,18 +136,25 @@ export function AnimatedGlobeBackground({ isSearching = false }: AnimatedGlobeBa
       const highlightG = 210;
       const highlightB = 230;
 
-      // Draw subtle outer glow
+      // Draw outer glow - Enhanced purple glow when searching
+      const isZooming = targetScaleRef.current > 1;
+      const glowIntensity = isZooming ? 0.12 : 0.04;
+      const glowR = isZooming ? 139 : primaryR; // Nexia purple when searching
+      const glowG = isZooming ? 92 : primaryG;
+      const glowB = isZooming ? 246 : primaryB;
+      
       const gradient = ctx.createRadialGradient(
         centerX,
         centerY,
-        0,
+        globeRadius * 0.3,
         centerX,
         centerY,
-        globeRadius * 1.4
+        globeRadius * 1.6
       );
-      gradient.addColorStop(0, `rgba(${primaryR}, ${primaryG}, ${primaryB}, 0.04)`);
-      gradient.addColorStop(0.6, `rgba(${primaryR}, ${primaryG}, ${primaryB}, 0.015)`);
-      gradient.addColorStop(1, `rgba(${primaryR}, ${primaryG}, ${primaryB}, 0)`);
+      gradient.addColorStop(0, `rgba(${glowR}, ${glowG}, ${glowB}, ${glowIntensity})`);
+      gradient.addColorStop(0.4, `rgba(${glowR}, ${glowG}, ${glowB}, ${glowIntensity * 0.5})`);
+      gradient.addColorStop(0.7, `rgba(${glowR}, ${glowG}, ${glowB}, ${glowIntensity * 0.15})`);
+      gradient.addColorStop(1, `rgba(${glowR}, ${glowG}, ${glowB}, 0)`);
       ctx.fillStyle = gradient;
       ctx.fillRect(0, 0, width, height);
 
