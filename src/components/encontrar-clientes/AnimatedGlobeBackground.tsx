@@ -48,10 +48,14 @@ export function AnimatedGlobeBackground() {
     canvas.addEventListener('mousemove', handleMouseMove);
 
     // Globe parameters - REFINED: smaller, more elegant globe
-    // Size: ~55-60% of available content height for balanced proportions
-    const availableHeight = height * 0.55;
+    // MOBILE: Much smaller globe to avoid pushing content
+    const isMobileView = width < 768;
     const availableContentWidth = width - sidebarWidth;
-    const globeRadius = Math.min(availableContentWidth * 0.35, availableHeight * 0.5);
+    
+    // Mobile: 30% of width, max 140px | Desktop: 35% of content area
+    const globeRadius = isMobileView 
+      ? Math.min(availableContentWidth * 0.30, 140) 
+      : Math.min(availableContentWidth * 0.35, height * 0.5 * 0.55);
     
     const numPoints = 1200; // Reduced for cleaner look
     const points: { phi: number; theta: number; size: number }[] = [];
@@ -101,11 +105,12 @@ export function AnimatedGlobeBackground() {
       const contentWidth = width - sidebarWidth;
       const centerX = sidebarWidth + (contentWidth / 2);
       
-      // VERTICAL SPACING: Push globe down to avoid overlapping with title/subtitle
-      // Added 48px offset to create breathing room below header text
-      // Globe positioned at center with vertical offset for text clearance
-      // 0.52 = slightly below center + ensures no overlap with title area
-      const centerY = height * 0.52;
+      // MOBILE: Position globe higher and smaller (decorative only, behind content)
+      // DESKTOP: Center with slight offset for text clearance
+      const isMobileCalc = width < 768;
+      const centerY = isMobileCalc 
+        ? height * 0.38  // Mobile: higher position (38% from top)
+        : height * 0.52; // Desktop: slightly below center
 
       // === COLOR PALETTE: More neutral, less purple, technical feel ===
       // Primary: Cool gray-blue (desaturated, technical)
