@@ -11,15 +11,22 @@ export default function Solucoes() {
   const navigate = useNavigate();
 
   return (
-    <AppLayout title="Criar App ou Site" hideBreadcrumb>
+    <AppLayout title="Criar" hideBreadcrumb>
       <div className="flex flex-col items-center justify-start min-h-[calc(100vh-140px)] px-4 pt-8 md:pt-20">
         {/* Header */}
         <div className="text-center mb-14 md:mb-20 max-w-3xl">
           <h1 className="text-4xl md:text-5xl lg:text-6xl font-bold text-foreground mb-6 leading-tight">
             O que você deseja criar hoje?
           </h1>
-          <p className="text-lg md:text-xl text-muted-foreground leading-relaxed max-w-2xl mx-auto">
-            Crie um aplicativo ou site profissional com estrutura, automação e escala desde o primeiro dia.
+          <p className="text-lg md:text-xl leading-relaxed max-w-2xl mx-auto">
+            <span className="text-muted-foreground">Crie </span>
+            <span className="bg-gradient-to-r from-primary to-[#3b82f6] bg-clip-text text-transparent font-medium">
+              aplicativos e sites profissionais
+            </span>
+            <span className="text-muted-foreground"> com estrutura, automação e escala desde o primeiro dia.</span>
+          </p>
+          <p className="text-sm text-muted-foreground/70 mt-4">
+            Escolha o caminho ideal para transformar sua ideia em produto.
           </p>
         </div>
 
