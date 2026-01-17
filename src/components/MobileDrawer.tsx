@@ -51,12 +51,12 @@ const simpleNavItems: NavItem[] = [
 ];
 
 // Items for ADVANCED mode
+// IMPORTANTE: Contratos NÃO é item separado no modo avançado - está dentro de Vendas
 const advancedNavItems: NavItem[] = [
   { label: 'Dashboard', path: '/dashboard', icon: LayoutDashboard, mode: 'advanced' },
   { label: 'Encontrar Clientes', path: '/encontrar-clientes', icon: Search, mode: 'advanced' },
   { label: 'Diagnóstico', path: '/nexia-ai', icon: Brain, badge: 'avançado', adminOnly: true, mode: 'advanced' },
   { label: 'Vendas', path: '/vendas', icon: Briefcase, mode: 'advanced' },
-  { label: 'Contratos', path: '/contratos', icon: FileSignature, mode: 'advanced' },
   { label: 'Clientes', path: '/clientes', icon: Users, mode: 'advanced' },
   { label: 'Soluções Digitais', path: '/solucoes', icon: Layers, adminOnly: true, mode: 'advanced' },
   { label: 'Entrega', path: '/entrega', icon: Package, adminOnly: true, mode: 'advanced' },
