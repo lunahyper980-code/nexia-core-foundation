@@ -2,6 +2,7 @@ import { useState, useEffect } from 'react';
 import { AppLayout } from '@/components/AppLayout';
 import { toast } from 'sonner';
 import { supabase } from '@/integrations/supabase/client';
+import { NeuralAnimation } from '@/components/encontrar-clientes/NeuralAnimation';
 import { Lead } from '@/components/encontrar-clientes/LeadCard';
 import { IntelligentApproachScreen } from '@/components/encontrar-clientes/IntelligentApproachScreen';
 import { GlobalSearchCard } from '@/components/encontrar-clientes/GlobalSearchCard';
@@ -153,7 +154,7 @@ export default function EncontrarClientes() {
   };
 
   return (
-    <AppLayout title="Encontrar Clientes" hideBreadcrumb hideNavigation={isSearching}>
+    <AppLayout title="Encontrar Clientes" hideBreadcrumb>
       {showResults ? (
         // Results Screen
         <LeadsResultsScreen
@@ -182,6 +183,9 @@ export default function EncontrarClientes() {
           />
         </div>
       )}
+
+      {/* Neural Animation Modal */}
+      <NeuralAnimation open={isSearching} />
 
       {/* Intelligent Approach Screen */}
       <IntelligentApproachScreen

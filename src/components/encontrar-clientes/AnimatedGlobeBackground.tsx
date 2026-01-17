@@ -1,32 +1,16 @@
-import { useEffect, useRef, useState } from 'react';
+import { useEffect, useRef } from 'react';
 import { useSidebarState } from '@/contexts/SidebarContext';
 import { useBreakpoint } from '@/hooks/use-breakpoint';
 
-interface AnimatedGlobeBackgroundProps {
-  isSearching?: boolean;
-}
-
-export function AnimatedGlobeBackground({ isSearching = false }: AnimatedGlobeBackgroundProps) {
+export function AnimatedGlobeBackground() {
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const { collapsed } = useSidebarState();
   const breakpoint = useBreakpoint();
-  const [scale, setScale] = useState(1);
-  const scaleRef = useRef(1);
-  const targetScaleRef = useRef(1);
 
   // Calculate sidebar width based on state
   const isMobile = breakpoint === 'mobile';
   const isTablet = breakpoint === 'tablet';
   const sidebarWidth = isMobile ? 0 : (isTablet || collapsed) ? 64 : 256;
-
-  // Handle zoom animation when searching
-  useEffect(() => {
-    if (isSearching) {
-      targetScaleRef.current = 1.15; // Subtle zoom when searching
-    } else {
-      targetScaleRef.current = 1;
-    }
-  }, [isSearching]);
 
   useEffect(() => {
     const canvas = canvasRef.current;
@@ -64,11 +48,12 @@ export function AnimatedGlobeBackground({ isSearching = false }: AnimatedGlobeBa
     canvas.addEventListener('mousemove', handleMouseMove);
 
     // Globe parameters - REFINED: smaller, more elegant globe
+    // Size: ~55-60% of available content height for balanced proportions
     const availableHeight = height * 0.55;
     const availableContentWidth = width - sidebarWidth;
-    const baseGlobeRadius = Math.min(availableContentWidth * 0.35, availableHeight * 0.5);
+    const globeRadius = Math.min(availableContentWidth * 0.35, availableHeight * 0.5);
     
-    const numPoints = 1200;
+    const numPoints = 1200; // Reduced for cleaner look
     const points: { phi: number; theta: number; size: number }[] = [];
     const connections: { from: number; to: number }[] = [];
 
@@ -83,7 +68,7 @@ export function AnimatedGlobeBackground({ isSearching = false }: AnimatedGlobeBa
       });
     }
 
-    // Generate connections
+    // Generate connections - fewer for cleaner look
     for (let i = 0; i < 100; i++) {
       const from = Math.floor(Math.random() * numPoints);
       const to = Math.floor(Math.random() * numPoints);
@@ -98,11 +83,6 @@ export function AnimatedGlobeBackground({ isSearching = false }: AnimatedGlobeBa
     const animate = () => {
       ctx.clearRect(0, 0, width, height);
 
-      // Smooth scale transition
-      scaleRef.current += (targetScaleRef.current - scaleRef.current) * 0.02;
-      const currentScale = scaleRef.current;
-      const globeRadius = baseGlobeRadius * currentScale;
-
       // Smooth mouse following
       mouseX += (targetMouseX - mouseX) * 0.03;
       mouseY += (targetMouseY - mouseY) * 0.03;
@@ -114,51 +94,51 @@ export function AnimatedGlobeBackground({ isSearching = false }: AnimatedGlobeBa
       rotationY += (targetRotationY - rotationY) * 0.015;
       rotationX += (targetRotationX - rotationX) * 0.015;
 
-      // Auto rotation - SLOWER when searching (reduced by ~50%)
-      const rotationSpeed = targetScaleRef.current > 1 ? 0.00003 : 0.00006;
-      const autoRotation = Date.now() * rotationSpeed;
+      // Auto rotation - SLOWER: reduced by ~40% for premium feel
+      const autoRotation = Date.now() * 0.00006;
 
-      // SIDEBAR-AWARE CENTER
+      // SIDEBAR-AWARE CENTER: Calculate center considering sidebar offset
       const contentWidth = width - sidebarWidth;
       const centerX = sidebarWidth + (contentWidth / 2);
+      
+      // VERTICAL SPACING: Push globe down to avoid overlapping with title/subtitle
+      // Added 48px offset to create breathing room below header text
+      // Globe positioned at center with vertical offset for text clearance
+      // 0.52 = slightly below center + ensures no overlap with title area
       const centerY = height * 0.52;
 
-      // === COLOR PALETTE: Neutral, technical feel ===
+      // === COLOR PALETTE: More neutral, less purple, technical feel ===
+      // Primary: Cool gray-blue (desaturated, technical)
       const primaryR = 140;
       const primaryG = 150;
       const primaryB = 180;
       
+      // Accent: Very subtle purple-gray
       const accentR = 160;
       const accentG = 155;
       const accentB = 190;
       
+      // Highlight: Soft white-blue
       const highlightR = 200;
       const highlightG = 210;
       const highlightB = 230;
 
-      // Draw outer glow - Enhanced purple glow when searching
-      const isZooming = targetScaleRef.current > 1;
-      const glowIntensity = isZooming ? 0.12 : 0.04;
-      const glowR = isZooming ? 139 : primaryR; // Nexia purple when searching
-      const glowG = isZooming ? 92 : primaryG;
-      const glowB = isZooming ? 246 : primaryB;
-      
+      // Draw subtle outer glow - very muted
       const gradient = ctx.createRadialGradient(
         centerX,
         centerY,
-        globeRadius * 0.3,
+        0,
         centerX,
         centerY,
-        globeRadius * 1.6
+        globeRadius * 1.4
       );
-      gradient.addColorStop(0, `rgba(${glowR}, ${glowG}, ${glowB}, ${glowIntensity})`);
-      gradient.addColorStop(0.4, `rgba(${glowR}, ${glowG}, ${glowB}, ${glowIntensity * 0.5})`);
-      gradient.addColorStop(0.7, `rgba(${glowR}, ${glowG}, ${glowB}, ${glowIntensity * 0.15})`);
-      gradient.addColorStop(1, `rgba(${glowR}, ${glowG}, ${glowB}, 0)`);
+      gradient.addColorStop(0, `rgba(${primaryR}, ${primaryG}, ${primaryB}, 0.04)`);
+      gradient.addColorStop(0.6, `rgba(${primaryR}, ${primaryG}, ${primaryB}, 0.015)`);
+      gradient.addColorStop(1, `rgba(${primaryR}, ${primaryG}, ${primaryB}, 0)`);
       ctx.fillStyle = gradient;
       ctx.fillRect(0, 0, width, height);
 
-      // Draw globe outline
+      // Draw globe outline - subtle
       ctx.beginPath();
       ctx.arc(centerX, centerY, globeRadius, 0, Math.PI * 2);
       ctx.strokeStyle = `rgba(${primaryR}, ${primaryG}, ${primaryB}, 0.12)`;
@@ -177,10 +157,12 @@ export function AnimatedGlobeBackground({ isSearching = false }: AnimatedGlobeBa
       for (let i = 0; i < points.length; i++) {
         const point = points[i];
 
+        // Spherical to cartesian
         let x = Math.sin(point.phi) * Math.cos(point.theta + autoRotation + rotationY);
         let y = Math.cos(point.phi);
         let z = Math.sin(point.phi) * Math.sin(point.theta + autoRotation + rotationY);
 
+        // Apply X rotation
         const tempY = y;
         y = y * Math.cos(rotationX) - z * Math.sin(rotationX);
         z = tempY * Math.sin(rotationX) + z * Math.cos(rotationX);
@@ -194,9 +176,10 @@ export function AnimatedGlobeBackground({ isSearching = false }: AnimatedGlobeBa
         });
       }
 
+      // Sort by Z (depth) for proper rendering
       projectedPoints.sort((a, b) => a.z - b.z);
 
-      // Draw connections
+      // Draw connections first (back to front) - more subtle
       ctx.lineWidth = 0.4;
       for (const conn of connections) {
         const p1 = projectedPoints.find((p) => p.index === conn.from);
@@ -218,19 +201,19 @@ export function AnimatedGlobeBackground({ isSearching = false }: AnimatedGlobeBa
         }
       }
 
-      // Draw points
+      // Draw points - neutral colors with subtle accent
       for (const point of projectedPoints) {
         if (point.z > -0.5) {
           const opacity = (point.z + 1) / 2;
           const size = point.size * (0.4 + opacity * 0.4);
 
-          // Subtle glow
+          // Subtle glow - very reduced
           ctx.beginPath();
           ctx.arc(point.x, point.y, size * 2.5, 0, Math.PI * 2);
           ctx.fillStyle = `rgba(${primaryR}, ${primaryG}, ${primaryB}, ${opacity * 0.06})`;
           ctx.fill();
 
-          // Point
+          // Point - more white/neutral
           ctx.beginPath();
           ctx.arc(point.x, point.y, size, 0, Math.PI * 2);
           ctx.fillStyle = `rgba(${highlightR}, ${highlightG}, ${highlightB}, ${opacity * 0.7})`;
@@ -238,7 +221,7 @@ export function AnimatedGlobeBackground({ isSearching = false }: AnimatedGlobeBa
         }
       }
 
-      // Draw latitude lines
+      // Draw latitude lines - very subtle
       for (let lat = -60; lat <= 60; lat += 30) {
         const latRad = (lat * Math.PI) / 180;
         const r = Math.cos(latRad) * globeRadius;
@@ -259,7 +242,7 @@ export function AnimatedGlobeBackground({ isSearching = false }: AnimatedGlobeBa
         ctx.stroke();
       }
 
-      // Draw longitude lines
+      // Draw longitude lines - very subtle
       for (let lon = 0; lon < 360; lon += 45) {
         const lonRad = ((lon + autoRotation * 57.3 + rotationY * 57.3) * Math.PI) / 180;
 
@@ -279,7 +262,7 @@ export function AnimatedGlobeBackground({ isSearching = false }: AnimatedGlobeBa
         ctx.stroke();
       }
 
-      // Inner glow highlight
+      // Inner glow highlight - soft white, elegant
       const innerGlow = ctx.createRadialGradient(
         centerX - globeRadius * 0.25,
         centerY - globeRadius * 0.25,
@@ -296,22 +279,6 @@ export function AnimatedGlobeBackground({ isSearching = false }: AnimatedGlobeBa
       ctx.arc(centerX, centerY, globeRadius, 0, Math.PI * 2);
       ctx.fill();
 
-      // Bottom grounding shadow - gives the globe a "seated" appearance
-      const groundShadow = ctx.createRadialGradient(
-        centerX,
-        centerY + globeRadius * 0.85,
-        0,
-        centerX,
-        centerY + globeRadius * 0.85,
-        globeRadius * 0.8
-      );
-      const groundingIntensity = isZooming ? 0.25 : 0.15;
-      groundShadow.addColorStop(0, `rgba(0, 0, 0, ${groundingIntensity})`);
-      groundShadow.addColorStop(0.5, `rgba(0, 0, 0, ${groundingIntensity * 0.4})`);
-      groundShadow.addColorStop(1, 'rgba(0, 0, 0, 0)');
-      ctx.fillStyle = groundShadow;
-      ctx.fillRect(centerX - globeRadius, centerY + globeRadius * 0.5, globeRadius * 2, globeRadius * 0.8);
-
       animationId = requestAnimationFrame(animate);
     };
 
@@ -322,7 +289,7 @@ export function AnimatedGlobeBackground({ isSearching = false }: AnimatedGlobeBa
       window.removeEventListener('resize', handleResize);
       canvas.removeEventListener('mousemove', handleMouseMove);
     };
-  }, [sidebarWidth, isSearching]);
+  }, [sidebarWidth]);
 
   return (
     <canvas
