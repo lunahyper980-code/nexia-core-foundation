@@ -677,7 +677,17 @@
     display: none;
   }
   
-  /* Premium Progress Bar Animation */
+  /* Premium Progress Slide Animation - Minimal style */
+  @keyframes progressSlide {
+    0% {
+      transform: translateX(-200%);
+    }
+    100% {
+      transform: translateX(300%);
+    }
+  }
+  
+  /* Legacy Progress Bar Animation */
   @keyframes progressBar {
     0% {
       transform: translateX(-100%);
@@ -708,5 +718,19 @@
   
   .animate-fade-in {
     animation: fadeIn 0.5s ease-out forwards;
+  }
+  
+  /* Subtle pulse animation for loading text */
+  @keyframes pulseSubtle {
+    0%, 100% {
+      opacity: 0.7;
+    }
+    50% {
+      opacity: 1;
+    }
+  }
+  
+  .animate-pulse-subtle {
+    animation: pulseSubtle 2s ease-in-out infinite;
   }
 }

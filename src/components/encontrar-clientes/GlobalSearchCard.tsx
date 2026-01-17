@@ -6,6 +6,10 @@ import { Checkbox } from '@/components/ui/checkbox';
 import { AnimatedGlobeBackground } from './AnimatedGlobeBackground';
 import { cn } from '@/lib/utils';
 
+// Sparkles icon is still imported but not used in loading state for cleaner UX
+// eslint-disable-next-line @typescript-eslint/no-unused-vars
+const _Sparkles = Sparkles;
+
 interface GlobalSearchCardProps {
   nicho: string;
   cidade: string;
@@ -34,77 +38,56 @@ export function GlobalSearchCard({
   return (
     <div className="relative w-full min-h-[calc(100vh-80px)] md:h-[calc(100vh-80px)] overflow-hidden">
       {/* ========== LAYER 0: Globe Canvas ========== */}
-      {/* Desktop: Full opacity normal | Mobile: Decorative, scaled, faded */}
+      {/* MESMO globo reutilizado - apenas altera rotação e zoom suave */}
       
-      {/* Desktop Globe - Full visibility with analyzing state */}
+      {/* Desktop Globe - Zoom suave durante busca */}
       <div className={cn(
-        "hidden md:block fixed inset-0 z-0 transition-transform duration-1000 ease-out",
-        isSearching && "scale-105"
+        "hidden md:block fixed inset-0 z-0 transition-transform duration-[2000ms] ease-in-out origin-center",
+        isSearching && "scale-[1.15]"
       )}>
         <AnimatedGlobeBackground isAnalyzing={isSearching} />
       </div>
       
-      {/* Mobile Globe - Decorative, reduced opacity, scaled, with fade mask */}
+      {/* Mobile Globe - Zoom proporcional durante busca */}
       <div 
         className={cn(
-          "md:hidden fixed inset-0 z-0 opacity-35 scale-[0.65] -translate-y-[15%] blur-[2px] transition-all duration-1000 ease-out",
-          isSearching && "opacity-50 scale-[0.75]"
+          "md:hidden fixed inset-0 z-0 transition-all duration-[2000ms] ease-in-out origin-center",
+          isSearching 
+            ? "opacity-60 scale-[0.8]" 
+            : "opacity-40 scale-[0.7] -translate-y-[10%]"
         )}
         style={{
-          maskImage: 'linear-gradient(to bottom, black 40%, transparent 85%)',
-          WebkitMaskImage: 'linear-gradient(to bottom, black 40%, transparent 85%)',
+          maskImage: 'linear-gradient(to bottom, black 50%, transparent 90%)',
+          WebkitMaskImage: 'linear-gradient(to bottom, black 50%, transparent 90%)',
         }}
       >
         <AnimatedGlobeBackground isAnalyzing={isSearching} />
       </div>
 
-      {/* ========== LAYER 0.5: Analyzing Overlay ========== */}
+      {/* ========== LAYER 0.5: Loading Status (discreto, abaixo do globo) ========== */}
       <div 
         className={cn(
-          "fixed inset-0 z-[5] flex flex-col items-center justify-center transition-all duration-500 pointer-events-none",
-          isSearching 
-            ? "opacity-100 backdrop-blur-sm" 
-            : "opacity-0"
+          "fixed inset-x-0 bottom-[35%] md:bottom-[28%] z-[5] flex flex-col items-center justify-center transition-all duration-700 pointer-events-none",
+          isSearching ? "opacity-100 translate-y-0" : "opacity-0 translate-y-4"
         )}
-        style={{
-          background: isSearching 
-            ? 'radial-gradient(circle at center, rgba(0,0,0,0.3) 0%, rgba(0,0,0,0.6) 100%)' 
-            : 'transparent'
-        }}
       >
         {isSearching && (
-          <div className="flex flex-col items-center gap-6 px-6 text-center animate-fade-in">
-            {/* Pulsing icon */}
-            <div className="relative">
-              <div className="absolute inset-0 animate-ping opacity-30">
-                <Sparkles className="h-10 w-10 md:h-12 md:w-12 text-primary" />
-              </div>
-              <Sparkles className="h-10 w-10 md:h-12 md:w-12 text-primary animate-pulse" />
-            </div>
+          <div className="flex flex-col items-center gap-4 px-6 text-center">
+            {/* Texto único e discreto */}
+            <p 
+              className="text-sm md:text-base text-muted-foreground/80 font-medium animate-pulse-subtle"
+              style={{ textShadow: '0 2px 12px rgba(0,0,0,0.8)' }}
+            >
+              Encontrando oportunidades na sua região…
+            </p>
             
-            {/* Main text */}
-            <div className="space-y-2">
-              <h2 
-                className="text-xl md:text-2xl font-semibold text-foreground"
-                style={{ textShadow: '0 2px 20px rgba(0,0,0,0.8)' }}
-              >
-                Analisando o mercado...
-              </h2>
-              <p 
-                className="text-sm md:text-base text-muted-foreground/90 max-w-md"
-                style={{ textShadow: '0 1px 10px rgba(0,0,0,0.6)' }}
-              >
-                Nossa IA está buscando leads qualificados na sua região
-              </p>
-            </div>
-            
-            {/* Progress bar */}
-            <div className="w-64 md:w-80 h-1.5 bg-muted/30 rounded-full overflow-hidden">
+            {/* Barra de progresso minimalista */}
+            <div className="w-48 md:w-64 h-1 bg-muted/20 rounded-full overflow-hidden">
               <div 
-                className="h-full bg-gradient-to-r from-primary via-primary/80 to-primary rounded-full animate-progress-bar"
+                className="h-full bg-gradient-to-r from-transparent via-primary/70 to-transparent rounded-full"
                 style={{
-                  width: '100%',
-                  animation: 'progressBar 2s ease-in-out infinite',
+                  width: '50%',
+                  animation: 'progressSlide 1.5s ease-in-out infinite',
                 }}
               />
             </div>
