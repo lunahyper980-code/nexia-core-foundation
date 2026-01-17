@@ -36,8 +36,7 @@ import {
 } from '@/data/siteTypeFields';
 import { useModuleState } from '@/hooks/useModuleState';
 import { ResumeSessionBanner } from '@/components/ResumeSessionBanner';
-import { AISuggestButton, AISuggestionsPanel, type Suggestion } from '@/components/ai-suggest';
-import { useAISuggestions } from '@/hooks/useAISuggestions';
+import { FieldLabelWithAI } from '@/components/ai-suggest';
 
 const TOTAL_STEPS = 5;
 
@@ -95,18 +94,15 @@ export default function HyperBuildSite() {
   const [showResumeBanner, setShowResumeBanner] = useState(false);
   
   const { getSavedState, saveStep, saveFormData, clearState } = useModuleState('criar-site');
-  
-  // AI Suggestions hook
-  const {
-    isLoading: isLoadingSuggestions,
-    suggestions,
-    isVisible: isSuggestionsVisible,
-    appliedSuggestions,
-    generateSuggestions,
-    applySuggestion,
-    closeSuggestions,
-    clearSuggestions
-  } = useAISuggestions({ projectType: 'site' });
+
+  // Context for AI suggestions
+  const getAIContext = () => ({
+    siteName: data.siteName,
+    siteType: data.siteType,
+    businessDescription: data.businessDescription,
+    targetAudience: data.targetAudience,
+    dynamicFields: data.dynamicFields,
+  });
   
   // Parse Nexia data from URL
   const nexiaData = parseNexiaParams(searchParams);
@@ -230,52 +226,6 @@ export default function HyperBuildSite() {
 
   const getCurrentFields = () => {
     return fieldsByType[data.siteType] || fieldsByType['outro'];
-  };
-
-  // Get fields for current step for AI suggestions
-  const getStepFields = () => {
-    switch (currentStep) {
-      case 1:
-        return [
-          { id: 'siteName', label: 'Nome do site', currentValue: data.siteName },
-          { id: 'businessDescription', label: 'Descrição do negócio', currentValue: data.businessDescription },
-          { id: 'targetAudience', label: 'Público-alvo', currentValue: data.targetAudience },
-        ];
-      case 2:
-        const currentFields = getCurrentFields();
-        return currentFields.map(f => ({
-          id: f.id,
-          label: f.label,
-          currentValue: data.dynamicFields[f.id] || ''
-        }));
-      default:
-        return [];
-    }
-  };
-
-  const handleGenerateSuggestions = () => {
-    clearSuggestions();
-    generateSuggestions({
-      step: currentStep,
-      fields: getStepFields(),
-      context: {
-        siteName: data.siteName,
-        siteType: getSiteTypeLabel(),
-        businessDescription: data.businessDescription,
-        targetAudience: data.targetAudience,
-        dynamicFields: data.dynamicFields,
-      }
-    });
-  };
-
-  const handleApplySuggestion = (suggestion: Suggestion) => {
-    const value = applySuggestion(suggestion);
-    if (currentStep === 1) {
-      updateData(suggestion.fieldId as keyof WizardData, value);
-    } else if (currentStep === 2) {
-      updateDynamicField(suggestion.fieldId, value);
-    }
-    toast.success('Sugestão aplicada!');
   };
 
   const generatePrompt = async () => {
@@ -474,23 +424,6 @@ Foco total em CONVERSÃO e EXPERIÊNCIA DO USUÁRIO.
       case 1:
         return (
           <div className="space-y-6">
-            {/* AI Suggest Button */}
-            <div className="flex justify-end">
-              <AISuggestButton
-                onClick={handleGenerateSuggestions}
-                isLoading={isLoadingSuggestions}
-              />
-            </div>
-
-            {/* AI Suggestions Panel */}
-            <AISuggestionsPanel
-              suggestions={suggestions}
-              appliedSuggestions={appliedSuggestions}
-              onApply={handleApplySuggestion}
-              onClose={closeSuggestions}
-              isVisible={isSuggestionsVisible}
-            />
-
             {/* Resume Session Banner */}
             {showResumeBanner && (
               <ResumeSessionBanner
@@ -518,7 +451,16 @@ Foco total em CONVERSÃO e EXPERIÊNCIA DO USUÁRIO.
 
             <div className="space-y-4">
               <div className="space-y-2">
-                <Label htmlFor="siteName">Nome do site ou projeto</Label>
+                <FieldLabelWithAI
+                  htmlFor="siteName"
+                  fieldId="siteName"
+                  projectType="site"
+                  context={getAIContext()}
+                  onApply={(value) => updateData('siteName', value)}
+                  currentValue={data.siteName}
+                >
+                  Nome do site ou projeto
+                </FieldLabelWithAI>
                 <Input
                   id="siteName"
                   placeholder="Ex: Curso de Marketing, Consultoria Silva, Loja Virtual..."
@@ -549,7 +491,6 @@ Foco total em CONVERSÃO e EXPERIÊNCIA DO USUÁRIO.
                 </div>
               </div>
 
-              {/* Custom type field */}
               {data.siteType === 'outro' && (
                 <div className="space-y-2">
                   <Label htmlFor="customSiteType">Descreva o tipo de site</Label>
@@ -563,7 +504,16 @@ Foco total em CONVERSÃO e EXPERIÊNCIA DO USUÁRIO.
               )}
 
               <div className="space-y-2">
-                <Label htmlFor="businessDescription">Descreva seu negócio ou oferta</Label>
+                <FieldLabelWithAI
+                  htmlFor="businessDescription"
+                  fieldId="businessDescription"
+                  projectType="site"
+                  context={getAIContext()}
+                  onApply={(value) => updateData('businessDescription', value)}
+                  currentValue={data.businessDescription}
+                >
+                  Descreva seu negócio ou oferta
+                </FieldLabelWithAI>
                 <Textarea
                   id="businessDescription"
                   placeholder="Ex: Sou nutricionista e ofereço consultoria online para emagrecimento saudável..."
@@ -574,7 +524,16 @@ Foco total em CONVERSÃO e EXPERIÊNCIA DO USUÁRIO.
               </div>
 
               <div className="space-y-2">
-                <Label htmlFor="targetAudience">Quem é seu público-alvo?</Label>
+                <FieldLabelWithAI
+                  htmlFor="targetAudience"
+                  fieldId="targetAudience"
+                  projectType="site"
+                  context={getAIContext()}
+                  onApply={(value) => updateData('targetAudience', value)}
+                  currentValue={data.targetAudience}
+                >
+                  Quem é seu público-alvo?
+                </FieldLabelWithAI>
                 <Input
                   id="targetAudience"
                   placeholder="Ex: Mulheres de 25-45 anos que querem emagrecer sem dietas restritivas"

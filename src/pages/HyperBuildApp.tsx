@@ -31,8 +31,7 @@ import { useAuth } from '@/contexts/AuthContext';
 import { NexiaOriginBanner, parseNexiaParams } from '@/components/nexia';
 import { useModuleState } from '@/hooks/useModuleState';
 import { ResumeSessionBanner } from '@/components/ResumeSessionBanner';
-import { AISuggestButton, AISuggestionsPanel, type Suggestion } from '@/components/ai-suggest';
-import { useAISuggestions } from '@/hooks/useAISuggestions';
+import { FieldLabelWithAI } from '@/components/ai-suggest';
 
 // Platform logos
 import platformLovable from '@/assets/platform-lovable.png';
@@ -134,18 +133,16 @@ export default function HyperBuildApp() {
   const [showResumeBanner, setShowResumeBanner] = useState(false);
   
   const { getSavedState, saveStep, saveFormData, clearState } = useModuleState('criar-app');
-  
-  // AI Suggestions hook
-  const {
-    isLoading: isLoadingSuggestions,
-    suggestions,
-    isVisible: isSuggestionsVisible,
-    appliedSuggestions,
-    generateSuggestions,
-    applySuggestion,
-    closeSuggestions,
-    clearSuggestions
-  } = useAISuggestions({ projectType: 'app' });
+
+  // Context for AI suggestions
+  const getAIContext = () => ({
+    appName: formData.appName,
+    targetAudience: formData.targetAudience,
+    mainTask: formData.mainTask,
+    mainBenefit: formData.mainBenefit,
+    dailyUsers: formData.dailyUsers,
+    pages: formData.pages,
+  });
 
   // Parse Nexia data from URL
   const nexiaData = parseNexiaParams(searchParams);
@@ -204,52 +201,6 @@ export default function HyperBuildApp() {
       ? formData.customFont 
       : formData.fontFamily;
     return { fontFamily: `"${font}", sans-serif` };
-  };
-
-  // Get fields for current step for AI suggestions
-  const getStepFields = () => {
-    switch (currentStep) {
-      case 1:
-        return [
-          { id: 'appName', label: 'Nome do aplicativo', currentValue: formData.appName },
-          { id: 'targetAudience', label: 'Público-alvo', currentValue: formData.targetAudience },
-        ];
-      case 2:
-        return [
-          { id: 'mainTask', label: 'Tarefa principal', currentValue: formData.mainTask },
-          { id: 'mainBenefit', label: 'Benefício principal', currentValue: formData.mainBenefit },
-          { id: 'dailyUsers', label: 'Usuários do sistema', currentValue: formData.dailyUsers },
-        ];
-      case 3:
-        return [
-          { id: 'pages', label: 'Páginas/telas do app', currentValue: formData.pages },
-          { id: 'otherFeatures', label: 'Outros recursos', currentValue: formData.otherFeatures },
-        ];
-      default:
-        return [];
-    }
-  };
-
-  const handleGenerateSuggestions = () => {
-    clearSuggestions();
-    generateSuggestions({
-      step: currentStep,
-      fields: getStepFields(),
-      context: {
-        appName: formData.appName,
-        targetAudience: formData.targetAudience,
-        mainTask: formData.mainTask,
-        mainBenefit: formData.mainBenefit,
-        dailyUsers: formData.dailyUsers,
-        pages: formData.pages,
-      }
-    });
-  };
-
-  const handleApplySuggestion = (suggestion: Suggestion) => {
-    const value = applySuggestion(suggestion);
-    updateField(suggestion.fieldId as keyof FormData, value);
-    toast.success('Sugestão aplicada!');
   };
 
   const generatePrompt = (): string => {
@@ -515,35 +466,25 @@ CRÍTICO: Gerar código COMPLETO e FUNCIONAL. NENHUMA página pode estar vazia, 
                   {currentStep === 5 && 'Copie o prompt e crie seu app na plataforma'}
                 </CardDescription>
               </div>
-              {/* AI Suggest Button - visible on steps 1-3 */}
-              {currentStep <= 3 && (
-                <AISuggestButton
-                  onClick={handleGenerateSuggestions}
-                  isLoading={isLoadingSuggestions}
-                />
-              )}
             </div>
           </CardHeader>
 
           <CardContent className="space-y-6">
-            {/* AI Suggestions Panel */}
-            {currentStep <= 3 && (
-              <AISuggestionsPanel
-                suggestions={suggestions}
-                appliedSuggestions={appliedSuggestions}
-                onApply={handleApplySuggestion}
-                onClose={closeSuggestions}
-                isVisible={isSuggestionsVisible}
-              />
-            )}
 
             {/* Step 1: Identity */}
             {currentStep === 1 && (
               <div className="space-y-5 animate-fade-in">
                 <div className="space-y-2">
-                  <Label htmlFor="appName">
+                  <FieldLabelWithAI
+                    htmlFor="appName"
+                    fieldId="appName"
+                    projectType="app"
+                    context={getAIContext()}
+                    onApply={(value) => updateField('appName', value)}
+                    currentValue={formData.appName}
+                  >
                     Qual o nome do seu aplicativo?
-                  </Label>
+                  </FieldLabelWithAI>
                   <Input
                     id="appName"
                     value={formData.appName}
@@ -553,9 +494,16 @@ CRÍTICO: Gerar código COMPLETO e FUNCIONAL. NENHUMA página pode estar vazia, 
                 </div>
 
                 <div className="space-y-2">
-                  <Label htmlFor="targetAudience">
+                  <FieldLabelWithAI
+                    htmlFor="targetAudience"
+                    fieldId="targetAudience"
+                    projectType="app"
+                    context={getAIContext()}
+                    onApply={(value) => updateField('targetAudience', value)}
+                    currentValue={formData.targetAudience}
+                  >
                     Para quem é este aplicativo?
-                  </Label>
+                  </FieldLabelWithAI>
                   <Textarea
                     id="targetAudience"
                     value={formData.targetAudience}
@@ -571,9 +519,16 @@ CRÍTICO: Gerar código COMPLETO e FUNCIONAL. NENHUMA página pode estar vazia, 
             {currentStep === 2 && (
               <div className="space-y-5 animate-fade-in">
                 <div className="space-y-2">
-                  <Label htmlFor="mainTask">
+                  <FieldLabelWithAI
+                    htmlFor="mainTask"
+                    fieldId="mainTask"
+                    projectType="app"
+                    context={getAIContext()}
+                    onApply={(value) => updateField('mainTask', value)}
+                    currentValue={formData.mainTask}
+                  >
                     Qual é a principal tarefa que este app vai fazer?
-                  </Label>
+                  </FieldLabelWithAI>
                   <Textarea
                     id="mainTask"
                     value={formData.mainTask}
@@ -584,9 +539,16 @@ CRÍTICO: Gerar código COMPLETO e FUNCIONAL. NENHUMA página pode estar vazia, 
                 </div>
 
                 <div className="space-y-2">
-                  <Label htmlFor="mainBenefit">
+                  <FieldLabelWithAI
+                    htmlFor="mainBenefit"
+                    fieldId="mainBenefit"
+                    projectType="app"
+                    context={getAIContext()}
+                    onApply={(value) => updateField('mainBenefit', value)}
+                    currentValue={formData.mainBenefit}
+                  >
                     Qual é a maior ajuda que este app vai dar para o usuário?
-                  </Label>
+                  </FieldLabelWithAI>
                   <Textarea
                     id="mainBenefit"
                     value={formData.mainBenefit}
@@ -597,9 +559,16 @@ CRÍTICO: Gerar código COMPLETO e FUNCIONAL. NENHUMA página pode estar vazia, 
                 </div>
 
                 <div className="space-y-2">
-                  <Label htmlFor="dailyUsers">
+                  <FieldLabelWithAI
+                    htmlFor="dailyUsers"
+                    fieldId="dailyUsers"
+                    projectType="app"
+                    context={getAIContext()}
+                    onApply={(value) => updateField('dailyUsers', value)}
+                    currentValue={formData.dailyUsers}
+                  >
                     Quem vai usar o aplicativo no dia a dia?
-                  </Label>
+                  </FieldLabelWithAI>
                   <Textarea
                     id="dailyUsers"
                     value={formData.dailyUsers}
@@ -615,9 +584,16 @@ CRÍTICO: Gerar código COMPLETO e FUNCIONAL. NENHUMA página pode estar vazia, 
             {currentStep === 3 && (
               <div className="space-y-5 animate-fade-in">
                 <div className="space-y-2">
-                  <Label htmlFor="pages">
+                  <FieldLabelWithAI
+                    htmlFor="pages"
+                    fieldId="pages"
+                    projectType="app"
+                    context={getAIContext()}
+                    onApply={(value) => updateField('pages', value)}
+                    currentValue={formData.pages}
+                  >
                     Quais páginas/telas o aplicativo deve ter?
-                  </Label>
+                  </FieldLabelWithAI>
                   <Input
                     id="pages"
                     value={formData.pages}
@@ -630,9 +606,16 @@ CRÍTICO: Gerar código COMPLETO e FUNCIONAL. NENHUMA página pode estar vazia, 
                 </div>
 
                 <div className="space-y-2">
-                  <Label htmlFor="otherFeatures">
+                  <FieldLabelWithAI
+                    htmlFor="otherFeatures"
+                    fieldId="otherFeatures"
+                    projectType="app"
+                    context={getAIContext()}
+                    onApply={(value) => updateField('otherFeatures', value)}
+                    currentValue={formData.otherFeatures}
+                  >
                     Outros recursos importantes <span className="text-muted-foreground">(opcional)</span>
-                  </Label>
+                  </FieldLabelWithAI>
                   <Textarea
                     id="otherFeatures"
                     value={formData.otherFeatures}
