@@ -16,6 +16,7 @@ export type ModuleKey =
   | 'contrato-hyperbuild'
   | 'criar-app'
   | 'criar-site'
+  | 'materializar'
   | 'proposta'
   | 'proposta-wizard'
   | 'contrato'
