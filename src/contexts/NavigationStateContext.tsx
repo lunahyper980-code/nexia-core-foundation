@@ -57,17 +57,17 @@ function getStorageKey(moduleKey: ModuleKey): string {
 
 function loadFromStorage(moduleKey: ModuleKey): ModuleState | null {
   try {
-    const stored = sessionStorage.getItem(getStorageKey(moduleKey));
+    const stored = localStorage.getItem(getStorageKey(moduleKey));
     if (!stored) return null;
-    
+
     const parsed = JSON.parse(stored) as ModuleState;
-    
+
     // Check if state is stale (older than TTL)
     if (parsed.lastUpdated && Date.now() - parsed.lastUpdated > STATE_TTL_MS) {
-      sessionStorage.removeItem(getStorageKey(moduleKey));
+      localStorage.removeItem(getStorageKey(moduleKey));
       return null;
     }
-    
+
     return parsed;
   } catch {
     return null;
@@ -80,14 +80,14 @@ function saveToStorage(moduleKey: ModuleKey, state: ModuleState): void {
       ...state,
       lastUpdated: Date.now(),
     };
-    sessionStorage.setItem(getStorageKey(moduleKey), JSON.stringify(stateWithTimestamp));
+    localStorage.setItem(getStorageKey(moduleKey), JSON.stringify(stateWithTimestamp));
   } catch (error) {
     console.warn('Failed to save navigation state:', error);
   }
 }
 
 export function NavigationStateProvider({ children }: { children: ReactNode }) {
-  
+
   const getModuleState = useCallback((moduleKey: ModuleKey): ModuleState | null => {
     return loadFromStorage(moduleKey);
   }, []);
@@ -101,7 +101,7 @@ export function NavigationStateProvider({ children }: { children: ReactNode }) {
     const merged = {
       ...current,
       ...updates,
-      formData: updates.formData 
+      formData: updates.formData
         ? { ...(current.formData || {}), ...updates.formData }
         : current.formData,
       extras: updates.extras
@@ -112,14 +112,14 @@ export function NavigationStateProvider({ children }: { children: ReactNode }) {
   }, []);
 
   const clearModuleState = useCallback((moduleKey: ModuleKey): void => {
-    sessionStorage.removeItem(getStorageKey(moduleKey));
+    localStorage.removeItem(getStorageKey(moduleKey));
   }, []);
 
   const clearAllStates = useCallback((): void => {
     // Clear all navigation states
-    Object.keys(sessionStorage).forEach(key => {
+    Object.keys(localStorage).forEach(key => {
       if (key.startsWith(STORAGE_PREFIX)) {
-        sessionStorage.removeItem(key);
+        localStorage.removeItem(key);
       }
     });
   }, []);

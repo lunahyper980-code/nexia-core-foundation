@@ -52,18 +52,51 @@ export function useModuleState(
   const saveTimeoutRef = useRef<NodeJS.Timeout>();
   const pendingFormDataRef = useRef<Record<string, any>>({});
 
-  // Cleanup timeout on unmount
+  const flushPendingFormData = useCallback(() => {
+    if (saveTimeoutRef.current) {
+      clearTimeout(saveTimeoutRef.current);
+      saveTimeoutRef.current = undefined;
+    }
+
+    if (Object.keys(pendingFormDataRef.current).length > 0) {
+      updateModuleState(moduleKey, { formData: pendingFormDataRef.current });
+      pendingFormDataRef.current = {};
+    }
+  }, [moduleKey, updateModuleState]);
+
+  // Flush pending data on unmount
   useEffect(() => {
     return () => {
-      if (saveTimeoutRef.current) {
-        clearTimeout(saveTimeoutRef.current);
-        // Save any pending data before unmount
-        if (Object.keys(pendingFormDataRef.current).length > 0) {
-          updateModuleState(moduleKey, { formData: pendingFormDataRef.current });
-        }
+      flushPendingFormData();
+    };
+  }, [flushPendingFormData]);
+
+  // Flush pending data when the app goes to background (mobile/tab switching)
+  useEffect(() => {
+    const handleVisibilityChange = () => {
+      if (document.visibilityState === 'hidden') {
+        flushPendingFormData();
       }
     };
-  }, [moduleKey, updateModuleState]);
+
+    const handlePageHide = () => {
+      flushPendingFormData();
+    };
+
+    const handleBeforeUnload = () => {
+      flushPendingFormData();
+    };
+
+    document.addEventListener('visibilitychange', handleVisibilityChange);
+    window.addEventListener('pagehide', handlePageHide);
+    window.addEventListener('beforeunload', handleBeforeUnload);
+
+    return () => {
+      document.removeEventListener('visibilitychange', handleVisibilityChange);
+      window.removeEventListener('pagehide', handlePageHide);
+      window.removeEventListener('beforeunload', handleBeforeUnload);
+    };
+  }, [flushPendingFormData]);
 
   const getSavedState = useCallback((): ModuleStateResult | null => {
     return getModuleState(moduleKey);
@@ -84,17 +117,16 @@ export function useModuleState(
   const saveFormData = useCallback((data: Record<string, any>) => {
     // Merge with pending data
     pendingFormDataRef.current = { ...pendingFormDataRef.current, ...data };
-    
+
     // Debounce the save
     if (saveTimeoutRef.current) {
       clearTimeout(saveTimeoutRef.current);
     }
-    
+
     saveTimeoutRef.current = setTimeout(() => {
-      updateModuleState(moduleKey, { formData: pendingFormDataRef.current });
-      pendingFormDataRef.current = {};
+      flushPendingFormData();
     }, saveDelay);
-  }, [moduleKey, updateModuleState, saveDelay]);
+  }, [flushPendingFormData, saveDelay]);
 
   const saveExtras = useCallback((extras: Record<string, any>) => {
     updateModuleState(moduleKey, { extras });

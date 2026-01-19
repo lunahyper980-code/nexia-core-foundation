@@ -109,11 +109,10 @@ export default function Materializar() {
   
   const { getSavedState, saveStep, saveFormData, clearState } = useModuleState('materializar');
 
-  // Check for saved state on mount (only if not using template)
+  // Check for saved state on mount
   useEffect(() => {
-    if (isTemplateMode) return;
     const saved = getSavedState();
-    if (saved && (saved.currentStep && saved.currentStep > 1 || (saved.formData && Object.keys(saved.formData).length > 0))) {
+    if (saved && ((saved.currentStep && saved.currentStep > 1) || (saved.formData && Object.keys(saved.formData).length > 0))) {
       setShowResumeBanner(true);
     }
   }, []);
@@ -493,9 +492,7 @@ ${isApp ? appInstructions : siteInstructions}`;
   const updateField = (field: keyof FormData, value: string) => {
     setFormData(prev => {
       const updated = { ...prev, [field]: value };
-      if (!isTemplateMode) {
-        saveFormData(updated);
-      }
+      saveFormData(updated);
       return updated;
     });
     if (errors[field]) {
@@ -531,7 +528,7 @@ ${isApp ? appInstructions : siteInstructions}`;
         </div>
 
         {/* Resume Session Banner */}
-        {showResumeBanner && !isTemplateMode && (
+        {showResumeBanner && (
           <ResumeSessionBanner
             title="Continuar de onde parou?"
             description={`Você estava na etapa ${getSavedState()?.currentStep || 1} de ${totalSteps}`}
