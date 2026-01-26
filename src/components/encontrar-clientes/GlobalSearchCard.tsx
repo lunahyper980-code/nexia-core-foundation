@@ -1,9 +1,23 @@
-import { Search, Globe, Sparkles, Building2, MapPin, Instagram, Zap } from 'lucide-react';
+import { Search, Globe, Sparkles, Building2, MapPin, Instagram, Zap, Scissors, Heart, Stethoscope, UtensilsCrossed, Dumbbell, Home, Scale, Calculator, Store, Wrench } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Checkbox } from '@/components/ui/checkbox';
 import { AnimatedGlobeBackground } from './AnimatedGlobeBackground';
+import { cn } from '@/lib/utils';
+
+const QUICK_NICHES = [
+  { label: 'Barbearia', icon: Scissors },
+  { label: 'Salão de beleza', icon: Heart },
+  { label: 'Clínica / Consultório', icon: Stethoscope },
+  { label: 'Restaurante / Delivery', icon: UtensilsCrossed },
+  { label: 'Academia / Personal', icon: Dumbbell },
+  { label: 'Imobiliária', icon: Home },
+  { label: 'Advogado', icon: Scale },
+  { label: 'Contador', icon: Calculator },
+  { label: 'Loja local', icon: Store },
+  { label: 'Prestador de serviços', icon: Wrench },
+];
 
 interface GlobalSearchCardProps {
   nicho: string;
@@ -30,6 +44,14 @@ export function GlobalSearchCard({
   onPossuiInstagramChange,
   onSearch,
 }: GlobalSearchCardProps) {
+  const handleNichoSelect = (label: string) => {
+    // Toggle: if already selected, clear it; otherwise set it
+    if (nicho === label) {
+      onNichoChange('');
+    } else {
+      onNichoChange(label);
+    }
+  };
   return (
     <div className="relative w-full min-h-[calc(100vh-80px)] md:h-[calc(100vh-80px)] overflow-hidden">
       {/* ========== LAYER 0: Globe Canvas - Fullscreen Background ========== */}
@@ -107,6 +129,36 @@ export function GlobalSearchCard({
                 boxShadow: '0 4px 24px rgba(0,0,0,0.25), inset 0 1px 0 rgba(255,255,255,0.03)'
               }}
             >
+              {/* Quick Niche Selection Chips */}
+              <div className="mb-4 md:mb-5">
+                <Label className="flex items-center gap-2 text-foreground/80 text-[11px] md:text-xs font-medium tracking-wide uppercase mb-2.5">
+                  <Building2 className="h-3 md:h-3.5 w-3 md:w-3.5 text-primary" />
+                  Seleção Rápida de Nicho
+                </Label>
+                <div className="flex flex-wrap gap-1.5 md:gap-2">
+                  {QUICK_NICHES.map(({ label, icon: Icon }) => {
+                    const isActive = nicho === label;
+                    return (
+                      <button
+                        key={label}
+                        type="button"
+                        onClick={() => handleNichoSelect(label)}
+                        className={cn(
+                          "inline-flex items-center gap-1.5 px-2.5 md:px-3 py-1 md:py-1.5 rounded-full text-[11px] md:text-xs font-medium transition-all duration-200",
+                          "border backdrop-blur-sm",
+                          isActive
+                            ? "bg-primary/20 border-primary/50 text-primary shadow-sm shadow-primary/20"
+                            : "bg-background/20 border-border/30 text-muted-foreground/80 hover:bg-background/40 hover:border-border/50 hover:text-foreground/90"
+                        )}
+                      >
+                        <Icon className={cn("h-3 w-3", isActive ? "text-primary" : "text-muted-foreground/70")} />
+                        <span className="whitespace-nowrap">{label}</span>
+                      </button>
+                    );
+                  })}
+                </div>
+              </div>
+
               <div className="grid gap-4 md:gap-5 lg:gap-6 lg:grid-cols-[1fr_1fr_auto] items-end">
                 {/* Input: Nicho */}
                 <div className="space-y-1.5">
@@ -116,7 +168,7 @@ export function GlobalSearchCard({
                   </Label>
                   <Input
                     id="nicho"
-                    placeholder="Ex: Barbearia, Clínica, Restaurante..."
+                    placeholder="Ou digite um nicho personalizado..."
                     value={nicho}
                     onChange={(e) => onNichoChange(e.target.value)}
                     className="bg-background/40 h-10 md:h-11 text-sm border-border/30 focus:border-primary/40 placeholder:text-muted-foreground/50"
