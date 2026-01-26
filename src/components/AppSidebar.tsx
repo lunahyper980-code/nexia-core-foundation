@@ -47,6 +47,7 @@ const simpleNavItems: NavItem[] = [
   { label: 'Meus Projetos', path: '/hyperbuild/projetos-lista', icon: FolderOpen, mode: 'simple' },
   { label: 'Contratos', path: '/contratos', icon: FileSignature, mode: 'simple' },
   { label: 'Clientes', path: '/clientes', icon: Users, mode: 'simple' },
+  { label: 'Academy', path: '/academy', icon: GraduationCap, mode: 'simple' },
   { label: 'Créditos', path: '/creditos', icon: Coins, mode: 'simple' },
   { label: 'Minha Equipe', path: '/admin/equipe', icon: UsersRound, adminOnly: true, mode: 'simple' },
   { label: 'Configurações', path: '/configuracoes', icon: Settings, mode: 'simple' },
