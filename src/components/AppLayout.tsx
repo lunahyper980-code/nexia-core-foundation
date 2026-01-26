@@ -48,10 +48,10 @@ export function AppLayout({ children, title, hideBreadcrumb = false }: AppLayout
           'pt-16 min-h-screen transition-all duration-300 w-full overflow-x-hidden',
           // Mobile: full width, bottom padding for nav
           isMobile && 'pl-0 pb-20',
-          // Tablet: collapsed sidebar padding
-          isTablet && 'pl-16',
-          // Desktop: dynamic sidebar padding
-          !isMobile && !isTablet && (collapsed ? 'pl-16' : 'pl-64')
+          // Tablet: collapsed sidebar padding (68px)
+          isTablet && 'pl-[68px]',
+          // Desktop: dynamic sidebar padding (68px collapsed, 272px expanded)
+          !isMobile && !isTablet && (collapsed ? 'pl-[68px]' : 'pl-[272px]')
         )}
       >
         {/* Full-width centered container for SaaS premium layout */}

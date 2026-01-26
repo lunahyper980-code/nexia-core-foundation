@@ -98,23 +98,23 @@ export function AppSidebar({ forceCollapsed = false }: AppSidebarProps) {
   return (
     <aside
       className={cn(
-        'fixed left-0 top-0 z-40 flex h-screen flex-col border-r border-foreground/[0.04] bg-sidebar transition-all duration-200',
-        isCollapsed ? 'w-16' : 'w-64'
+        'fixed left-0 top-0 z-40 flex h-screen flex-col border-r border-foreground/[0.06] bg-sidebar transition-all duration-200',
+        isCollapsed ? 'w-[68px]' : 'w-[272px]'
       )}
     >
       {/* Logo */}
       <div className={cn(
-        'flex items-center gap-2.5 border-b border-foreground/[0.04] p-4 h-14',
-        isCollapsed && 'justify-center'
+        'flex items-center gap-3 border-b border-foreground/[0.06] px-5 h-16',
+        isCollapsed && 'justify-center px-3'
       )}>
-        <img src={logoNexia} alt="Nexia Suite" className="w-10 h-10 object-contain" />
+        <img src={logoNexia} alt="Nexia Suite" className="w-10 h-10 object-contain flex-shrink-0" />
         {!isCollapsed && (
           <span className="font-semibold text-sm text-foreground tracking-tight truncate">NEXIA SUITE</span>
         )}
       </div>
 
       {/* Navigation */}
-      <nav className="flex-1 overflow-y-auto p-2.5 pt-4 space-y-1.5">
+      <nav className="flex-1 overflow-y-auto px-3 py-4 space-y-1">
         {navItems.map((item) => {
           const isActive = location.pathname === item.path || location.pathname.startsWith(item.path + '/');
           const Icon = item.icon;
@@ -124,14 +124,14 @@ export function AppSidebar({ forceCollapsed = false }: AppSidebarProps) {
             <NavLink
               to={item.path}
               className={cn(
-                'flex items-center gap-2.5 rounded-md px-2.5 py-2 text-sm font-medium transition-all duration-150',
+                'flex items-center gap-3 rounded-lg px-3 py-2.5 text-sm font-medium transition-all duration-150',
                 isActive
                   ? 'bg-primary/10 text-primary border border-primary/15'
                   : 'text-muted-foreground hover:bg-secondary/60 hover:text-foreground',
-                isCollapsed && 'justify-center px-2'
+                isCollapsed && 'justify-center px-2.5'
               )}
             >
-              <Icon className={cn('h-4 w-4 flex-shrink-0', isActive ? 'text-primary' : 'text-muted-foreground')} strokeWidth={1.75} />
+              <Icon className={cn('h-[18px] w-[18px] flex-shrink-0', isActive ? 'text-primary' : 'text-muted-foreground')} strokeWidth={1.75} />
               {!isCollapsed && (
                 <span className="truncate flex-1 flex items-center gap-2">
                   {item.label}
@@ -162,20 +162,20 @@ export function AppSidebar({ forceCollapsed = false }: AppSidebarProps) {
 
       {/* Toggle Button - Only show on desktop */}
       {!forceCollapsed && (
-        <div className="border-t border-foreground/[0.04] p-2.5">
+        <div className="border-t border-foreground/[0.06] px-3 py-3">
           <button
             onClick={toggle}
             className={cn(
-              'flex w-full items-center gap-2.5 rounded-md px-2.5 py-2 text-sm font-medium text-muted-foreground',
+              'flex w-full items-center gap-3 rounded-lg px-3 py-2.5 text-sm font-medium text-muted-foreground',
               'transition-all duration-150 hover:bg-secondary/60 hover:text-foreground',
-              isCollapsed && 'justify-center px-2'
+              isCollapsed && 'justify-center px-2.5'
             )}
           >
             {isCollapsed ? (
-              <ChevronRight className="h-4 w-4" strokeWidth={1.75} />
+              <ChevronRight className="h-[18px] w-[18px]" strokeWidth={1.75} />
             ) : (
               <>
-                <ChevronLeft className="h-4 w-4" strokeWidth={1.75} />
+                <ChevronLeft className="h-[18px] w-[18px]" strokeWidth={1.75} />
                 <span>Recolher menu</span>
               </>
             )}
