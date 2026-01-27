@@ -86,7 +86,7 @@ export default function MinhaEquipe() {
               <CardHeader className="pb-4">
                 <CardTitle className="text-lg font-semibold">Plano Mensal</CardTitle>
                 <div className="flex items-baseline gap-1 mt-2">
-                  <span className="text-4xl font-bold text-foreground">R$ 197</span>
+                  <span className="text-4xl font-bold text-foreground">R$ 147</span>
                   <span className="text-muted-foreground text-sm">/ mês</span>
                 </div>
               </CardHeader>
@@ -128,7 +128,7 @@ export default function MinhaEquipe() {
               <CardHeader className="pb-4">
                 <CardTitle className="text-lg font-semibold">Plano Vitalício</CardTitle>
                 <div className="flex items-baseline gap-1 mt-2">
-                  <span className="text-4xl font-bold text-foreground">R$ 297</span>
+                  <span className="text-4xl font-bold text-foreground">R$ 247</span>
                   <span className="text-muted-foreground text-sm">único</span>
                 </div>
               </CardHeader>
