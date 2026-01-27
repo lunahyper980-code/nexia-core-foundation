@@ -12,6 +12,7 @@ import {
 import { Avatar, AvatarFallback } from '@/components/ui/avatar';
 import { Menu, LogOut, User, Settings } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
+import { ThemeToggle } from '@/components/ThemeToggle';
 import logoNexia from '@/assets/logo-nexia.png';
 
 interface AppHeaderProps {
@@ -71,8 +72,11 @@ export function AppHeader({ title, isMobile = false, onMenuClick }: AppHeaderPro
         </h1>
       </div>
 
-      <DropdownMenu>
-        <DropdownMenuTrigger asChild>
+      <div className="flex items-center gap-2">
+        <ThemeToggle />
+        
+        <DropdownMenu>
+          <DropdownMenuTrigger asChild>
           <Button variant="ghost" className="relative h-8 w-8 rounded-full flex-shrink-0 transition-all">
             <Avatar className="h-8 w-8 border border-foreground/[0.06]">
               <AvatarFallback className="bg-gradient-to-br from-primary to-accent text-primary-foreground font-medium text-xs">
@@ -123,8 +127,9 @@ export function AppHeader({ title, isMobile = false, onMenuClick }: AppHeaderPro
             <LogOut className="mr-2 h-3.5 w-3.5" />
             Sair
           </DropdownMenuItem>
-        </DropdownMenuContent>
-      </DropdownMenu>
+            </DropdownMenuContent>
+        </DropdownMenu>
+      </div>
     </header>
   );
 }

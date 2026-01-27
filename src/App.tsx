@@ -11,6 +11,7 @@ import { UserModeProvider } from "@/contexts/UserModeContext";
 import { DemoModeProvider } from "@/contexts/DemoModeContext";
 import { GlobalLoaderProvider } from "@/contexts/GlobalLoaderContext";
 import { NavigationStateProvider } from "@/contexts/NavigationStateContext";
+import { ThemeProvider } from "@/contexts/ThemeContext";
 import { ProtectedRoute } from "@/components/ProtectedRoute";
 import { PWAProvider } from "@/components/pwa";
 import { DemoModeBadge } from "@/components/DemoModeBadge";
@@ -104,6 +105,7 @@ const queryClient = new QueryClient();
 
 const App = () => (
   <QueryClientProvider client={queryClient}>
+    <ThemeProvider>
     <TooltipProvider>
       <Toaster />
       <Sonner />
@@ -226,6 +228,7 @@ const App = () => (
         </AuthProvider>
       </BrowserRouter>
     </TooltipProvider>
+    </ThemeProvider>
   </QueryClientProvider>
 );
 
