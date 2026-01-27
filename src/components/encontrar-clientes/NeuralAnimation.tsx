@@ -6,9 +6,11 @@ interface NeuralAnimationProps {
 }
 
 const PROGRESS_STEPS = [
-  { label: 'Coletando dados do mercado...', duration: 600 },
-  { label: 'Validando oportunidades...', duration: 700 },
-  { label: 'Organizando leads...', duration: 500 },
+  { label: 'Buscando empresas na região...', duration: 500 },
+  { label: 'Analisando oportunidades de mercado...', duration: 600 },
+  { label: 'Identificando negócios similares...', duration: 500 },
+  { label: 'Expandindo alcance da busca...', duration: 600 },
+  { label: 'Organizando 15-20 leads...', duration: 400 },
 ];
 
 export function NeuralAnimation({ open, message }: NeuralAnimationProps) {

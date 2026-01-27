@@ -68,7 +68,7 @@ export function LeadsResultsScreen({
             </div>
             <div>
               <h1 className="text-2xl md:text-3xl font-bold text-foreground">
-                {leads.length} Leads Encontrados
+                {leads.length >= 15 ? '15 a 20' : leads.length} Leads Encontrados
               </h1>
               <p className="text-muted-foreground flex items-center gap-2 mt-1">
                 <Search className="h-4 w-4" />
