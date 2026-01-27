@@ -5,7 +5,8 @@
 @tailwind utilities;
 
 @layer base {
-  :root {
+  :root,
+  .dark {
     /* NEXA SUITE Premium Dark Theme - Absolute Black */
     --background: 0 0% 0%;
     --foreground: 230 15% 92%;
@@ -95,6 +96,100 @@
     --glass-bg: hsl(240 6% 4% / 0.9);
     --glass-bg-light: hsl(240 5% 8% / 0.85);
     --glass-border: hsl(0 0% 100% / 0.04);
+    --glass-blur: 20px;
+    --glass-blur-heavy: 32px;
+  }
+
+  .light {
+    /* NEXA SUITE Light Theme - Clean & Professional */
+    --background: 0 0% 98%;
+    --foreground: 240 10% 10%;
+    
+    /* Cards on light background */
+    --card: 0 0% 100%;
+    --card-foreground: 240 10% 10%;
+    
+    --popover: 0 0% 100%;
+    --popover-foreground: 240 10% 10%;
+    
+    /* Primary - Nexa Purple (slightly adjusted for light) */
+    --primary: 263 70% 50%;
+    --primary-foreground: 0 0% 100%;
+    
+    /* Secondary - Light gray surface */
+    --secondary: 240 5% 94%;
+    --secondary-foreground: 240 10% 10%;
+    
+    /* Muted - Subtle light gray */
+    --muted: 240 5% 96%;
+    --muted-foreground: 240 5% 45%;
+    
+    /* Accent - Nexa Blue */
+    --accent: 217 91% 55%;
+    --accent-foreground: 0 0% 100%;
+    
+    --destructive: 0 72% 51%;
+    --destructive-foreground: 0 0% 100%;
+    
+    --success: 142 71% 40%;
+    --success-foreground: 0 0% 100%;
+    
+    --warning: 38 92% 45%;
+    --warning-foreground: 0 0% 0%;
+    
+    /* Borders - Subtle on light */
+    --border: 240 5% 88%;
+    --input: 240 5% 94%;
+    --ring: 263 70% 50%;
+    
+    --radius: 0.625rem;
+    
+    /* Sidebar - Light surface */
+    --sidebar-background: 0 0% 100%;
+    --sidebar-foreground: 240 10% 10%;
+    --sidebar-primary: 263 70% 50%;
+    --sidebar-primary-foreground: 0 0% 100%;
+    --sidebar-accent: 240 5% 96%;
+    --sidebar-accent-foreground: 240 10% 10%;
+    --sidebar-border: 240 5% 90%;
+    --sidebar-ring: 263 70% 50%;
+    
+    /* Premium Tokens - Light */
+    --surface: 0 0% 100%;
+    --surface-hover: 240 5% 97%;
+    --surface-elevated: 0 0% 100%;
+    --text-primary: 240 10% 10%;
+    --text-secondary: 240 5% 35%;
+    --text-tertiary: 240 5% 55%;
+    --border-subtle: 240 5% 90%;
+    --border-glow: 263 70% 50%;
+    
+    /* Light Gradients */
+    --gradient-primary: linear-gradient(135deg, hsl(263 70% 50%), hsl(217 91% 55%));
+    --gradient-surface: linear-gradient(180deg, hsl(0 0% 100%), hsl(0 0% 98%));
+    --gradient-card: linear-gradient(145deg, hsl(0 0% 100%), hsl(240 5% 98%));
+    --gradient-subtle: radial-gradient(ellipse at top, hsl(263 70% 50% / 0.03), transparent 50%);
+    
+    /* Light Shadows */
+    --shadow-xs: 0 1px 2px 0 rgb(0 0 0 / 0.05);
+    --shadow-sm: 0 2px 4px 0 rgb(0 0 0 / 0.06), 0 1px 2px -1px rgb(0 0 0 / 0.04);
+    --shadow-md: 0 4px 12px -2px rgb(0 0 0 / 0.08), 0 2px 4px -2px rgb(0 0 0 / 0.04);
+    --shadow-lg: 0 8px 24px -4px rgb(0 0 0 / 0.1), 0 4px 8px -4px rgb(0 0 0 / 0.06);
+    --shadow-xl: 0 20px 40px -8px rgb(0 0 0 / 0.12);
+    --shadow-inner: inset 0 1px 2px 0 rgb(0 0 0 / 0.05);
+    --shadow-glow: 0 0 20px hsl(263 70% 50% / 0.1), 0 0 40px hsl(263 70% 50% / 0.05);
+    --shadow-glow-sm: 0 0 10px hsl(263 70% 50% / 0.08);
+    --shadow-glow-subtle: 0 0 16px hsl(263 70% 50% / 0.05);
+    
+    /* Frame - Light */
+    --frame-bg: 0 0% 100%;
+    --frame-border: 263 60% 50%;
+    --frame-glow: 263 70% 50%;
+    
+    /* Glassmorphism - Light version */
+    --glass-bg: hsl(0 0% 100% / 0.8);
+    --glass-bg-light: hsl(0 0% 100% / 0.9);
+    --glass-border: hsl(0 0% 0% / 0.06);
     --glass-blur: 20px;
     --glass-blur-heavy: 32px;
   }
