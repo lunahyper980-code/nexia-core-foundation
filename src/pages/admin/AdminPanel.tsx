@@ -34,7 +34,8 @@ import {
   CheckCircle,
   XCircle,
   AlertCircle,
-  UserPlus
+  UserPlus,
+  BarChart3,
 } from 'lucide-react';
 import { toast } from 'sonner';
 import { format } from 'date-fns';
@@ -48,6 +49,7 @@ import {
   CreditRequestStatus,
   LovableCreditRequest 
 } from '@/hooks/useLovableCreditRequests';
+import { AdminMetricsEditor } from '@/components/admin/AdminMetricsEditor';
 
 export default function AdminPanel() {
   const navigate = useNavigate();
@@ -104,10 +106,14 @@ export default function AdminPanel() {
 
         {/* Navigation Tabs */}
         <Tabs value={currentPath} onValueChange={handleTabChange} className="w-full">
-          <TabsList className="grid w-full grid-cols-3 max-w-md">
+          <TabsList className="grid w-full grid-cols-4 max-w-lg">
             <TabsTrigger value="dashboard" className="gap-2">
               <LayoutDashboard className="h-4 w-4" />
               <span className="hidden sm:inline">Dashboard</span>
+            </TabsTrigger>
+            <TabsTrigger value="metrics" className="gap-2">
+              <BarChart3 className="h-4 w-4" />
+              <span className="hidden sm:inline">Métricas</span>
             </TabsTrigger>
             <TabsTrigger value="users" className="gap-2">
               <Users className="h-4 w-4" />
@@ -121,6 +127,10 @@ export default function AdminPanel() {
 
           <TabsContent value="dashboard" className="mt-6">
             <AdminDashboard />
+          </TabsContent>
+
+          <TabsContent value="metrics" className="mt-6">
+            <AdminMetricsEditor />
           </TabsContent>
 
           <TabsContent value="users" className="mt-6">

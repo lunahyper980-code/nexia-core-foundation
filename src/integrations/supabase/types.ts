@@ -1242,6 +1242,7 @@ export type Database = {
           plannings: number
           projects: number
           proposals: number
+          recurrence_monthly: number
           reference_date: string
           total_pipeline_value: number
           updated_at: string
@@ -1259,6 +1260,7 @@ export type Database = {
           plannings?: number
           projects?: number
           proposals?: number
+          recurrence_monthly?: number
           reference_date?: string
           total_pipeline_value?: number
           updated_at?: string
@@ -1276,6 +1278,7 @@ export type Database = {
           plannings?: number
           projects?: number
           proposals?: number
+          recurrence_monthly?: number
           reference_date?: string
           total_pipeline_value?: number
           updated_at?: string

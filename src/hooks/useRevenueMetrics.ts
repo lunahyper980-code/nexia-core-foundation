@@ -47,16 +47,16 @@ export function useRevenueMetrics(period: 7 | 30) {
     return contractMetrics.totalValue;
   }, [isAdminOrOwner, ownerMetrics.totalPipelineValue, contractMetrics.totalValue]);
 
-  // ADMIN: Recorrência fixa de 3.223 (demo)
+  // ADMIN: Recorrência do owner_metrics (editável pelo admin)
   // USUÁRIO: Soma das recorrências dos contratos ASSINADOS
   const totalRecurrence = useMemo(() => {
     if (isAdminOrOwner) {
-      // ADMIN: Valor fixo de demo
-      return 3223;
+      // ADMIN: Valor do owner_metrics (editável)
+      return ownerMetrics.recurrenceMonthly || 3223;
     }
     // USUÁRIO COMUM: Soma real dos contratos assinados
     return contractMetrics.totalRecurrence;
-  }, [isAdminOrOwner, contractMetrics.totalRecurrence]);
+  }, [isAdminOrOwner, ownerMetrics.recurrenceMonthly, contractMetrics.totalRecurrence]);
 
   // Calcular métricas do período selecionado e período anterior
   const periodMetrics = useMemo((): PeriodMetrics => {
