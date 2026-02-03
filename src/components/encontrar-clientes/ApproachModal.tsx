@@ -169,57 +169,6 @@ export function ApproachModal({ open, onOpenChange, lead }: ApproachModalProps) 
           <Languages className="h-3.5 w-3.5" />
           Traduzir
         </Button>
-
-        {type === 'whatsapp' && (
-          <Button
-            variant="outline"
-            size="sm"
-            className="h-8 gap-1.5 text-xs text-emerald-600 border-emerald-600/30 hover:bg-emerald-600/10"
-            onClick={() => openWhatsApp(message)}
-          >
-            <MessageCircle className="h-3.5 w-3.5" />
-            WhatsApp
-          </Button>
-        )}
-
-        {type === 'instagram' && (
-          <Button
-            variant="outline"
-            size="sm"
-            className="h-8 gap-1.5 text-xs text-pink-600 border-pink-600/30 hover:bg-pink-600/10"
-            onClick={() => openInstagram(message)}
-          >
-            <Instagram className="h-3.5 w-3.5" />
-            Instagram
-          </Button>
-        )}
-
-        {type === 'email' && (
-          <Button
-            variant="outline"
-            size="sm"
-            className="h-8 gap-1.5 text-xs text-blue-600 border-blue-600/30 hover:bg-blue-600/10"
-            onClick={() => openEmail(message)}
-          >
-            <Mail className="h-3.5 w-3.5" />
-            E-mail
-          </Button>
-        )}
-
-        {type === 'ligacao' && (
-          <Button
-            variant="outline"
-            size="sm"
-            className="h-8 gap-1.5 text-xs text-orange-600 border-orange-600/30 hover:bg-orange-600/10"
-            onClick={() => {
-              copyToClipboard(message);
-              toast.success('Roteiro copiado!');
-            }}
-          >
-            <Phone className="h-3.5 w-3.5" />
-            Roteiro
-          </Button>
-        )}
       </div>
     </div>
   );
