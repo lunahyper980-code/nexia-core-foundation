@@ -14,7 +14,8 @@ import {
   X,
   Sparkles,
   Handshake,
-  Target
+  Target,
+  MapPin
 } from 'lucide-react';
 import { toast } from 'sonner';
 import { TranslateApproachModal } from './TranslateApproachModal';
@@ -132,6 +133,14 @@ export function ApproachModal({ open, onOpenChange, lead }: ApproachModalProps) 
     setTranslateModalOpen(true);
   };
 
+  const openGoogleMaps = () => {
+    if (!lead) return;
+    const query = encodeURIComponent(`${lead.nome} ${lead.localizacao}`);
+    const url = `https://www.google.com/maps/search/${query}`;
+    window.open(url, '_blank');
+    toast.success('Abrindo no Google Maps...');
+  };
+
   if (!lead || !currentMessages) return null;
 
   const MessageCard = ({ 
@@ -168,6 +177,16 @@ export function ApproachModal({ open, onOpenChange, lead }: ApproachModalProps) 
         >
           <Languages className="h-3.5 w-3.5" />
           Traduzir
+        </Button>
+
+        <Button
+          variant="outline"
+          size="sm"
+          className="h-8 gap-1.5 text-xs text-primary border-primary/30 hover:bg-primary/10"
+          onClick={openGoogleMaps}
+        >
+          <MapPin className="h-3.5 w-3.5" />
+          Ver no Maps
         </Button>
       </div>
     </div>
