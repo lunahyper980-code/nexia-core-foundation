@@ -41,6 +41,7 @@ import templateRestauranteBar from '@/assets/template-restaurante-bar.png';
 import templatePrestadorServicos from '@/assets/template-prestador-servicos.png';
 import templateEscritorioProfissional from '@/assets/template-escritorio-profissional.png';
 import templateEvento from '@/assets/template-evento.png';
+import templateRestaurante from '@/assets/template-restaurante.png';
 
 type SolutionType = 'app' | 'site' | null;
 type CategoryType = 'all' | string;
@@ -106,6 +107,14 @@ const templates: Template[] = [
     name: 'Delivery',
     description: 'Sistema completo de entregas e rastreamento de pedidos',
     image: templateDelivery,
+    type: 'app',
+    category: 'alimentacao',
+  },
+  {
+    id: 'restaurante',
+    name: 'Restaurante',
+    description: 'Cardápio digital, reservas e pedidos para restaurantes',
+    image: templateRestaurante,
     type: 'app',
     category: 'alimentacao',
   },
