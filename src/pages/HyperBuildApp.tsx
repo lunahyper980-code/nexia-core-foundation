@@ -39,6 +39,7 @@ import platformFirebase from '@/assets/platform-firebase.png';
 import platformBolt from '@/assets/platform-bolt.png';
 import platformGoogleAI from '@/assets/platform-google-ai.svg';
 import platformBase44 from '@/assets/platform-base44.png';
+import platformLasy from '@/assets/platform-lasy.svg';
 
 interface FormData {
   appName: string;
@@ -96,6 +97,7 @@ const languages = [
 
 const platforms = [
   { value: 'lovable', label: 'Lovable', image: platformLovable, subtitle: 'Recomendado' },
+  { value: 'lasy', label: 'Lasy AI', image: platformLasy, subtitle: 'No-code SaaS' },
   { value: 'firebase-studio', label: 'Firebase Studio', image: platformFirebase, subtitle: 'Google' },
   { value: 'bolt', label: 'Bolt', image: platformBolt, subtitle: 'StackBlitz' },
   { value: 'replit', label: 'Replit', letter: 'R', subtitle: 'Colaborativo', bgColor: '#F26207' },
@@ -107,6 +109,7 @@ const platforms = [
 
 const platformUrls: Record<string, string> = {
   lovable: 'https://lovable.dev/projects/create',
+  lasy: 'https://app.lasy.ai/',
   'firebase-studio': 'https://console.firebase.google.com/',
   bolt: 'https://bolt.new/',
   replit: 'https://replit.com/',
