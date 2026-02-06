@@ -39,7 +39,7 @@ import platformFirebase from '@/assets/platform-firebase.png';
 import platformBolt from '@/assets/platform-bolt.png';
 import platformGoogleAI from '@/assets/platform-google-ai.svg';
 import platformBase44 from '@/assets/platform-base44.png';
-import platformLasy from '@/assets/platform-lasy.svg';
+import platformLasy from '@/assets/platform-lasy.png';
 
 interface FormData {
   appName: string;
