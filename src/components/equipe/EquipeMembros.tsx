@@ -1,6 +1,10 @@
+import { useState } from 'react';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
+import { Input } from '@/components/ui/input';
+import { Label } from '@/components/ui/label';
 import { Users, UserPlus, Mail, Phone } from 'lucide-react';
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogFooter } from '@/components/ui/dialog';
 import type { TeamData } from '@/hooks/useTeamMetrics';
 import { toast } from 'sonner';
 
@@ -12,9 +16,7 @@ const formatCurrency = (value: number) =>
   new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL' }).format(value);
 
 export function EquipeMembros({ teamData }: EquipeMembrosProps) {
-  const handleAddMember = () => {
-    toast.info('Funcionalidade de adicionar membro em breve!');
-  };
+  const [modalOpen, setModalOpen] = useState(false);
 
   return (
     <div className="space-y-6">
@@ -24,7 +26,7 @@ export function EquipeMembros({ teamData }: EquipeMembrosProps) {
           <h2 className="text-lg font-semibold text-foreground">Membros da Equipe</h2>
           <p className="text-sm text-muted-foreground">{teamData.stats.activeMembers} membros ativos</p>
         </div>
-        <Button onClick={handleAddMember}>
+        <Button onClick={() => setModalOpen(true)}>
           <UserPlus className="h-4 w-4 mr-2" />
           Adicionar Membro
         </Button>
@@ -64,6 +66,32 @@ export function EquipeMembros({ teamData }: EquipeMembrosProps) {
           </Card>
         ))}
       </div>
+
+      {/* Modal decorativo */}
+      <Dialog open={modalOpen} onOpenChange={setModalOpen}>
+        <DialogContent className="sm:max-w-md">
+          <DialogHeader>
+            <DialogTitle>Adicionar Membro</DialogTitle>
+            <DialogDescription>Preencha os dados do novo membro da equipe.</DialogDescription>
+          </DialogHeader>
+          <div className="space-y-4 py-2">
+            <div className="space-y-2">
+              <Label htmlFor="member-name">Nome completo</Label>
+              <Input id="member-name" placeholder="Ex: João Silva" />
+            </div>
+            <div className="space-y-2">
+              <Label htmlFor="member-phone">Telefone</Label>
+              <Input id="member-phone" placeholder="(00) 00000-0000" />
+            </div>
+          </div>
+          <DialogFooter>
+            <Button variant="outline" onClick={() => setModalOpen(false)}>Cancelar</Button>
+            <Button onClick={() => { toast.info('Funcionalidade em breve!'); setModalOpen(false); }}>
+              Adicionar
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 }
