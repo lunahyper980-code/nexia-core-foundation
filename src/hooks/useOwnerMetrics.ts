@@ -19,6 +19,9 @@ const DEFAULT_METRICS = {
   totalPipelineValue: 62000,
   totalProposalValue: 62000,
   recurrenceMonthly: 3223,
+  teamCommission: 0,
+  teamVolume: 23080,
+  teamActiveMembers: 8,
 };
 
 export interface OwnerMetrics {
@@ -34,6 +37,9 @@ export interface OwnerMetrics {
   totalPipelineValue: number;
   totalProposalValue: number;
   recurrenceMonthly: number;
+  teamCommission: number;
+  teamVolume: number;
+  teamActiveMembers: number;
 }
 
 export function useOwnerMetrics() {
@@ -68,7 +74,6 @@ export function useOwnerMetrics() {
         }
 
         if (existingMetrics) {
-          // Usar valores do banco (editados pelo admin)
           const pipelineValue = Number(existingMetrics.total_pipeline_value) || DEFAULT_METRICS.totalPipelineValue;
           const projects = existingMetrics.projects || DEFAULT_METRICS.projects;
           const recurrence = Number(existingMetrics.recurrence_monthly) || DEFAULT_METRICS.recurrenceMonthly;
@@ -86,6 +91,9 @@ export function useOwnerMetrics() {
             totalProposalValue: pipelineValue,
             averageTicket: projects > 0 ? Math.round(pipelineValue / projects) : 0,
             recurrenceMonthly: recurrence,
+            teamCommission: Number((existingMetrics as any).team_commission) || DEFAULT_METRICS.teamCommission,
+            teamVolume: Number((existingMetrics as any).team_volume) || DEFAULT_METRICS.teamVolume,
+            teamActiveMembers: Number((existingMetrics as any).team_active_members) || DEFAULT_METRICS.teamActiveMembers,
           });
         } else {
           // Criar novo registro com valores padrão
@@ -151,6 +159,9 @@ export function useOwnerMetrics() {
           totalProposalValue: pipelineValue,
           averageTicket: projects > 0 ? Math.round(pipelineValue / projects) : 0,
           recurrenceMonthly: recurrence,
+          teamCommission: Number((data as any).team_commission) || DEFAULT_METRICS.teamCommission,
+          teamVolume: Number((data as any).team_volume) || DEFAULT_METRICS.teamVolume,
+          teamActiveMembers: Number((data as any).team_active_members) || DEFAULT_METRICS.teamActiveMembers,
         });
       }
     }, 30000);
@@ -177,6 +188,9 @@ export function useOwnerMetrics() {
         totalPipelineValue: realStats.totalPipelineValue || 0,
         totalProposalValue: realStats.totalProposalValue || 0,
         recurrenceMonthly: realStats.recurrenceMonthly || 0,
+        teamCommission: realStats.teamCommission || 0,
+        teamVolume: realStats.teamVolume || 0,
+        teamActiveMembers: realStats.teamActiveMembers || 0,
       };
     }
     return metrics;
@@ -210,6 +224,9 @@ export function useOwnerMetrics() {
         totalProposalValue: pipelineValue,
         averageTicket: projects > 0 ? Math.round(pipelineValue / projects) : 0,
         recurrenceMonthly: recurrence,
+        teamCommission: Number((data as any).team_commission) || DEFAULT_METRICS.teamCommission,
+        teamVolume: Number((data as any).team_volume) || DEFAULT_METRICS.teamVolume,
+        teamActiveMembers: Number((data as any).team_active_members) || DEFAULT_METRICS.teamActiveMembers,
       });
     }
   }, [workspace]);

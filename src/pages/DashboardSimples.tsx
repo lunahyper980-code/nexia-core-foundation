@@ -4,6 +4,7 @@ import { AppLayout } from '@/components/AppLayout';
 import { PremiumFrame } from '@/components/ui/PremiumFrame';
 import { useUserRole } from '@/contexts/UserRoleContext';
 import { useTeamMetrics } from '@/hooks/useTeamMetrics';
+import { useOwnerMetrics } from '@/hooks/useOwnerMetrics';
 import { useRevenueMetrics } from '@/hooks/useRevenueMetrics';
 import { useContractsMetrics } from '@/hooks/useContractsMetrics';
 import { 
@@ -133,8 +134,9 @@ export default function DashboardSimples() {
   // Recorrência mensal (todos os contratos assinados)
   const monthlyRecurrence = totalRecurrence;
   
-  // Comissão = 10% do volume da equipe (apenas para admin)
-  const commission = Math.round((teamData?.stats.totalVolume || monthlyRecurrence) * 0.1);
+  // Comissão da equipe: usa valor editável do owner_metrics via useRevenueMetrics
+  const { metrics: ownerMetrics } = useOwnerMetrics();
+  const commission = ownerMetrics.teamCommission || Math.round((teamData?.stats.totalVolume || monthlyRecurrence) * 0.1);
   
   // Growth indicator
   const hasGrowth = periodMetrics.hasComparison && periodMetrics.growthPercentage !== null;
