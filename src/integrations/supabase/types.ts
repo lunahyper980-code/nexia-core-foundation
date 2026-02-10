@@ -1244,9 +1244,6 @@ export type Database = {
           proposals: number
           recurrence_monthly: number
           reference_date: string
-          team_active_members: number
-          team_commission: number
-          team_volume: number
           total_pipeline_value: number
           updated_at: string
           workspace_id: string
@@ -1265,9 +1262,6 @@ export type Database = {
           proposals?: number
           recurrence_monthly?: number
           reference_date?: string
-          team_active_members?: number
-          team_commission?: number
-          team_volume?: number
           total_pipeline_value?: number
           updated_at?: string
           workspace_id: string
@@ -1286,9 +1280,6 @@ export type Database = {
           proposals?: number
           recurrence_monthly?: number
           reference_date?: string
-          team_active_members?: number
-          team_commission?: number
-          team_volume?: number
           total_pipeline_value?: number
           updated_at?: string
           workspace_id?: string

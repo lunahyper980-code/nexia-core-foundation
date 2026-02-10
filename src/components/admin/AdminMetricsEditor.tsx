@@ -23,9 +23,6 @@ import {
 interface MetricsValues {
   total_pipeline_value: number;
   recurrence_monthly: number;
-  team_commission: number;
-  team_volume: number;
-  team_active_members: number;
   projects: number;
   proposals: number;
   clients: number;
@@ -39,17 +36,17 @@ export function AdminMetricsEditor() {
   const [values, setValues] = useState<MetricsValues>({
     total_pipeline_value: 62000,
     recurrence_monthly: 3223,
-    team_commission: 0,
-    team_volume: 23080,
-    team_active_members: 8,
     projects: 32,
     proposals: 38,
     clients: 29,
     contracts: 24,
   });
 
+  // Derived values
+  const commission = Math.round(values.recurrence_monthly * 0.1 * 14.3); // ~10% do volume simulado da equipe
   const averageTicket = values.projects > 0 ? Math.round(values.total_pipeline_value / values.projects) : 0;
 
+  // Fetch current values
   useEffect(() => {
     if (!workspace?.id) return;
 
@@ -71,9 +68,6 @@ export function AdminMetricsEditor() {
           setValues({
             total_pipeline_value: Number(data.total_pipeline_value) || 62000,
             recurrence_monthly: Number(data.recurrence_monthly) || 3223,
-            team_commission: Number((data as any).team_commission) || 0,
-            team_volume: Number((data as any).team_volume) || 23080,
-            team_active_members: Number((data as any).team_active_members) || 8,
             projects: data.projects || 32,
             proposals: data.proposals || 38,
             clients: data.clients || 29,
@@ -95,6 +89,7 @@ export function AdminMetricsEditor() {
 
     setSaving(true);
     try {
+      // Check if record exists
       const { data: existing } = await supabase
         .from('owner_metrics')
         .select('id')
@@ -104,9 +99,6 @@ export function AdminMetricsEditor() {
       const updateData = {
         total_pipeline_value: values.total_pipeline_value,
         recurrence_monthly: values.recurrence_monthly,
-        team_commission: values.team_commission,
-        team_volume: values.team_volume,
-        team_active_members: values.team_active_members,
         projects: values.projects,
         proposals: values.proposals,
         clients: values.clients,
@@ -166,14 +158,15 @@ export function AdminMetricsEditor() {
       <div className="flex items-start gap-3 p-4 rounded-lg bg-primary/10 border border-primary/20">
         <Info className="h-5 w-5 text-primary mt-0.5 flex-shrink-0" />
         <div>
-          <p className="font-medium text-foreground">Editor de Métricas</p>
+          <p className="font-medium text-foreground">Editor de Métricas do Dashboard</p>
           <p className="text-sm text-muted-foreground mt-1">
             Altere os valores abaixo para personalizar o Dashboard, Minha Equipe e Contratos.
+            As mudanças são aplicadas automaticamente ao gráfico de evolução.
           </p>
         </div>
       </div>
 
-      {/* Faturamento & Recorrência */}
+      {/* Main Values - Dashboard */}
       <Card>
         <CardHeader>
           <div className="flex items-center gap-3">
@@ -188,6 +181,7 @@ export function AdminMetricsEditor() {
         </CardHeader>
         <CardContent className="space-y-6">
           <div className="grid sm:grid-cols-2 gap-6">
+            {/* Faturamento Total */}
             <div className="space-y-2">
               <Label htmlFor="total_pipeline_value" className="flex items-center gap-2">
                 <DollarSign className="h-4 w-4 text-emerald-500" />
@@ -208,6 +202,7 @@ export function AdminMetricsEditor() {
               </p>
             </div>
 
+            {/* Recorrência Mensal */}
             <div className="space-y-2">
               <Label htmlFor="recurrence_monthly" className="flex items-center gap-2">
                 <RefreshCcw className="h-4 w-4 text-primary" />
@@ -229,110 +224,32 @@ export function AdminMetricsEditor() {
             </div>
           </div>
 
+          {/* Preview dos valores derivados */}
           <Separator />
-
-          <div className="p-4 rounded-lg bg-primary/10 border border-primary/20">
-            <div className="flex items-center gap-2 mb-1">
-              <TrendingUp className="h-4 w-4 text-primary" />
-              <span className="text-sm font-medium text-foreground">Ticket Médio (calculado)</span>
-            </div>
-            <p className="text-xl font-bold text-primary">{formatCurrency(averageTicket)}</p>
-            <p className="text-xs text-muted-foreground mt-1">Faturamento ÷ Projetos</p>
-          </div>
-        </CardContent>
-      </Card>
-
-      {/* Comissão da Equipe */}
-      <Card>
-        <CardHeader>
-          <div className="flex items-center gap-3">
-            <div className="p-2 rounded-lg bg-warning/10">
-              <Percent className="h-5 w-5 text-warning" />
-            </div>
-            <div>
-              <CardTitle className="text-lg">Comissão da Equipe</CardTitle>
-              <CardDescription>Valor exibido como "Sua Comissão" no Dashboard</CardDescription>
-            </div>
-          </div>
-        </CardHeader>
-        <CardContent>
-          <div className="space-y-2">
-            <Label htmlFor="team_commission" className="flex items-center gap-2">
-              <Percent className="h-4 w-4 text-warning" />
-              Valor da Comissão
-            </Label>
-            <div className="relative">
-              <span className="absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground">R$</span>
-              <Input
-                id="team_commission"
-                type="number"
-                value={values.team_commission}
-                onChange={(e) => setValues({ ...values, team_commission: Number(e.target.value) })}
-                className="pl-10"
-              />
-            </div>
-            <p className="text-xs text-muted-foreground">
-              Este valor é exibido no card "Sua Comissão" do Dashboard (separado da recorrência mensal)
-            </p>
-          </div>
-        </CardContent>
-      </Card>
-
-      {/* Performance da Equipe */}
-      <Card>
-        <CardHeader>
-          <div className="flex items-center gap-3">
-            <div className="p-2 rounded-lg bg-primary/10">
-              <Users className="h-5 w-5 text-primary" />
-            </div>
-            <div>
-              <CardTitle className="text-lg">Performance da Equipe</CardTitle>
-              <CardDescription>Valores exibidos na página "Minha Equipe"</CardDescription>
-            </div>
-          </div>
-        </CardHeader>
-        <CardContent>
-          <div className="grid sm:grid-cols-2 gap-6">
-            <div className="space-y-2">
-              <Label htmlFor="team_volume" className="flex items-center gap-2">
-                <DollarSign className="h-4 w-4 text-primary" />
-                Volume Total Gerado
-              </Label>
-              <div className="relative">
-                <span className="absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground">R$</span>
-                <Input
-                  id="team_volume"
-                  type="number"
-                  value={values.team_volume}
-                  onChange={(e) => setValues({ ...values, team_volume: Number(e.target.value) })}
-                  className="pl-10"
-                />
+          
+          <div className="grid sm:grid-cols-2 gap-4">
+            <div className="p-4 rounded-lg bg-warning/10 border border-warning/20">
+              <div className="flex items-center gap-2 mb-1">
+                <Percent className="h-4 w-4 text-warning" />
+                <span className="text-sm font-medium text-foreground">Comissão (calculada)</span>
               </div>
-              <p className="text-xs text-muted-foreground">
-                Valor exibido como "Volume total gerado" em Minha Equipe
-              </p>
+              <p className="text-xl font-bold text-warning">{formatCurrency(commission)}</p>
+              <p className="text-xs text-muted-foreground mt-1">10% do volume da equipe</p>
             </div>
-
-            <div className="space-y-2">
-              <Label htmlFor="team_active_members" className="flex items-center gap-2">
-                <Users className="h-4 w-4 text-primary" />
-                Membros Ativos
-              </Label>
-              <Input
-                id="team_active_members"
-                type="number"
-                value={values.team_active_members}
-                onChange={(e) => setValues({ ...values, team_active_members: Number(e.target.value) })}
-              />
-              <p className="text-xs text-muted-foreground">
-                Quantidade exibida como "Membros ativos" em Minha Equipe
-              </p>
+            
+            <div className="p-4 rounded-lg bg-primary/10 border border-primary/20">
+              <div className="flex items-center gap-2 mb-1">
+                <TrendingUp className="h-4 w-4 text-primary" />
+                <span className="text-sm font-medium text-foreground">Ticket Médio (calculado)</span>
+              </div>
+              <p className="text-xl font-bold text-primary">{formatCurrency(averageTicket)}</p>
+              <p className="text-xs text-muted-foreground mt-1">Faturamento ÷ Projetos</p>
             </div>
           </div>
         </CardContent>
       </Card>
 
-      {/* Contadores */}
+      {/* Counters - Minha Equipe & Dashboard */}
       <Card>
         <CardHeader>
           <div className="flex items-center gap-3">
@@ -356,6 +273,7 @@ export function AdminMetricsEditor() {
                 onChange={(e) => setValues({ ...values, projects: Number(e.target.value) })}
               />
             </div>
+            
             <div className="space-y-2">
               <Label htmlFor="proposals">Propostas</Label>
               <Input
@@ -365,6 +283,7 @@ export function AdminMetricsEditor() {
                 onChange={(e) => setValues({ ...values, proposals: Number(e.target.value) })}
               />
             </div>
+            
             <div className="space-y-2">
               <Label htmlFor="clients">Clientes</Label>
               <Input
@@ -374,6 +293,7 @@ export function AdminMetricsEditor() {
                 onChange={(e) => setValues({ ...values, clients: Number(e.target.value) })}
               />
             </div>
+            
             <div className="space-y-2">
               <Label htmlFor="contracts">Contratos</Label>
               <Input

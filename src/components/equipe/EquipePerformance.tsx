@@ -1,7 +1,6 @@
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { Users, TrendingUp, DollarSign, Activity } from 'lucide-react';
 import type { TeamData } from '@/hooks/useTeamMetrics';
-import { useOwnerMetrics } from '@/hooks/useOwnerMetrics';
 
 interface EquipePerformanceProps {
   teamData: TeamData;
@@ -11,12 +10,6 @@ const formatCurrency = (value: number) =>
   new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL' }).format(value);
 
 export function EquipePerformance({ teamData }: EquipePerformanceProps) {
-  const { metrics: ownerMetrics } = useOwnerMetrics();
-  
-  // Use admin-editable values when available
-  const totalVolume = ownerMetrics.teamVolume || teamData.stats.totalVolume;
-  const activeMembers = ownerMetrics.teamActiveMembers || teamData.stats.activeMembers;
-  const averageTicket = activeMembers > 0 ? Math.round(totalVolume / activeMembers) : 0;
   return (
     <div className="space-y-6">
       {/* Stats Cards */}
@@ -26,7 +19,7 @@ export function EquipePerformance({ teamData }: EquipePerformanceProps) {
             <div className="flex items-center justify-between">
               <div>
                 <p className="text-xs text-muted-foreground">Membros ativos</p>
-                <p className="text-2xl font-bold text-foreground">{activeMembers}</p>
+                <p className="text-2xl font-bold text-foreground">{teamData.stats.activeMembers}</p>
                 <p className="text-[10px] text-muted-foreground mt-0.5">Colaboradores na equipe</p>
               </div>
               <Users className="h-8 w-8 text-primary/60" />
@@ -42,7 +35,7 @@ export function EquipePerformance({ teamData }: EquipePerformanceProps) {
             <div className="flex items-center justify-between">
               <div>
                 <p className="text-xs text-muted-foreground">Volume total gerado</p>
-                <p className="text-2xl font-bold text-primary">{formatCurrency(totalVolume)}</p>
+                <p className="text-2xl font-bold text-primary">{formatCurrency(teamData.stats.totalVolume)}</p>
               </div>
               <DollarSign className="h-8 w-8 text-primary/60" />
             </div>
@@ -54,7 +47,7 @@ export function EquipePerformance({ teamData }: EquipePerformanceProps) {
             <div className="flex items-center justify-between">
               <div>
                 <p className="text-xs text-muted-foreground">Ticket médio</p>
-                <p className="text-2xl font-bold text-foreground">{formatCurrency(averageTicket)}</p>
+                <p className="text-2xl font-bold text-foreground">{formatCurrency(teamData.stats.averageTicket)}</p>
               </div>
               <TrendingUp className="h-7 w-7 text-muted-foreground/50" />
             </div>
