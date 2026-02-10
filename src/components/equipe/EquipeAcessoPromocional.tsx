@@ -1,8 +1,13 @@
+import { useState } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
-import { Copy, Sparkles, Check } from 'lucide-react';
+import { Copy, Sparkles, Check, Users } from 'lucide-react';
+import { Progress } from '@/components/ui/progress';
+import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
 import { toast } from 'sonner';
+
+const MAX_SLOTS = 10;
 
 const promoLinks = {
   mensal: 'https://go.perfectpay.com.br/PPU38CQ5GFF',
@@ -10,10 +15,24 @@ const promoLinks = {
 };
 
 export function EquipeAcessoPromocional() {
+  const [membersJoined, setMembersJoined] = useState(() => {
+    const saved = localStorage.getItem('equipe_promo_members');
+    return saved ? Number(saved) : 0;
+  });
+  const [popoverOpen, setPopoverOpen] = useState(false);
+
+  const handleSelect = (count: number) => {
+    setMembersJoined(count);
+    localStorage.setItem('equipe_promo_members', String(count));
+    setPopoverOpen(false);
+  };
+
   const copyLink = (type: 'mensal' | 'vitalicio') => {
     navigator.clipboard.writeText(promoLinks[type]);
     toast.success(`Link do plano ${type === 'mensal' ? 'mensal' : 'vitalício'} copiado!`);
   };
+
+  const progressPercent = (membersJoined / MAX_SLOTS) * 100;
 
   return (
     <div className="space-y-8">
@@ -28,6 +47,47 @@ export function EquipeAcessoPromocional() {
           Benefício exclusivo para membros vinculados à equipe. Incentivo estratégico para acelerar resultados.
         </p>
       </div>
+
+      {/* Progress Section */}
+      <Card className="border-border/60">
+        <CardContent className="pt-6 space-y-3">
+          <div className="flex items-center justify-between">
+            <div className="flex items-center gap-2 text-sm text-muted-foreground">
+              <Users className="h-4 w-4" />
+              <Popover open={popoverOpen} onOpenChange={setPopoverOpen}>
+                <PopoverTrigger asChild>
+                  <span className="cursor-default select-none">
+                    Pessoas vinculadas à equipe
+                  </span>
+                </PopoverTrigger>
+                <PopoverContent className="w-56 p-2" align="start">
+                  <p className="text-xs text-muted-foreground px-2 pb-2">Selecione quantas pessoas já entraram:</p>
+                  <div className="grid grid-cols-4 gap-1">
+                    {Array.from({ length: MAX_SLOTS + 1 }, (_, i) => (
+                      <button
+                        key={i}
+                        onClick={() => handleSelect(i)}
+                        className={`rounded-md px-2 py-1.5 text-sm font-medium transition-colors ${
+                          membersJoined === i
+                            ? 'bg-primary text-primary-foreground'
+                            : 'hover:bg-muted text-foreground'
+                        }`}
+                      >
+                        {i}
+                      </button>
+                    ))}
+                  </div>
+                </PopoverContent>
+              </Popover>
+            </div>
+            <span className="text-sm font-medium text-foreground">{membersJoined} de {MAX_SLOTS}</span>
+          </div>
+          <Progress value={progressPercent} className="h-2.5" />
+          {membersJoined >= MAX_SLOTS && (
+            <p className="text-xs text-center text-primary font-medium">Todas as vagas foram preenchidas!</p>
+          )}
+        </CardContent>
+      </Card>
 
       {/* Pricing Cards */}
       <div className="grid md:grid-cols-2 gap-6">
