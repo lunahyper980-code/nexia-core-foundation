@@ -43,6 +43,7 @@ export default function DashboardSimples() {
   const { teamData } = useTeamMetrics();
   const { workspace } = useWorkspace();
   const { user } = useAuth();
+  const { metrics: ownerMetrics } = useOwnerMetrics();
   
   // Chart period selector: 7 or 30 days
   const [chartPeriod, setChartPeriod] = useState<7 | 30>(30);
@@ -134,8 +135,7 @@ export default function DashboardSimples() {
   // Recorrência mensal (todos os contratos assinados)
   const monthlyRecurrence = totalRecurrence;
   
-  // Comissão da equipe: usa valor editável do owner_metrics via useRevenueMetrics
-  const { metrics: ownerMetrics } = useOwnerMetrics();
+  // Comissão da equipe: usa valor editável do owner_metrics via useOwnerMetrics (hook called at top)
   const commission = ownerMetrics.teamCommission || Math.round((teamData?.stats.totalVolume || monthlyRecurrence) * 0.1);
   
   // Growth indicator
