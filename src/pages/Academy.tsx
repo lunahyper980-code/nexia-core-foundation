@@ -1,7 +1,14 @@
 import { AppLayout } from '@/components/AppLayout';
 import { Card, CardContent } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
-import { MapPin, Smartphone, PenTool, Globe, Copy, FolderOpen, FileSignature, DollarSign, Rocket, Sparkles, TrendingUp, Users, CheckCircle2, ArrowRight, Zap, Target } from 'lucide-react';
+import { Button } from '@/components/ui/button';
+import { useNavigate } from 'react-router-dom';
+import { useUserMode } from '@/contexts/UserModeContext';
+import { MapPin, Smartphone, PenTool, Globe, Copy, FolderOpen, FileSignature, DollarSign, Rocket, Sparkles, TrendingUp, Users, CheckCircle2, ArrowRight, Zap, Target, GraduationCap, Building2, HelpCircle, BookOpen } from 'lucide-react';
+
+// ================================
+// MODO SIMPLES - Guia visual com cards
+// ================================
 interface AcademyCard {
   id: string;
   icon: React.ReactNode;
@@ -17,6 +24,7 @@ interface AcademyCard {
     value: string;
   }[];
 }
+
 const academyCards: AcademyCard[] = [{
   id: 'encontrar-clientes',
   icon: <MapPin className="h-7 w-7" />,
@@ -52,10 +60,7 @@ const academyCards: AcademyCard[] = [{
         </p>
       </div>,
   tips: ['Perfeito para live selling', 'Edite depois conforme o cliente pede', 'Mostre funcionando, fecha mais rápido'],
-  pricing: [{
-    label: 'App Simples',
-    value: 'R$ 1.000 a R$ 1.500'
-  }]
+  pricing: [{ label: 'App Simples', value: 'R$ 1.000 a R$ 1.500' }]
 }, {
   id: 'app-zero',
   icon: <PenTool className="h-7 w-7" />,
@@ -73,10 +78,7 @@ const academyCards: AcademyCard[] = [{
         </div>
       </div>,
   tips: ['Para clientes que sabem o que querem', 'Maior ticket = maior personalização', 'Copie o prompt e cole no Lovable'],
-  pricing: [{
-    label: 'App Personalizado',
-    value: 'R$ 2.000 a R$ 3.000+'
-  }]
+  pricing: [{ label: 'App Personalizado', value: 'R$ 2.000 a R$ 3.000+' }]
 }, {
   id: 'criar-site',
   icon: <Globe className="h-7 w-7" />,
@@ -94,13 +96,7 @@ const academyCards: AcademyCard[] = [{
         </div>
       </div>,
   tips: ['Ideal para negócios locais', 'Entrega rápida = cliente feliz', 'Depois oferece app como upgrade'],
-  pricing: [{
-    label: 'Site Simples',
-    value: 'R$ 300 a R$ 600'
-  }, {
-    label: 'Site Completo',
-    value: 'R$ 800 a R$ 1.500'
-  }]
+  pricing: [{ label: 'Site Simples', value: 'R$ 300 a R$ 600' }, { label: 'Site Completo', value: 'R$ 800 a R$ 1.500' }]
 }, {
   id: 'prompt-lovable',
   icon: <Copy className="h-7 w-7" />,
@@ -197,8 +193,10 @@ const academyCards: AcademyCard[] = [{
         </div>
       </div>
 }];
-export default function Academy() {
-  return <AppLayout title="Academy">
+
+function AcademySimples() {
+  return (
+    <AppLayout title="Academy">
       <div className="w-full max-w-6xl mx-auto space-y-8">
         {/* Header */}
         <div className="text-center space-y-3">
@@ -210,7 +208,8 @@ export default function Academy() {
           <h1 className="text-3xl font-bold text-foreground">
             Guia Rápido Nexia
           </h1>
-          <p className="text-lg text-muted-foreground max-w-2xl mx-auto">Tudo o que você precisa saber para encontrar clientes, criar projetos e fazer dinheiro  sem complicação.<strong className="text-foreground">encontrar clientes</strong>, <strong className="text-foreground">criar projetos</strong> e <strong className="text-foreground">fazer dinheiro</strong> — sem complicação.
+          <p className="text-lg text-muted-foreground max-w-2xl mx-auto">
+            Tudo o que você precisa saber para <strong className="text-foreground">encontrar clientes</strong>, <strong className="text-foreground">criar projetos</strong> e <strong className="text-foreground">fazer dinheiro</strong> — sem complicação.
           </p>
         </div>
 
@@ -240,61 +239,48 @@ export default function Academy() {
 
         {/* Cards Grid */}
         <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
-          {academyCards.map(card => <Card key={card.id} className="group relative overflow-hidden border-primary/10 hover:border-primary/25 transition-all duration-300 hover:shadow-lg hover:shadow-primary/5">
-              {/* Decorative gradient */}
+          {academyCards.map(card => (
+            <Card key={card.id} className="group relative overflow-hidden border-primary/10 hover:border-primary/25 transition-all duration-300 hover:shadow-lg hover:shadow-primary/5">
               <div className="absolute top-0 right-0 w-40 h-40 bg-gradient-to-br from-primary/5 to-transparent rounded-bl-full opacity-0 group-hover:opacity-100 transition-opacity" />
-              
               <CardContent className="p-6 space-y-4">
-                {/* Header */}
                 <div className="flex items-start justify-between">
                   <div className={`p-3 rounded-xl border ${card.iconBg}`}>
                     {card.icon}
                   </div>
-                  {card.badge && <Badge variant={card.badgeVariant || 'secondary'} className="text-xs">
-                      {card.badge}
-                    </Badge>}
+                  {card.badge && <Badge variant={card.badgeVariant || 'secondary'} className="text-xs">{card.badge}</Badge>}
                 </div>
-
-                {/* Title */}
                 <div>
-                  <h3 className="text-lg font-bold text-foreground mb-1">
-                    {card.title}
-                  </h3>
-                  <p className="text-sm text-muted-foreground">
-                    {card.subtitle}
-                  </p>
+                  <h3 className="text-lg font-bold text-foreground mb-1">{card.title}</h3>
+                  <p className="text-sm text-muted-foreground">{card.subtitle}</p>
                 </div>
-
-                {/* Content */}
-                <div className="pt-2">
-                  {card.content}
-                </div>
-
-                {/* Tips */}
-                {card.tips && <div className="pt-3 border-t border-primary/5 space-y-2">
-                    <p className="text-xs font-medium text-primary uppercase tracking-wide">
-                      Dicas
-                    </p>
-                    {card.tips.map((tip, idx) => <div key={idx} className="flex items-start gap-2">
+                <div className="pt-2">{card.content}</div>
+                {card.tips && (
+                  <div className="pt-3 border-t border-primary/5 space-y-2">
+                    <p className="text-xs font-medium text-primary uppercase tracking-wide">Dicas</p>
+                    {card.tips.map((tip, idx) => (
+                      <div key={idx} className="flex items-start gap-2">
                         <span className="text-primary text-xs mt-0.5">•</span>
                         <p className="text-xs text-muted-foreground">{tip}</p>
-                      </div>)}
-                  </div>}
-
-                {/* Pricing */}
-                {card.pricing && <div className="pt-3 border-t border-primary/5">
-                    <p className="text-xs font-medium text-emerald-500 uppercase tracking-wide mb-2">
-                      💰 Quanto cobrar
-                    </p>
+                      </div>
+                    ))}
+                  </div>
+                )}
+                {card.pricing && (
+                  <div className="pt-3 border-t border-primary/5">
+                    <p className="text-xs font-medium text-emerald-500 uppercase tracking-wide mb-2">💰 Quanto cobrar</p>
                     <div className="space-y-1">
-                      {card.pricing.map((price, idx) => <div key={idx} className="flex items-center justify-between">
+                      {card.pricing.map((price, idx) => (
+                        <div key={idx} className="flex items-center justify-between">
                           <span className="text-xs text-muted-foreground">{price.label}</span>
                           <span className="text-sm font-semibold text-foreground">{price.value}</span>
-                        </div>)}
+                        </div>
+                      ))}
                     </div>
-                  </div>}
+                  </div>
+                )}
               </CardContent>
-            </Card>)}
+            </Card>
+          ))}
         </div>
 
         {/* Footer CTA */}
@@ -305,9 +291,7 @@ export default function Academy() {
                 <Rocket className="h-8 w-8 text-primary" />
               </div>
               <div className="flex-1">
-                <h3 className="text-lg font-bold text-foreground mb-1">
-                  Pronto para começar?
-                </h3>
+                <h3 className="text-lg font-bold text-foreground mb-1">Pronto para começar?</h3>
                 <p className="text-sm text-muted-foreground">
                   Escolha um nicho, encontre seus primeiros leads e crie seu primeiro projeto. <strong className="text-foreground">O Nexia cuida do resto.</strong>
                 </p>
@@ -316,5 +300,139 @@ export default function Academy() {
           </CardContent>
         </Card>
       </div>
-    </AppLayout>;
+    </AppLayout>
+  );
+}
+
+// ================================
+// MODO AVANÇADO - Hub com guias e FAQ
+// ================================
+const advancedGuides = [
+  {
+    id: 'guia-iniciante',
+    title: 'Guia Iniciante',
+    description: 'Do zero ao primeiro cliente — passo a passo com briefing, diagnóstico e proposta.',
+    icon: BookOpen,
+    badge: 'Recomendado',
+    badgeVariant: 'default' as const,
+    path: '/academy/guia-iniciante',
+    color: 'text-emerald-500',
+    bgColor: 'bg-emerald-500/10 border-emerald-500/20',
+  },
+  {
+    id: 'modo-agencia',
+    title: 'Modo Agência',
+    description: 'Padronize diagnóstico, proposta e entrega para escalar sua operação como agência.',
+    icon: Building2,
+    badge: 'Profissional',
+    badgeVariant: 'secondary' as const,
+    path: '/academy/guia-agencia',
+    color: 'text-primary',
+    bgColor: 'bg-primary/10 border-primary/20',
+  },
+  {
+    id: 'faq',
+    title: 'FAQ + Suporte',
+    description: 'Respostas rápidas sobre fluxo, entregas, soluções, propostas e uso da plataforma.',
+    icon: HelpCircle,
+    path: '/academy/faq',
+    color: 'text-amber-500',
+    bgColor: 'bg-amber-500/10 border-amber-500/20',
+  },
+];
+
+function AcademyAvancado() {
+  const navigate = useNavigate();
+
+  return (
+    <AppLayout title="Academy / Ajuda">
+      <div className="w-full max-w-4xl mx-auto space-y-8">
+        {/* Header */}
+        <div className="text-center space-y-3">
+          <div className="flex items-center justify-center gap-3">
+            <div className="p-3 rounded-xl bg-primary/10 border border-primary/20">
+              <GraduationCap className="h-8 w-8 text-primary" />
+            </div>
+          </div>
+          <h1 className="text-3xl font-bold text-foreground">Academy / Ajuda</h1>
+          <p className="text-lg text-muted-foreground max-w-2xl mx-auto">
+            Aprenda o fluxo completo: <strong className="text-foreground">prospecção → briefing → diagnóstico → proposta → entrega</strong>.
+          </p>
+        </div>
+
+        {/* Guides */}
+        <div className="grid gap-6 md:grid-cols-3">
+          {advancedGuides.map((guide) => {
+            const Icon = guide.icon;
+            return (
+              <Card
+                key={guide.id}
+                className="group cursor-pointer border-primary/10 hover:border-primary/25 transition-all duration-300 hover:shadow-lg hover:shadow-primary/5"
+                onClick={() => navigate(guide.path)}
+              >
+                <CardContent className="p-6 space-y-4">
+                  <div className="flex items-start justify-between">
+                    <div className={`p-3 rounded-xl border ${guide.bgColor}`}>
+                      <Icon className={`h-7 w-7 ${guide.color}`} />
+                    </div>
+                    {guide.badge && (
+                      <Badge variant={guide.badgeVariant || 'secondary'} className="text-xs">
+                        {guide.badge}
+                      </Badge>
+                    )}
+                  </div>
+                  <div>
+                    <h3 className="text-lg font-bold text-foreground mb-1 group-hover:text-primary transition-colors">
+                      {guide.title}
+                    </h3>
+                    <p className="text-sm text-muted-foreground leading-relaxed">
+                      {guide.description}
+                    </p>
+                  </div>
+                  <Button variant="ghost" size="sm" className="w-full group-hover:bg-primary/10 group-hover:text-primary transition-colors">
+                    Acessar
+                    <ArrowRight className="h-4 w-4 ml-2 group-hover:translate-x-1 transition-transform" />
+                  </Button>
+                </CardContent>
+              </Card>
+            );
+          })}
+        </div>
+
+        {/* Footer CTA */}
+        <Card className="border-primary/20 bg-gradient-to-r from-primary/10 via-primary/5 to-transparent">
+          <CardContent className="p-6">
+            <div className="flex flex-col md:flex-row items-center gap-4 text-center md:text-left">
+              <div className="p-4 rounded-2xl bg-primary/20 border border-primary/30 shrink-0">
+                <Rocket className="h-8 w-8 text-primary" />
+              </div>
+              <div className="flex-1">
+                <h3 className="text-lg font-bold text-foreground mb-1">Comece pelo Guia Iniciante</h3>
+                <p className="text-sm text-muted-foreground">
+                  Siga o passo a passo: encontre um cliente, gere o briefing, crie o diagnóstico e envie a proposta. <strong className="text-foreground">Simples assim.</strong>
+                </p>
+              </div>
+              <Button onClick={() => navigate('/academy/guia-iniciante')} className="gap-2 shrink-0">
+                Começar agora
+                <ArrowRight className="h-4 w-4" />
+              </Button>
+            </div>
+          </CardContent>
+        </Card>
+      </div>
+    </AppLayout>
+  );
+}
+
+// ================================
+// COMPONENTE PRINCIPAL
+// ================================
+export default function Academy() {
+  const { mode } = useUserMode();
+
+  if (mode === 'simple') {
+    return <AcademySimples />;
+  }
+
+  return <AcademyAvancado />;
 }
