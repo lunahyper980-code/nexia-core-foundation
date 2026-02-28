@@ -34,7 +34,7 @@ const simpleNavItems: NavItem[] = [
 const advancedNavItems: NavItem[] = [
   { label: 'Dashboard', path: '/dashboard', icon: LayoutDashboard, mode: 'advanced' },
   { label: 'Buscar', path: '/encontrar-clientes', icon: Search, mode: 'advanced' },
-  { label: 'Diagnóstico', path: '/nexia-ai', icon: Brain, mode: 'advanced', adminOnly: true },
+  { label: 'Diagnóstico', path: '/nexia-ai', icon: Brain, mode: 'advanced' },
   { label: 'Clientes', path: '/clientes', icon: Users, mode: 'advanced' },
 ];
 
