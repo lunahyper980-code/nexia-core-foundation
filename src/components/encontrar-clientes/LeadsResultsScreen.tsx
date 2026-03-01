@@ -110,7 +110,7 @@ export function LeadsResultsScreen({
       )}
 
       {/* Leads grid */}
-      <div className="grid gap-4 sm:grid-cols-2">
+      <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
         {leads.map((lead) => (
           <LeadCard
             key={lead.id}
@@ -141,7 +141,7 @@ export function LeadsResultsScreen({
             <p className="text-sm text-muted-foreground px-1">
               Estes leads não passaram na validação mínima. Use com cautela.
             </p>
-            <div className="grid gap-4 sm:grid-cols-2 opacity-80">
+            <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3 opacity-80">
               {leadsNaoConfirmados.map((lead) => (
                 <LeadCard
                   key={lead.id}
