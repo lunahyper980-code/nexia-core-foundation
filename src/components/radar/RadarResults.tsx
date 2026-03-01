@@ -1,4 +1,4 @@
-import { Building2, MapPin, Globe, Instagram, Map, Copy, MessageCircle, CheckCircle, HelpCircle, AlertTriangle, Radio, ScanSearch, Crosshair } from 'lucide-react';
+import { Building2, MapPin, Globe, Instagram, Map, Copy, MessageCircle, CheckCircle, HelpCircle, AlertTriangle, Radio, ScanSearch, Crosshair, AlertCircle } from 'lucide-react';
 import { Card, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
@@ -91,8 +91,6 @@ export function RadarResults({ leads, onNewSearch }: RadarResultsProps) {
 }
 
 function RadarLeadCard({ lead, onGenerateMessage }: { lead: Lead; onGenerateMessage: (lead: Lead) => void }) {
-  const [mapError, setMapError] = useState(false);
-
   const buildMapsQuery = (): string => {
     const parts = lead.localizacao.split(/[-,]/);
     const cidade = parts[0]?.trim() || lead.localizacao;
@@ -106,30 +104,6 @@ function RadarLeadCard({ lead, onGenerateMessage }: { lead: Lead; onGenerateMess
   const mapsQuery = buildMapsQuery();
   const mapsQueryEncoded = encodeURIComponent(mapsQuery);
   const googleMapsSearchUrl = `https://www.google.com/maps/search/?api=1&query=${mapsQueryEncoded}`;
-  const googleMapsEmbedUrl = `https://www.google.com/maps?q=${mapsQueryEncoded}&output=embed`;
-
-  const getConfiancaBadge = () => {
-    switch (lead.confiancaNome) {
-      case 'alta':
-        return (
-          <Badge variant="secondary" className="gap-1 text-[10px] bg-emerald-500/10 text-emerald-600 border-emerald-500/20">
-            <CheckCircle className="h-2.5 w-2.5" /> Confirmado
-          </Badge>
-        );
-      case 'baixa':
-        return (
-          <Badge variant="secondary" className="gap-1 text-[10px] bg-orange-500/10 text-orange-600 border-orange-500/20">
-            <AlertTriangle className="h-2.5 w-2.5" /> Estimado
-          </Badge>
-        );
-      default:
-        return (
-          <Badge variant="secondary" className="gap-1 text-[10px] bg-amber-500/10 text-amber-600 border-amber-500/20">
-            <HelpCircle className="h-2.5 w-2.5" /> Provável
-          </Badge>
-        );
-    }
-  };
 
   return (
     <Card className="group hover:shadow-lg hover:shadow-primary/5 hover:border-primary/30 transition-all duration-200 overflow-hidden bg-gradient-to-b from-card to-primary/[0.03] border-border/40">
@@ -141,61 +115,32 @@ function RadarLeadCard({ lead, onGenerateMessage }: { lead: Lead; onGenerateMess
           </div>
           <div className="flex-1 min-w-0 overflow-hidden">
             <h3 className="font-semibold text-foreground text-sm leading-tight break-words line-clamp-2">{lead.nome}</h3>
-            <div className="flex flex-wrap items-center gap-1 mt-1">
-              <Badge variant="secondary" className="text-[10px] px-1.5 py-0 max-w-full truncate">{lead.segmento}</Badge>
-              {getConfiancaBadge()}
-            </div>
+            <Badge variant="secondary" className="text-[10px] px-1.5 py-0 mt-1 max-w-full truncate">{lead.segmento}</Badge>
           </div>
         </div>
 
-        {/* Info */}
-        <div className="space-y-1">
-          <div className="flex items-center gap-1.5 text-xs text-muted-foreground">
-            <MapPin className="h-3 w-3 shrink-0 text-primary/50" />
-            <span className="truncate">{lead.localizacao}</span>
-          </div>
-          {lead.endereco && (
-            <div className="flex items-center gap-1.5 text-xs text-muted-foreground">
-              <Map className="h-3 w-3 shrink-0 text-primary/50" />
-              <span className="truncate">{lead.endereco}</span>
-            </div>
+        {/* Location */}
+        <div className="flex items-center gap-1.5 text-xs text-muted-foreground">
+          <MapPin className="h-3 w-3 shrink-0 text-primary/50" />
+          <span className="truncate">{lead.localizacao}</span>
+        </div>
+
+        {/* Digital presence needs */}
+        <div className="flex flex-wrap gap-1.5">
+          {!lead.temSite && (
+            <Badge variant="destructive" className="text-[10px] gap-1 h-5">
+              <AlertCircle className="h-2.5 w-2.5" /> Precisa de Site
+            </Badge>
           )}
-          <div className="flex items-center gap-2 flex-wrap">
-            {lead.temSite && (
-              <span className="flex items-center gap-1 text-[10px] text-emerald-600">
-                <Globe className="h-2.5 w-2.5" /> Site
-              </span>
-            )}
-            {lead.temInstagram && (
-              <span className="flex items-center gap-1 text-[10px] text-pink-600">
-                <Instagram className="h-2.5 w-2.5" /> Instagram
-              </span>
-            )}
-            {!lead.temSite && !lead.temInstagram && (
-              <Badge variant="destructive" className="text-[10px] h-4">Sem presença digital</Badge>
-            )}
-          </div>
-        </div>
-
-        {/* Mini Mapa */}
-        <div className="relative w-full h-24 rounded-lg overflow-hidden border border-primary/10 bg-muted/10">
-          {!mapError ? (
-            <iframe
-              src={googleMapsEmbedUrl}
-              width="100%"
-              height="100%"
-              style={{ border: 0 }}
-              loading="lazy"
-              referrerPolicy="no-referrer-when-downgrade"
-              title={`Mapa de ${lead.nome}`}
-              onError={() => setMapError(true)}
-              className="rounded-lg"
-            />
-          ) : (
-            <div className="flex flex-col items-center justify-center h-full text-muted-foreground text-xs">
-              <Map className="h-6 w-6 mb-1 opacity-40" />
-              <span>Abrir no Google Maps</span>
-            </div>
+          {!lead.temInstagram && (
+            <Badge className="text-[10px] gap-1 h-5 bg-orange-500/10 text-orange-600 border-orange-500/20" variant="secondary">
+              <AlertCircle className="h-2.5 w-2.5" /> Sem Presença Digital
+            </Badge>
+          )}
+          {lead.temSite && lead.temInstagram && (
+            <Badge variant="secondary" className="text-[10px] gap-1 h-5 bg-emerald-500/10 text-emerald-600 border-emerald-500/20">
+              <CheckCircle className="h-2.5 w-2.5" /> Presença OK
+            </Badge>
           )}
         </div>
 
