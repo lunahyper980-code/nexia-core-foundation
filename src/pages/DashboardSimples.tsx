@@ -19,11 +19,7 @@ import {
   FileText,
   Award,
   AlertCircle,
-  Rocket,
-  Globe,
-  Monitor,
 } from 'lucide-react';
-import { Badge } from '@/components/ui/badge';
 import { NexiaLoader } from '@/components/ui/nexia-loader';
 import { Card, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -436,57 +432,6 @@ export default function DashboardSimples() {
               Ver todos os projetos <ArrowRight className="h-4 w-4" />
             </Link>
           </PremiumFrame>
-        )}
-
-        {/* Últimos Projetos Fechados — Admin/Owner only */}
-        {isAdminOrOwner && (
-          <div className="mt-6">
-            <PremiumFrame title="Projetos Recentes — Pipeline" className="fade-in" style={{ animationDelay: '0.3s' }}>
-              <div className="flex items-center justify-between mb-4">
-                <div className="flex items-center gap-2">
-                  <Rocket className="h-4 w-4 text-primary" />
-                  <span className="text-sm font-semibold text-foreground">Últimos Projetos Fechados</span>
-                </div>
-                <Badge variant="secondary" className="text-[10px]">Tempo real</Badge>
-              </div>
-              <div className="space-y-2 max-h-[360px] overflow-y-auto pr-1">
-                {[
-                  { client: 'Dra. Camila Ferreira', type: 'Site Institucional', value: 1850, date: 'Hoje', icon: <Globe className="h-4 w-4 text-primary" /> },
-                  { client: 'Barbearia Classic', type: 'Aplicativo Mobile', value: 3200, date: 'Hoje', icon: <Smartphone className="h-4 w-4 text-accent" /> },
-                  { client: 'Auto Center Silva', type: 'Sistema Web', value: 4500, date: 'Ontem', icon: <Monitor className="h-4 w-4 text-success" /> },
-                  { client: 'Restaurante Sabor & Arte', type: 'Site + Cardápio Digital', value: 2750, date: 'Ontem', icon: <Globe className="h-4 w-4 text-primary" /> },
-                  { client: 'Studio Bella Hair', type: 'Aplicativo de Agendamento', value: 3800, date: '27/02', icon: <Smartphone className="h-4 w-4 text-accent" /> },
-                  { client: 'Construtora Horizonte', type: 'Site Institucional', value: 2100, date: '27/02', icon: <Globe className="h-4 w-4 text-primary" /> },
-                  { client: 'Pet Shop Amigão', type: 'Sistema de Gestão', value: 4200, date: '26/02', icon: <Monitor className="h-4 w-4 text-success" /> },
-                  { client: 'Clínica Odonto Plus', type: 'Site + Landing Page', value: 1650, date: '26/02', icon: <Globe className="h-4 w-4 text-primary" /> },
-                  { client: 'Imobiliária Central', type: 'Aplicativo Mobile', value: 3950, date: '25/02', icon: <Smartphone className="h-4 w-4 text-accent" /> },
-                  { client: 'Padaria Dona Maria', type: 'Site com Delivery', value: 2380, date: '25/02', icon: <Globe className="h-4 w-4 text-primary" /> },
-                  { client: 'Academia FitMax', type: 'Sistema de Gestão', value: 4100, date: '24/02', icon: <Monitor className="h-4 w-4 text-success" /> },
-                  { client: 'Loja Moda & Estilo', type: 'E-commerce', value: 3450, date: '24/02', icon: <Globe className="h-4 w-4 text-primary" /> },
-                  { client: 'Escola ABC Kids', type: 'Aplicativo Escolar', value: 3700, date: '23/02', icon: <Smartphone className="h-4 w-4 text-accent" /> },
-                  { client: 'Escritório JL Advocacia', type: 'Site Institucional', value: 1490, date: '23/02', icon: <Globe className="h-4 w-4 text-primary" /> },
-                  { client: 'Cafeteria Aroma', type: 'Site + Cardápio', value: 980, date: '22/02', icon: <Globe className="h-4 w-4 text-primary" /> },
-                  { client: 'Mecânica Express', type: 'Sistema de Ordens', value: 2900, date: '22/02', icon: <Monitor className="h-4 w-4 text-success" /> },
-                  { client: 'Nail Designer Lú', type: 'Landing Page', value: 750, date: '21/02', icon: <Globe className="h-4 w-4 text-primary" /> },
-                  { client: 'Corretor Paulo Mendes', type: 'Site Imobiliário', value: 2650, date: '21/02', icon: <Globe className="h-4 w-4 text-primary" /> },
-                ].map((sale, i) => (
-                  <div key={i} className="flex items-center gap-3 p-3 rounded-lg bg-primary/5 border border-primary/10 hover:bg-primary/8 transition-colors">
-                    <div className="p-2 rounded-lg bg-primary/10 shrink-0">
-                      {sale.icon}
-                    </div>
-                    <div className="flex-1 min-w-0">
-                      <p className="text-sm font-medium text-foreground truncate">{sale.client}</p>
-                      <p className="text-xs text-muted-foreground">{sale.type}</p>
-                    </div>
-                    <div className="text-right shrink-0">
-                      <p className="text-sm font-semibold text-success">R$ {sale.value.toLocaleString('pt-BR')}</p>
-                      <p className="text-[10px] text-muted-foreground/60">{sale.date}</p>
-                    </div>
-                  </div>
-                ))}
-              </div>
-            </PremiumFrame>
-          </div>
         )}
       </div>
     </AppLayout>
