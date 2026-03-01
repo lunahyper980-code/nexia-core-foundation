@@ -264,9 +264,8 @@ function DashboardAdvanced() {
           </PremiumFrame>
         </div>
 
-        {/* Últimos Projetos Vendidos — Admin only */}
-        {isAdminOrOwner && (
-          <div className="mt-6">
+        {/* Últimos Projetos Vendidos */}
+        <div className="mt-6">
             <PremiumFrame title="Projetos Recentes — Pipeline" className="fade-in" style={{ animationDelay: '0.3s' }}>
               <div className="flex items-center justify-between mb-4">
                 <div className="flex items-center gap-2">
@@ -292,9 +291,8 @@ function DashboardAdvanced() {
                   </div>
                 ))}
               </div>
-            </PremiumFrame>
-          </div>
-        )}
+          </PremiumFrame>
+        </div>
       </div>
     </AppLayout>
   );
