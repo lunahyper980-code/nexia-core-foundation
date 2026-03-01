@@ -1,11 +1,11 @@
-import { Building2, MapPin, Globe, Instagram, Map, Copy, Bookmark, UserPlus, ExternalLink, CheckCircle, HelpCircle, AlertTriangle, Phone } from 'lucide-react';
+import { Building2, MapPin, Globe, Instagram, Map, Copy, MessageCircle, ExternalLink, CheckCircle, HelpCircle, AlertTriangle } from 'lucide-react';
 import { Card, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { toast } from 'sonner';
-import { supabase } from '@/integrations/supabase/client';
-import { useWorkspace } from '@/contexts/WorkspaceContext';
 import { useState } from 'react';
+import { GenerateMessageModal } from '@/components/encontrar-clientes/GenerateMessageModal';
+import type { Lead as LeadCardLead } from '@/components/encontrar-clientes/LeadCard';
 
 interface Lead {
   id: string;
@@ -25,28 +25,25 @@ interface RadarResultsProps {
 }
 
 export function RadarResults({ leads, onNewSearch }: RadarResultsProps) {
-  const { workspace } = useWorkspace();
+  const [messageModalOpen, setMessageModalOpen] = useState(false);
+  const [selectedLead, setSelectedLead] = useState<Lead | null>(null);
 
-  const handleSaveLead = async (lead: Lead) => {
-    if (!workspace?.id) {
-      toast.error('Workspace não encontrado');
-      return;
-    }
-    try {
-      const { error } = await supabase.from('clients').insert({
-        name: lead.nome,
-        segment: lead.segmento,
-        city: lead.localizacao,
-        notes: lead.endereco ? `Endereço: ${lead.endereco}` : undefined,
-        workspace_id: workspace.id,
-        status: 'lead',
-      });
-      if (error) throw error;
-      toast.success(`${lead.nome} salvo em Clientes!`);
-    } catch {
-      toast.error('Erro ao salvar lead');
-    }
+  const handleGenerateMessage = (lead: Lead) => {
+    setSelectedLead(lead);
+    setMessageModalOpen(true);
   };
+
+  // Convert to LeadCard Lead type for the modal
+  const modalLead: LeadCardLead | null = selectedLead ? {
+    id: selectedLead.id,
+    nome: selectedLead.nome,
+    segmento: selectedLead.segmento,
+    localizacao: selectedLead.localizacao,
+    endereco: selectedLead.endereco || undefined,
+    temSite: selectedLead.temSite,
+    temInstagram: selectedLead.temInstagram,
+    confiancaNome: (selectedLead.confiancaNome as 'alta' | 'media' | 'baixa') || 'media',
+  } : null;
 
   return (
     <div className="animate-fade-in space-y-6">
@@ -60,21 +57,26 @@ export function RadarResults({ leads, onNewSearch }: RadarResultsProps) {
 
       <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
         {leads.map((lead) => (
-          <RadarLeadCard key={lead.id} lead={lead} onSaveLead={handleSaveLead} />
+          <RadarLeadCard key={lead.id} lead={lead} onGenerateMessage={handleGenerateMessage} />
         ))}
       </div>
+
+      <GenerateMessageModal
+        open={messageModalOpen}
+        onOpenChange={setMessageModalOpen}
+        lead={modalLead}
+      />
     </div>
   );
 }
 
-function RadarLeadCard({ lead, onSaveLead }: { lead: Lead; onSaveLead: (lead: Lead) => void }) {
+function RadarLeadCard({ lead, onGenerateMessage }: { lead: Lead; onGenerateMessage: (lead: Lead) => void }) {
   const [mapError, setMapError] = useState(false);
 
   const buildMapsQuery = (): string => {
     const parts = lead.localizacao.split(/[-,]/);
     const cidade = parts[0]?.trim() || lead.localizacao;
     const estado = parts[1]?.trim() || '';
-
     if (lead.endereco) {
       return `${lead.nome} ${lead.endereco}, ${cidade}, ${estado}`;
     }
@@ -91,19 +93,19 @@ function RadarLeadCard({ lead, onSaveLead }: { lead: Lead; onSaveLead: (lead: Le
       case 'alta':
         return (
           <Badge variant="secondary" className="gap-1 text-[10px] bg-emerald-500/10 text-emerald-600 border-emerald-500/20">
-            <CheckCircle className="h-3 w-3" /> Confirmado
+            <CheckCircle className="h-2.5 w-2.5" /> Confirmado
           </Badge>
         );
       case 'baixa':
         return (
           <Badge variant="secondary" className="gap-1 text-[10px] bg-orange-500/10 text-orange-600 border-orange-500/20">
-            <AlertTriangle className="h-3 w-3" /> Estimado
+            <AlertTriangle className="h-2.5 w-2.5" /> Estimado
           </Badge>
         );
       default:
         return (
           <Badge variant="secondary" className="gap-1 text-[10px] bg-amber-500/10 text-amber-600 border-amber-500/20">
-            <HelpCircle className="h-3 w-3" /> Provável
+            <HelpCircle className="h-2.5 w-2.5" /> Provável
           </Badge>
         );
     }
@@ -111,48 +113,46 @@ function RadarLeadCard({ lead, onSaveLead }: { lead: Lead; onSaveLead: (lead: Le
 
   return (
     <Card className="group hover:shadow-xl hover:border-primary/40 transition-all duration-200 overflow-hidden bg-gradient-to-br from-card via-card to-muted/20 border-border/60">
-      <CardContent className="p-3 space-y-3">
+      <CardContent className="p-3 space-y-2.5">
         {/* Header */}
-        <div className="flex items-start justify-between gap-2">
-          <div className="flex items-center gap-2.5">
-            <div className="w-10 h-10 rounded-lg bg-gradient-to-br from-primary/20 to-primary/5 flex items-center justify-center shrink-0 border border-primary/10">
-              <Building2 className="h-5 w-5 text-primary" />
-            </div>
-            <div className="flex-1 min-w-0">
-              <h3 className="font-semibold text-foreground text-sm truncate">{lead.nome}</h3>
-              <div className="flex flex-wrap items-center gap-1 mt-0.5">
-                <Badge variant="secondary" className="text-[10px] px-1.5 py-0">{lead.segmento}</Badge>
-                {getConfiancaBadge()}
-              </div>
+        <div className="flex items-start gap-2.5">
+          <div className="w-9 h-9 rounded-lg bg-gradient-to-br from-primary/20 to-primary/5 flex items-center justify-center shrink-0 border border-primary/10">
+            <Building2 className="h-4 w-4 text-primary" />
+          </div>
+          <div className="flex-1 min-w-0 overflow-hidden">
+            <h3 className="font-semibold text-foreground text-sm leading-tight break-words line-clamp-2">{lead.nome}</h3>
+            <div className="flex flex-wrap items-center gap-1 mt-1">
+              <Badge variant="secondary" className="text-[10px] px-1.5 py-0 max-w-full truncate">{lead.segmento}</Badge>
+              {getConfiancaBadge()}
             </div>
           </div>
         </div>
 
         {/* Info */}
-        <div className="space-y-1.5">
+        <div className="space-y-1">
           <div className="flex items-center gap-1.5 text-xs text-muted-foreground">
-            <MapPin className="h-3.5 w-3.5 shrink-0" />
+            <MapPin className="h-3 w-3 shrink-0" />
             <span className="truncate">{lead.localizacao}</span>
           </div>
           {lead.endereco && (
             <div className="flex items-center gap-1.5 text-xs text-muted-foreground">
-              <Map className="h-3.5 w-3.5 shrink-0" />
+              <Map className="h-3 w-3 shrink-0" />
               <span className="truncate">{lead.endereco}</span>
             </div>
           )}
-          <div className="flex items-center gap-2 flex-wrap pt-0.5">
+          <div className="flex items-center gap-2 flex-wrap">
             {lead.temSite && (
-              <div className="flex items-center gap-1 text-[10px] text-emerald-600">
-                <Globe className="h-3 w-3" /> Site
-              </div>
+              <span className="flex items-center gap-1 text-[10px] text-emerald-600">
+                <Globe className="h-2.5 w-2.5" /> Site
+              </span>
             )}
             {lead.temInstagram && (
-              <div className="flex items-center gap-1 text-[10px] text-pink-600">
-                <Instagram className="h-3 w-3" /> Instagram
-              </div>
+              <span className="flex items-center gap-1 text-[10px] text-pink-600">
+                <Instagram className="h-2.5 w-2.5" /> Instagram
+              </span>
             )}
             {!lead.temSite && !lead.temInstagram && (
-              <Badge variant="destructive" className="text-[10px]">Sem presença digital</Badge>
+              <Badge variant="destructive" className="text-[10px] h-4">Sem presença digital</Badge>
             )}
           </div>
         </div>
@@ -180,15 +180,15 @@ function RadarLeadCard({ lead, onSaveLead }: { lead: Lead; onSaveLead: (lead: Le
         </div>
 
         {/* Actions */}
-        <div className="flex gap-1.5 pt-1">
+        <div className="flex gap-1.5">
           <Button
             variant="default"
             size="sm"
             className="flex-1 gap-1.5 h-8 text-xs"
-            onClick={() => onSaveLead(lead)}
+            onClick={() => onGenerateMessage(lead)}
           >
-            <UserPlus className="h-3.5 w-3.5" />
-            Salvar
+            <MessageCircle className="h-3.5 w-3.5" />
+            Mensagem
           </Button>
           <Button
             variant="outline"
