@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { Radar as RadarIcon, MapPin, Zap, ArrowLeft } from 'lucide-react';
 import { AppLayout } from '@/components/AppLayout';
 import { Input } from '@/components/ui/input';
@@ -26,6 +26,7 @@ interface Lead {
 }
 
 type Screen = 'form' | 'scanning' | 'results';
+
 
 export default function Radar() {
   const { getSavedState, saveSubScreen, saveFormData, saveExtras, clearState } = useModuleState('radar');
@@ -57,6 +58,9 @@ export default function Radar() {
     }
   }, [leads, saveExtras]);
 
+  const [scanProgress, setScanProgress] = useState(0);
+  const progressRef = useRef<NodeJS.Timeout | null>(null);
+
   const handleScan = async () => {
     if (!localidade.trim()) {
       toast.error('Informe sua cidade ou bairro');
@@ -64,6 +68,15 @@ export default function Radar() {
     }
 
     setScreen('scanning');
+    setScanProgress(0);
+
+    // Simulate progress that accelerates then slows near end
+    let progress = 0;
+    progressRef.current = setInterval(() => {
+      progress += progress < 70 ? 2.5 : 0.5;
+      if (progress > 92) progress = 92; // cap until real response
+      setScanProgress(Math.min(progress, 92));
+    }, 150);
 
     try {
       const { data, error } = await supabase.functions.invoke('generate-leads', {
@@ -78,11 +91,19 @@ export default function Radar() {
 
       if (error) throw error;
 
+      // Complete the bar
+      if (progressRef.current) clearInterval(progressRef.current);
+      setScanProgress(100);
+
       const allLeads = [...(data?.leads || []), ...(data?.leadsNaoConfirmados || [])];
       setLeads(allLeads);
-      setScreen('results');
+
+      // Small delay to show 100% before transitioning
+      setTimeout(() => setScreen('results'), 600);
     } catch (err) {
       console.error('Radar error:', err);
+      if (progressRef.current) clearInterval(progressRef.current);
+      setScanProgress(0);
       toast.error('Erro ao escanear região. Tente novamente.');
       setScreen('form');
     }
@@ -97,7 +118,7 @@ export default function Radar() {
 
   return (
     <AppLayout title="Radar">
-      <RadarScanAnimation isActive={screen === 'scanning'} />
+      {/* Removed full-screen scan animation */}
 
       <div className="max-w-4xl mx-auto space-y-8 p-4 sm:p-6">
         {/* Header */}
@@ -116,11 +137,11 @@ export default function Radar() {
           </div>
         </div>
 
-        {screen === 'form' && (
+        {(screen === 'form' || screen === 'scanning') && (
           <div className="animate-fade-in space-y-4">
             {/* Robot scanner animation card */}
             <div className="relative rounded-2xl overflow-hidden border border-border/40 h-[420px] sm:h-[500px]">
-              <RadarIdleAnimation />
+              <RadarIdleAnimation isScanning={screen === 'scanning'} scanProgress={scanProgress} />
             </div>
 
             {/* Form card - compact & translucent */}
@@ -140,16 +161,17 @@ export default function Radar() {
                       onChange={(e) => setLocalidade(e.target.value)}
                       onKeyDown={(e) => e.key === 'Enter' && handleScan()}
                       className="h-9 text-sm"
+                      disabled={screen === 'scanning'}
                     />
                   </div>
                   <Button
                     className="gap-1.5 h-9 px-4 shrink-0"
                     size="sm"
                     onClick={handleScan}
-                    disabled={!localidade.trim()}
+                    disabled={!localidade.trim() || screen === 'scanning'}
                   >
                     <Zap className="h-3.5 w-3.5" />
-                    Ativar Radar
+                    {screen === 'scanning' ? 'Escaneando...' : 'Ativar Radar'}
                   </Button>
                 </div>
               </Card>
