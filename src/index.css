@@ -213,15 +213,11 @@
     letter-spacing: -0.01em;
   }
 
-  .bg-grid-pattern::after {
-    content: '';
-    position: fixed;
-    inset: 0;
-    z-index: 50;
-    pointer-events: none;
+  .bg-grid-pattern {
     background-image: 
       repeating-linear-gradient(0deg, transparent, transparent 23px, hsla(263, 70%, 40%, 0.12) 23px, hsla(263, 70%, 40%, 0.12) 24px),
       repeating-linear-gradient(90deg, transparent, transparent 23px, hsla(263, 70%, 40%, 0.12) 23px, hsla(263, 70%, 40%, 0.12) 24px);
+    background-color: hsl(var(--background));
   }
   
   /* Prevent horizontal scroll from any element */
