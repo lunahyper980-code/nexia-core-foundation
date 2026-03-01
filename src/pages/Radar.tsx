@@ -93,7 +93,7 @@ export default function Radar() {
         {screen === 'form' && (
           <div className="animate-fade-in space-y-4">
             {/* Robot scanner animation card */}
-            <div className="relative rounded-2xl overflow-hidden border border-border/40 h-[320px] sm:h-[360px]">
+            <div className="relative rounded-2xl overflow-hidden border border-border/40 h-[420px] sm:h-[500px]">
               <RadarIdleAnimation />
             </div>
 
