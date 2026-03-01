@@ -90,41 +90,51 @@ export default function Radar() {
         </div>
 
         {screen === 'form' && (
-          <div className="animate-fade-in space-y-6">
-            {/* Animated idle card */}
-            <div className="relative rounded-2xl overflow-hidden border border-border/40 bg-card">
+          <div className="animate-fade-in">
+            {/* Animated robot scanner card */}
+            <div className="relative rounded-2xl overflow-hidden border border-border/40 min-h-[420px] sm:min-h-[480px]">
               <RadarIdleAnimation />
-              <div className="relative z-10 p-6 sm:p-8 flex flex-col items-center text-center">
-                <h2 className="text-lg font-semibold text-foreground mt-2">Onde você está?</h2>
-                <p className="text-sm text-muted-foreground max-w-md mx-auto mt-1">
-                  Informe sua cidade e bairro para o radar escanear empresas próximas a você.
-                </p>
+              {/* Floating form overlay at bottom */}
+              <div className="absolute inset-x-0 bottom-0 z-10">
+                <div
+                  className="mx-4 mb-4 sm:mx-6 sm:mb-6 p-4 sm:p-5 rounded-xl max-w-md mx-auto"
+                  style={{
+                    background: 'rgba(8, 8, 16, 0.75)',
+                    backdropFilter: 'blur(12px)',
+                    border: '1px solid rgba(255,255,255,0.08)',
+                  }}
+                >
+                  <h2 className="text-sm font-semibold text-foreground text-center mb-1">Onde você está?</h2>
+                  <p className="text-[11px] text-muted-foreground text-center mb-4">
+                    Informe sua localidade para iniciar o escaneamento
+                  </p>
 
-                <div className="w-full max-w-md mt-6 space-y-4">
-                  <div className="space-y-2 text-left">
-                    <Label htmlFor="localidade" className="flex items-center gap-2 text-xs font-medium uppercase tracking-wide text-muted-foreground">
-                      <MapPin className="h-3.5 w-3.5 text-primary" />
-                      Cidade / Bairro
-                    </Label>
-                    <Input
-                      id="localidade"
-                      placeholder="Ex: Araruama, Iguabinha"
-                      value={localidade}
-                      onChange={(e) => setLocalidade(e.target.value)}
-                      onKeyDown={(e) => e.key === 'Enter' && handleScan()}
-                      className="h-11"
-                    />
+                  <div className="space-y-3">
+                    <div className="space-y-1.5 text-left">
+                      <Label htmlFor="localidade" className="flex items-center gap-1.5 text-[10px] font-medium uppercase tracking-wider text-muted-foreground/80">
+                        <MapPin className="h-3 w-3 text-primary" />
+                        Cidade / Bairro
+                      </Label>
+                      <Input
+                        id="localidade"
+                        placeholder="Ex: Araruama, Iguabinha"
+                        value={localidade}
+                        onChange={(e) => setLocalidade(e.target.value)}
+                        onKeyDown={(e) => e.key === 'Enter' && handleScan()}
+                        className="h-10 bg-background/40 border-border/30 text-sm"
+                      />
+                    </div>
+
+                    <Button
+                      className="w-full gap-2"
+                      size="default"
+                      onClick={handleScan}
+                      disabled={!localidade.trim()}
+                    >
+                      <Zap className="h-4 w-4" />
+                      Ativar Radar
+                    </Button>
                   </div>
-
-                  <Button
-                    className="w-full gap-2"
-                    size="lg"
-                    onClick={handleScan}
-                    disabled={!localidade.trim()}
-                  >
-                    <Zap className="h-4 w-4" />
-                    Ativar Radar
-                  </Button>
                 </div>
               </div>
             </div>
