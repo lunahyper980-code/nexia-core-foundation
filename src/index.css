@@ -215,8 +215,8 @@
 
   .bg-grid-pattern {
     background-image: 
-      radial-gradient(ellipse 80% 60% at 50% 0%, hsla(263, 70%, 30%, 0.15) 0%, transparent 60%),
-      radial-gradient(ellipse 50% 40% at 80% 80%, hsla(263, 60%, 25%, 0.1) 0%, transparent 50%),
+      radial-gradient(ellipse 80% 60% at 50% 0%, hsla(263, 70%, 30%, 0.22) 0%, transparent 60%),
+      radial-gradient(ellipse 50% 40% at 80% 80%, hsla(263, 60%, 25%, 0.15) 0%, transparent 50%),
       repeating-linear-gradient(0deg, transparent, transparent 23px, hsla(263, 70%, 40%, 0.12) 23px, hsla(263, 70%, 40%, 0.12) 24px),
       repeating-linear-gradient(90deg, transparent, transparent 23px, hsla(263, 70%, 40%, 0.12) 23px, hsla(263, 70%, 40%, 0.12) 24px);
     background-color: hsl(var(--background));
