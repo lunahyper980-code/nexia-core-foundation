@@ -304,7 +304,7 @@ export function NeuralAnimation({ open, message }: NeuralAnimationProps) {
         ))}
       </div>
 
-      <div className="relative flex flex-col items-center justify-center px-6 max-w-md mx-auto animate-fade-in" style={{ marginTop: '-2rem' }}>
+      <div className="relative flex flex-col items-center justify-center px-6 max-w-md mx-auto animate-fade-in">
         {/* Canvas container with glow effects */}
         <div className="relative mb-8">
           {/* Outer glow ring */}
