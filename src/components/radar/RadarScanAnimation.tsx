@@ -24,7 +24,7 @@ export function RadarScanAnimation({ isActive }: RadarScanAnimationProps) {
     if (!isActive) { setStepIndex(0); return; }
     const interval = setInterval(() => {
       setStepIndex(prev => (prev < STEPS.length - 1 ? prev + 1 : prev));
-    }, 1200);
+    }, 2800);
     return () => clearInterval(interval);
   }, [isActive]);
 
