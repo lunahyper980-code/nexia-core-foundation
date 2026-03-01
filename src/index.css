@@ -209,12 +209,19 @@
   body {
     @apply bg-background text-foreground font-sans antialiased;
     font-family: 'Inter', system-ui, sans-serif;
-    background-image: 
-      linear-gradient(hsla(263, 70%, 58%, 0.07) 1px, transparent 1px),
-      linear-gradient(90deg, hsla(263, 70%, 58%, 0.07) 1px, transparent 1px);
-    background-size: 24px 24px;
     font-feature-settings: "cv11", "ss01";
     letter-spacing: -0.01em;
+  }
+
+  .bg-grid-pattern::after {
+    content: '';
+    position: fixed;
+    inset: 0;
+    z-index: 50;
+    pointer-events: none;
+    background-image: 
+      repeating-linear-gradient(0deg, transparent, transparent 23px, hsla(263, 70%, 40%, 0.12) 23px, hsla(263, 70%, 40%, 0.12) 24px),
+      repeating-linear-gradient(90deg, transparent, transparent 23px, hsla(263, 70%, 40%, 0.12) 23px, hsla(263, 70%, 40%, 0.12) 24px);
   }
   
   /* Prevent horizontal scroll from any element */
