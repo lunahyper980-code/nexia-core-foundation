@@ -174,9 +174,9 @@ export function RadarIdleAnimation() {
 
       // Background gradient - dark purple/blue
       const bg = ctx.createRadialGradient(w * 0.5, h * 0.45, 0, w * 0.5, h * 0.45, w * 0.7);
-      bg.addColorStop(0, 'hsla(260, 50%, 18%, 1)');
-      bg.addColorStop(0.5, 'hsla(260, 40%, 10%, 1)');
-      bg.addColorStop(1, 'hsla(240, 30%, 5%, 1)');
+      bg.addColorStop(0, 'hsla(260, 30%, 12%, 0.6)');
+      bg.addColorStop(0.5, 'hsla(260, 25%, 8%, 0.5)');
+      bg.addColorStop(1, 'hsla(240, 20%, 4%, 0.4)');
       ctx.fillStyle = bg;
       ctx.fillRect(0, 0, w, h);
 
