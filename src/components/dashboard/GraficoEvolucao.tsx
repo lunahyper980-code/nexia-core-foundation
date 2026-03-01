@@ -300,8 +300,8 @@ export function GraficoEvolucao({
             <Area
               type="monotone"
               dataKey="valor"
-              stroke="hsl(var(--success))"
-              strokeWidth={2}
+              stroke="hsla(263, 80%, 30%, 0.95)"
+              strokeWidth={2.5}
               fill="url(#colorValor)"
               yAxisId="right"
             />
