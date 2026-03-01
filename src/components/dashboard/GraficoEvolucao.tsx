@@ -211,7 +211,7 @@ export function GraficoEvolucao({
   }, [isOwner, data, currentPipelineValue]);
 
   return (
-    <PremiumFrame title="📈 Evolução do Faturamento — Últimos 30 dias" className="fade-in" style={{ animationDelay: '0.25s' }}>
+    <PremiumFrame title="📈 Evolução do Faturamento — Últimos 30 dias" className="fade-in bg-background/70 backdrop-blur-sm" style={{ animationDelay: '0.25s' }}>
       {/* Métricas - SEM Pipeline Atual */}
       <div className="grid grid-cols-3 gap-3 mb-4">
         {/* Faturamento 30 dias */}
@@ -292,8 +292,8 @@ export function GraficoEvolucao({
             <Area
               type="monotone"
               dataKey="projetos"
-              stroke="hsl(var(--primary))"
-              strokeWidth={2}
+              stroke="hsla(263, 80%, 35%, 0.95)"
+              strokeWidth={2.5}
               fill="url(#colorProjetos)"
               yAxisId="left"
             />
