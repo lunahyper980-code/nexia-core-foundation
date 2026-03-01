@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { Radar as RadarIcon, MapPin, Zap, ArrowLeft } from 'lucide-react';
 import { AppLayout } from '@/components/AppLayout';
 import { Input } from '@/components/ui/input';
@@ -11,6 +11,7 @@ import { RadarIdleAnimation } from '@/components/radar/RadarIdleAnimation';
 import { supabase } from '@/integrations/supabase/client';
 import { toast } from 'sonner';
 import { useNavigate } from 'react-router-dom';
+import { useModuleState } from '@/hooks/useModuleState';
 
 interface Lead {
   id: string;
@@ -27,10 +28,34 @@ interface Lead {
 type Screen = 'form' | 'scanning' | 'results';
 
 export default function Radar() {
-  const [localidade, setLocalidade] = useState('');
-  const [screen, setScreen] = useState<Screen>('form');
-  const [leads, setLeads] = useState<Lead[]>([]);
+  const { getSavedState, saveSubScreen, saveFormData, saveExtras, clearState } = useModuleState('radar');
+
+  // Restore persisted state
+  const saved = getSavedState();
+  const [localidade, setLocalidade] = useState(saved?.formData?.localidade || '');
+  const [screen, setScreen] = useState<Screen>(() => {
+    if (saved?.subScreen === 'results' && saved?.extras?.leads?.length) return 'results';
+    return 'form';
+  });
+  const [leads, setLeads] = useState<Lead[]>(saved?.extras?.leads || []);
   const navigate = useNavigate();
+
+  // Persist screen changes
+  useEffect(() => {
+    saveSubScreen(screen);
+  }, [screen, saveSubScreen]);
+
+  // Persist localidade
+  useEffect(() => {
+    saveFormData({ localidade });
+  }, [localidade, saveFormData]);
+
+  // Persist leads
+  useEffect(() => {
+    if (leads.length > 0) {
+      saveExtras({ leads });
+    }
+  }, [leads, saveExtras]);
 
   const handleScan = async () => {
     if (!localidade.trim()) {
@@ -67,6 +92,7 @@ export default function Radar() {
     setLeads([]);
     setLocalidade('');
     setScreen('form');
+    clearState();
   };
 
   return (
