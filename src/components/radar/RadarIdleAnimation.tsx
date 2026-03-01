@@ -4,7 +4,7 @@ import { useEffect, useRef, useState } from 'react';
  * Futuristic robot scanner idle animation inspired by the reference image.
  * Features: robot silhouette, scrolling terminal data, stats panel, progress bar.
  */
-export function RadarIdleAnimation() {
+export function RadarIdleAnimation({ isScanning = false, scanProgress = 0 }: { isScanning?: boolean; scanProgress?: number } = {}) {
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const animRef = useRef<number>(0);
   const [scanLines, setScanLines] = useState<string[]>([]);
@@ -278,24 +278,29 @@ export function RadarIdleAnimation() {
 
       ctx.font = 'bold 8px monospace';
       ctx.fillStyle = 'hsla(260, 40%, 60%, 0.5)';
-      ctx.fillText('PROGRESS', barX, barY - 6);
+      ctx.fillText(isScanning ? 'ESCANEANDO...' : 'PROGRESS', barX, barY - 6);
 
       // Bar bg
       ctx.fillStyle = 'hsla(240, 20%, 15%, 0.8)';
       ctx.fillRect(barX, barY, barW, barH);
 
-      // Bar fill - animated pulse
-      const progress = (Math.sin(frame * 0.015) + 1) / 2;
+      // Bar fill - use real progress when scanning, animated pulse when idle
+      const progress = isScanning ? scanProgress / 100 : (Math.sin(frame * 0.015) + 1) / 2;
       const barGrad = ctx.createLinearGradient(barX, 0, barX + barW * progress, 0);
-      barGrad.addColorStop(0, 'hsla(260, 70%, 55%, 0.9)');
-      barGrad.addColorStop(1, 'hsla(200, 90%, 55%, 0.9)');
+      if (isScanning) {
+        barGrad.addColorStop(0, 'hsla(160, 80%, 50%, 0.9)');
+        barGrad.addColorStop(1, 'hsla(200, 90%, 55%, 0.9)');
+      } else {
+        barGrad.addColorStop(0, 'hsla(260, 70%, 55%, 0.9)');
+        barGrad.addColorStop(1, 'hsla(200, 90%, 55%, 0.9)');
+      }
       ctx.fillStyle = barGrad;
       ctx.fillRect(barX, barY, barW * progress, barH);
 
       // Bottom label
       ctx.font = '8px monospace';
       ctx.fillStyle = 'hsla(200, 60%, 60%, 0.4)';
-      ctx.fillText('Aguardando input de localização...', barX, barY + 16);
+      ctx.fillText(isScanning ? 'Buscando empresas na região...' : 'Aguardando input de localização...', barX, barY + 16);
 
       // Percentage
       ctx.fillStyle = 'hsla(200, 70%, 70%, 0.6)';
@@ -312,7 +317,7 @@ export function RadarIdleAnimation() {
       cancelAnimationFrame(animRef.current);
       window.removeEventListener('resize', resize);
     };
-  }, [scanLines]);
+  }, [scanLines, isScanning, scanProgress]);
 
   return (
     <canvas
