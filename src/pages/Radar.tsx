@@ -70,13 +70,13 @@ export default function Radar() {
     setScreen('scanning');
     setScanProgress(0);
 
-    // Simulate progress that accelerates then slows near end
+    // Fast progress simulation - reaches ~90% quickly
     let progress = 0;
     progressRef.current = setInterval(() => {
-      progress += progress < 70 ? 2.5 : 0.5;
-      if (progress > 92) progress = 92; // cap until real response
-      setScanProgress(Math.min(progress, 92));
-    }, 150);
+      progress += progress < 60 ? 5 : progress < 85 ? 3 : 1;
+      if (progress > 95) progress = 95;
+      setScanProgress(Math.min(progress, 95));
+    }, 80);
 
     try {
       const { data, error } = await supabase.functions.invoke('generate-leads', {
@@ -91,15 +91,13 @@ export default function Radar() {
 
       if (error) throw error;
 
-      // Complete the bar
       if (progressRef.current) clearInterval(progressRef.current);
       setScanProgress(100);
 
       const allLeads = [...(data?.leads || []), ...(data?.leadsNaoConfirmados || [])];
       setLeads(allLeads);
 
-      // Small delay to show 100% before transitioning
-      setTimeout(() => setScreen('results'), 600);
+      setTimeout(() => setScreen('results'), 400);
     } catch (err) {
       console.error('Radar error:', err);
       if (progressRef.current) clearInterval(progressRef.current);
@@ -137,11 +135,11 @@ export default function Radar() {
           </div>
         </div>
 
-        {(screen === 'form' || screen === 'scanning') && (
+        {screen === 'form' && (
           <div className="animate-fade-in space-y-4">
             {/* Robot scanner animation card */}
             <div className="relative rounded-2xl overflow-hidden border border-border/40 h-[420px] sm:h-[500px]">
-              <RadarIdleAnimation isScanning={screen === 'scanning'} scanProgress={scanProgress} />
+              <RadarIdleAnimation isScanning={false} scanProgress={0} />
             </div>
 
             {/* Form card - compact & translucent */}
@@ -161,21 +159,32 @@ export default function Radar() {
                       onChange={(e) => setLocalidade(e.target.value)}
                       onKeyDown={(e) => e.key === 'Enter' && handleScan()}
                       className="h-9 text-sm"
-                      disabled={screen === 'scanning'}
                     />
                   </div>
                   <Button
                     className="gap-1.5 h-9 px-4 shrink-0"
                     size="sm"
                     onClick={handleScan}
-                    disabled={!localidade.trim() || screen === 'scanning'}
+                    disabled={!localidade.trim()}
                   >
                     <Zap className="h-3.5 w-3.5" />
-                    {screen === 'scanning' ? 'Escaneando...' : 'Ativar Radar'}
+                    Ativar Radar
                   </Button>
                 </div>
               </Card>
             </div>
+          </div>
+        )}
+
+        {screen === 'scanning' && (
+          <div className="animate-fade-in">
+            {/* Drone animation focused on progress */}
+            <div className="relative rounded-2xl overflow-hidden border border-border/40 h-[420px] sm:h-[500px]">
+              <RadarIdleAnimation isScanning={true} scanProgress={scanProgress} />
+            </div>
+            <p className="text-center text-sm text-muted-foreground mt-3 animate-pulse">
+              Escaneando empresas em <span className="font-semibold text-foreground">{localidade}</span>...
+            </p>
           </div>
         )}
 
