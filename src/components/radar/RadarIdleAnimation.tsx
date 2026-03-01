@@ -76,129 +76,256 @@ export function RadarIdleAnimation({ isScanning = false, scanProgress = 0 }: { i
     resize();
     window.addEventListener('resize', resize);
 
-    // Draw the drone
+    // Draw professional drone
     const drawDrone = (cx: number, cy: number, scale: number, t: number, scanning: boolean) => {
       ctx.save();
       ctx.translate(cx, cy);
       ctx.scale(scale, scale);
 
-      // Movement: idle = gentle float, scanning = faster bob + tilt
       const floatSpeed = scanning ? 0.05 : 0.025;
-      const floatAmp = scanning ? 4 : 6;
-      const tiltAmp = scanning ? 0.08 : 0.04;
+      const floatAmp = scanning ? 3 : 5;
+      const tiltAmp = scanning ? 0.06 : 0.03;
       const floatY = Math.sin(t * floatSpeed) * floatAmp;
       const tiltX = Math.sin(t * floatSpeed * 0.6) * tiltAmp;
       ctx.translate(0, floatY);
       ctx.rotate(tiltX);
 
       // Scanner light cone
-      const scanPulse = scanning
-        ? 0.25 + Math.sin(t * 0.08) * 0.1
-        : 0.15 + Math.sin(t * 0.04) * 0.08;
-      const scanSwing = scanning
-        ? Math.sin(t * 0.04) * 35  // wider, faster sweep
-        : Math.sin(t * 0.018) * 18;
-      const coneWidth = scanning ? 55 : 45;
-      const coneLen = scanning ? 160 : 140;
+      const scanPulse = scanning ? 0.22 + Math.sin(t * 0.08) * 0.08 : 0.12 + Math.sin(t * 0.04) * 0.06;
+      const scanSwing = scanning ? Math.sin(t * 0.04) * 35 : Math.sin(t * 0.018) * 18;
+      const coneWidth = scanning ? 50 : 40;
+      const coneLen = scanning ? 155 : 135;
 
       ctx.save();
-      ctx.translate(0, 12);
+      ctx.translate(0, 10);
       ctx.beginPath();
-      ctx.moveTo(-4, 0);
+      ctx.moveTo(-3, 0);
       ctx.lineTo(scanSwing - coneWidth, coneLen);
       ctx.lineTo(scanSwing + coneWidth, coneLen);
-      ctx.lineTo(4, 0);
+      ctx.lineTo(3, 0);
       ctx.closePath();
-
       const coneColor = scanning ? '160, 90%, 55%' : '200, 95%, 65%';
       const scanGrad = ctx.createLinearGradient(0, 0, 0, coneLen);
-      scanGrad.addColorStop(0, `hsla(${coneColor}, ${scanPulse + 0.2})`);
-      scanGrad.addColorStop(0.4, `hsla(${coneColor}, ${scanPulse * 0.5})`);
+      scanGrad.addColorStop(0, `hsla(${coneColor}, ${scanPulse + 0.15})`);
+      scanGrad.addColorStop(0.4, `hsla(${coneColor}, ${scanPulse * 0.4})`);
       scanGrad.addColorStop(1, `hsla(${coneColor}, 0)`);
       ctx.fillStyle = scanGrad;
       ctx.fill();
-
-      // Ground scan ellipse
+      // Ground ellipse
       ctx.beginPath();
-      const groundW = scanning ? 60 : 48;
-      ctx.ellipse(scanSwing, coneLen, groundW, 10, 0, 0, Math.PI * 2);
-      const groundGlow = scanning
-        ? 0.15 + Math.sin(t * 0.08) * 0.08
-        : 0.08 + Math.sin(t * 0.04) * 0.04;
+      const groundW = scanning ? 55 : 44;
+      ctx.ellipse(scanSwing, coneLen, groundW, 8, 0, 0, Math.PI * 2);
+      const groundGlow = scanning ? 0.12 + Math.sin(t * 0.08) * 0.06 : 0.06 + Math.sin(t * 0.04) * 0.03;
       ctx.fillStyle = `hsla(${coneColor}, ${groundGlow})`;
       ctx.fill();
       ctx.restore();
 
-      // Drone body
-      ctx.beginPath();
-      ctx.ellipse(0, 0, 22, 10, 0, 0, Math.PI * 2);
-      ctx.fillStyle = 'hsla(240, 15%, 14%, 0.95)';
-      ctx.fill();
-      ctx.strokeStyle = scanning ? 'hsla(160, 60%, 45%, 0.5)' : 'hsla(260, 50%, 50%, 0.4)';
-      ctx.lineWidth = 1;
-      ctx.stroke();
+      // ── Arms (carbon-fiber look) ──
+      const armLength = 42;
+      const armAngles = [-0.55, 0.55, Math.PI - 0.55, Math.PI + 0.55];
+      const propSpeed = scanning ? 0.8 : 0.4;
+      const accentColor = scanning ? 'hsla(160, 50%, 40%,' : 'hsla(220, 40%, 45%,';
 
-      // Top dome
-      ctx.beginPath();
-      ctx.ellipse(0, -5, 10, 7, 0, Math.PI, Math.PI * 2);
-      ctx.fillStyle = 'hsla(240, 20%, 18%, 0.95)';
-      ctx.fill();
-
-      // Camera lens — pulses green when scanning
-      ctx.beginPath();
-      ctx.arc(0, 8, 4, 0, Math.PI * 2);
-      const lensHue = scanning ? '160, 95%, 55%' : '200, 95%, 65%';
-      const lensGlow = scanning
-        ? 0.7 + Math.sin(t * 0.12) * 0.3
-        : 0.6 + Math.sin(t * 0.06) * 0.3;
-      ctx.fillStyle = `hsla(${lensHue}, ${lensGlow})`;
-      ctx.fill();
-      ctx.shadowColor = `hsla(${lensHue}, 0.7)`;
-      ctx.shadowBlur = scanning ? 18 : 12;
-      ctx.fill();
-      ctx.shadowBlur = 0;
-
-      // Arms with propellers
-      const propSpeed = scanning ? 0.6 : 0.3;
-      const arms = [
-        { angle: -0.6 }, { angle: 0.6 },
-        { angle: Math.PI - 0.6 }, { angle: Math.PI + 0.6 },
-      ];
-
-      for (const arm of arms) {
+      for (const angle of armAngles) {
         ctx.save();
-        ctx.rotate(arm.angle);
-        ctx.fillStyle = 'hsla(240, 15%, 20%, 0.9)';
-        ctx.fillRect(0, -2, 38, 4);
+        ctx.rotate(angle);
+
+        // Arm structure — tapered carbon tube
         ctx.beginPath();
-        ctx.arc(38, 0, 7, 0, Math.PI * 2);
-        ctx.fillStyle = 'hsla(240, 15%, 16%, 0.95)';
+        ctx.moveTo(4, -1.8);
+        ctx.lineTo(armLength - 4, -1.2);
+        ctx.lineTo(armLength - 4, 1.2);
+        ctx.lineTo(4, 1.8);
+        ctx.closePath();
+        const armGrad = ctx.createLinearGradient(4, 0, armLength, 0);
+        armGrad.addColorStop(0, 'hsla(220, 10%, 22%, 0.95)');
+        armGrad.addColorStop(0.5, 'hsla(220, 8%, 28%, 0.9)');
+        armGrad.addColorStop(1, 'hsla(220, 10%, 20%, 0.95)');
+        ctx.fillStyle = armGrad;
         ctx.fill();
-        ctx.strokeStyle = scanning ? 'hsla(160, 40%, 45%, 0.3)' : 'hsla(260, 40%, 45%, 0.3)';
-        ctx.lineWidth = 0.8;
+        ctx.strokeStyle = 'hsla(220, 15%, 35%, 0.3)';
+        ctx.lineWidth = 0.5;
         ctx.stroke();
-        // Propeller disc
+
+        // Motor housing — cylindrical
         ctx.beginPath();
-        ctx.ellipse(38, 0, 16, 3, t * propSpeed + arm.angle, 0, Math.PI * 2);
-        ctx.fillStyle = `hsla(200, 40%, 60%, ${0.12 + Math.sin(t * 0.1) * 0.04})`;
+        ctx.arc(armLength, 0, 5.5, 0, Math.PI * 2);
+        const motorGrad = ctx.createRadialGradient(armLength - 1, -1, 0, armLength, 0, 6);
+        motorGrad.addColorStop(0, 'hsla(220, 10%, 30%, 0.95)');
+        motorGrad.addColorStop(0.7, 'hsla(220, 10%, 18%, 0.95)');
+        motorGrad.addColorStop(1, 'hsla(220, 10%, 12%, 0.95)');
+        ctx.fillStyle = motorGrad;
         ctx.fill();
+        ctx.strokeStyle = `${accentColor} 0.25)`;
+        ctx.lineWidth = 0.6;
+        ctx.stroke();
+
+        // Motor top cap
+        ctx.beginPath();
+        ctx.arc(armLength, 0, 3, 0, Math.PI * 2);
+        ctx.fillStyle = 'hsla(220, 8%, 35%, 0.8)';
+        ctx.fill();
+
+        // Propeller blades — motion blur disc
+        const propAlpha = 0.18 + Math.sin(t * 0.08) * 0.05;
+        ctx.beginPath();
+        ctx.ellipse(armLength, 0, 18, 18, 0, 0, Math.PI * 2);
+        ctx.fillStyle = `hsla(200, 20%, 60%, ${propAlpha * 0.3})`;
+        ctx.fill();
+        // Blade hints (2 blades as thin arcs)
+        for (let b = 0; b < 2; b++) {
+          const bAngle = t * propSpeed + b * Math.PI;
+          ctx.save();
+          ctx.translate(armLength, 0);
+          ctx.rotate(bAngle);
+          ctx.beginPath();
+          ctx.moveTo(0, 0);
+          ctx.quadraticCurveTo(6, -1.5, 17, -0.3);
+          ctx.quadraticCurveTo(6, 0.5, 0, 0);
+          ctx.fillStyle = `hsla(200, 15%, 55%, ${propAlpha})`;
+          ctx.fill();
+          ctx.restore();
+        }
+
         ctx.restore();
       }
 
-      // LEDs — both green when scanning
+      // ── Central body — angular fuselage ──
+      // Bottom plate
+      ctx.beginPath();
+      ctx.moveTo(-18, 3);
+      ctx.lineTo(-12, 9);
+      ctx.lineTo(12, 9);
+      ctx.lineTo(18, 3);
+      ctx.lineTo(18, -1);
+      ctx.lineTo(-18, -1);
+      ctx.closePath();
+      const bodyGrad = ctx.createLinearGradient(0, -1, 0, 9);
+      bodyGrad.addColorStop(0, 'hsla(220, 12%, 20%, 0.97)');
+      bodyGrad.addColorStop(1, 'hsla(220, 12%, 12%, 0.97)');
+      ctx.fillStyle = bodyGrad;
+      ctx.fill();
+      ctx.strokeStyle = 'hsla(220, 15%, 35%, 0.25)';
+      ctx.lineWidth = 0.5;
+      ctx.stroke();
+
+      // Top shell — tapered canopy
+      ctx.beginPath();
+      ctx.moveTo(-18, -1);
+      ctx.lineTo(-14, -8);
+      ctx.lineTo(-6, -11);
+      ctx.lineTo(6, -11);
+      ctx.lineTo(14, -8);
+      ctx.lineTo(18, -1);
+      ctx.closePath();
+      const topGrad = ctx.createLinearGradient(0, -11, 0, -1);
+      topGrad.addColorStop(0, 'hsla(220, 10%, 28%, 0.95)');
+      topGrad.addColorStop(0.5, 'hsla(220, 10%, 22%, 0.97)');
+      topGrad.addColorStop(1, 'hsla(220, 12%, 18%, 0.97)');
+      ctx.fillStyle = topGrad;
+      ctx.fill();
+      ctx.strokeStyle = 'hsla(220, 15%, 35%, 0.2)';
+      ctx.lineWidth = 0.5;
+      ctx.stroke();
+
+      // Edge accent line
+      ctx.beginPath();
+      ctx.moveTo(-17, -1);
+      ctx.lineTo(17, -1);
+      ctx.strokeStyle = `${accentColor} 0.35)`;
+      ctx.lineWidth = 0.8;
+      ctx.stroke();
+
+      // ── Camera/gimbal ──
+      // Gimbal arm
+      ctx.fillStyle = 'hsla(220, 8%, 25%, 0.9)';
+      ctx.fillRect(-2, 8, 4, 6);
+
+      // Camera housing
+      ctx.beginPath();
+      ctx.roundRect(-5, 13, 10, 7, 2);
+      ctx.fillStyle = 'hsla(220, 10%, 15%, 0.95)';
+      ctx.fill();
+      ctx.strokeStyle = 'hsla(220, 15%, 30%, 0.4)';
+      ctx.lineWidth = 0.5;
+      ctx.stroke();
+
+      // Camera lens
+      ctx.beginPath();
+      ctx.arc(0, 16.5, 2.8, 0, Math.PI * 2);
+      const lensHue = scanning ? '160, 95%, 55%' : '200, 95%, 65%';
+      const lensGlow = scanning ? 0.7 + Math.sin(t * 0.12) * 0.3 : 0.5 + Math.sin(t * 0.06) * 0.3;
+      ctx.fillStyle = `hsla(${lensHue}, ${lensGlow})`;
+      ctx.fill();
+      ctx.shadowColor = `hsla(${lensHue}, 0.6)`;
+      ctx.shadowBlur = scanning ? 14 : 8;
+      ctx.fill();
+      ctx.shadowBlur = 0;
+      // Lens reflection
+      ctx.beginPath();
+      ctx.arc(-0.8, 15.8, 0.8, 0, Math.PI * 2);
+      ctx.fillStyle = 'hsla(0, 0%, 100%, 0.25)';
+      ctx.fill();
+
+      // ── GPS antenna ──
+      ctx.fillStyle = 'hsla(220, 8%, 40%, 0.7)';
+      ctx.fillRect(-0.5, -11, 1, -5);
+      ctx.beginPath();
+      ctx.arc(0, -16, 1.8, 0, Math.PI * 2);
+      ctx.fillStyle = 'hsla(220, 8%, 35%, 0.8)';
+      ctx.fill();
+
+      // ── Landing gear skids ──
+      ctx.strokeStyle = 'hsla(220, 10%, 30%, 0.6)';
+      ctx.lineWidth = 1.2;
+      // Left skid
+      ctx.beginPath();
+      ctx.moveTo(-10, 9);
+      ctx.lineTo(-12, 14);
+      ctx.lineTo(-16, 14);
+      ctx.stroke();
+      ctx.beginPath();
+      ctx.moveTo(-6, 9);
+      ctx.lineTo(-8, 14);
+      ctx.stroke();
+      // Right skid
+      ctx.beginPath();
+      ctx.moveTo(10, 9);
+      ctx.lineTo(12, 14);
+      ctx.lineTo(16, 14);
+      ctx.stroke();
+      ctx.beginPath();
+      ctx.moveTo(6, 9);
+      ctx.lineTo(8, 14);
+      ctx.stroke();
+
+      // ── Status LEDs ──
       if (scanning) {
         const led = Math.sin(t * 0.15) > 0 ? 0.9 : 0.3;
-        ctx.beginPath(); ctx.arc(-8, -2, 1.5, 0, Math.PI * 2);
-        ctx.fillStyle = `hsla(120, 90%, 55%, ${led})`; ctx.fill();
-        ctx.beginPath(); ctx.arc(8, -2, 1.5, 0, Math.PI * 2);
-        ctx.fillStyle = `hsla(120, 90%, 55%, ${1 - led})`; ctx.fill();
+        ctx.beginPath(); ctx.arc(-14, -5, 1.2, 0, Math.PI * 2);
+        ctx.fillStyle = `hsla(120, 90%, 50%, ${led})`; ctx.fill();
+        ctx.shadowColor = `hsla(120, 90%, 50%, ${led * 0.5})`;
+        ctx.shadowBlur = 4; ctx.fill(); ctx.shadowBlur = 0;
+        ctx.beginPath(); ctx.arc(14, -5, 1.2, 0, Math.PI * 2);
+        ctx.fillStyle = `hsla(120, 90%, 50%, ${1 - led})`; ctx.fill();
+        ctx.shadowColor = `hsla(120, 90%, 50%, ${(1 - led) * 0.5})`;
+        ctx.shadowBlur = 4; ctx.fill(); ctx.shadowBlur = 0;
       } else {
-        const led1 = Math.sin(t * 0.1) > 0 ? 0.9 : 0.2;
-        ctx.beginPath(); ctx.arc(-8, -2, 1.5, 0, Math.PI * 2);
-        ctx.fillStyle = `hsla(120, 90%, 55%, ${led1})`; ctx.fill();
-        ctx.beginPath(); ctx.arc(8, -2, 1.5, 0, Math.PI * 2);
-        ctx.fillStyle = `hsla(0, 90%, 55%, ${1 - led1})`; ctx.fill();
+        const led1 = Math.sin(t * 0.1) > 0 ? 0.9 : 0.15;
+        ctx.beginPath(); ctx.arc(-14, -5, 1.2, 0, Math.PI * 2);
+        ctx.fillStyle = `hsla(120, 90%, 50%, ${led1})`; ctx.fill();
+        ctx.beginPath(); ctx.arc(14, -5, 1.2, 0, Math.PI * 2);
+        ctx.fillStyle = `hsla(0, 90%, 50%, ${1 - led1})`; ctx.fill();
       }
+
+      // ── Front direction indicator ──
+      ctx.beginPath();
+      ctx.moveTo(0, -8);
+      ctx.lineTo(-2, -6);
+      ctx.lineTo(2, -6);
+      ctx.closePath();
+      ctx.fillStyle = `${accentColor} 0.5)`;
+      ctx.fill();
 
       ctx.restore();
     };
