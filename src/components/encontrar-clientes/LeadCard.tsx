@@ -160,89 +160,69 @@ export function LeadCard({ lead, onGenerateMessage, onSaveLead }: LeadCardProps)
   };
 
   return (
-    <Card className="group hover:shadow-xl hover:border-primary/40 transition-all duration-200 overflow-hidden bg-gradient-to-br from-card via-card to-muted/20 border-border/60">
-      <CardContent className="p-3 space-y-3">
-        {/* Header - Compacto */}
-        <div className="flex items-start justify-between gap-2">
-          <div className="flex items-center gap-2.5">
-            <div className="w-10 h-10 rounded-lg bg-gradient-to-br from-primary/20 to-primary/5 flex items-center justify-center shrink-0 border border-primary/10">
-              <Building2 className="h-5 w-5 text-primary" />
-            </div>
-            <div className="flex-1 min-w-0">
-              <h3 className="font-semibold text-foreground text-sm truncate">{lead.nome}</h3>
-              <div className="flex flex-wrap items-center gap-1 mt-0.5">
-                <Badge variant="secondary" className="text-[10px] px-1.5 py-0">
-                  {lead.segmento}
-                </Badge>
-                {getConfiancaBadge()}
-              </div>
+    <Card className="group hover:shadow-lg hover:border-primary/30 transition-all duration-200 overflow-hidden bg-gradient-to-br from-card via-card to-muted/20 border-border/60">
+      <CardContent className="p-2.5 space-y-2">
+        {/* Header */}
+        <div className="flex items-center gap-2">
+          <div className="w-8 h-8 rounded-md bg-gradient-to-br from-primary/20 to-primary/5 flex items-center justify-center shrink-0 border border-primary/10">
+            <Building2 className="h-4 w-4 text-primary" />
+          </div>
+          <div className="flex-1 min-w-0">
+            <h3 className="font-semibold text-foreground text-xs leading-tight break-words line-clamp-2">{lead.nome}</h3>
+            <div className="flex flex-wrap items-center gap-1 mt-0.5">
+              <Badge variant="secondary" className="text-[9px] px-1 py-0 h-3.5">{lead.segmento}</Badge>
+              {getConfiancaBadge()}
             </div>
           </div>
         </div>
 
-        {/* Alerta para nome estimado - Compacto */}
+        {/* Alerta nome estimado */}
         {lead.confiancaNome === 'baixa' && (
-          <div className="flex items-center gap-1.5 text-[10px] text-orange-600 bg-orange-500/5 px-2 py-1.5 rounded-md border border-orange-500/10">
-            <AlertTriangle className="h-3 w-3 shrink-0" />
+          <div className="flex items-center gap-1 text-[9px] text-orange-600 bg-orange-500/5 px-1.5 py-1 rounded border border-orange-500/10">
+            <AlertTriangle className="h-2.5 w-2.5 shrink-0" />
             <span>Nome estimado - confirme no Maps</span>
           </div>
         )}
 
-        {/* Info - Compacto */}
-        <div className="space-y-1.5">
-          <div className="flex items-center gap-1.5 text-xs text-muted-foreground">
-            <MapPin className="h-3.5 w-3.5 shrink-0" />
+        {/* Info */}
+        <div className="space-y-1">
+          <div className="flex items-center gap-1 text-[11px] text-muted-foreground">
+            <MapPin className="h-3 w-3 shrink-0" />
             <span className="truncate">{lead.localizacao}</span>
           </div>
-          
           {lead.endereco && (
-            <div className="flex items-center gap-1.5 text-xs text-muted-foreground">
-              <Map className="h-3.5 w-3.5 shrink-0" />
+            <div className="flex items-center gap-1 text-[11px] text-muted-foreground">
+              <Map className="h-3 w-3 shrink-0" />
               <span className="truncate">{lead.endereco}</span>
             </div>
           )}
-          
-          {/* Telefone - só mostra se for público/real */}
-          <div className="flex items-center gap-1.5 text-xs text-muted-foreground">
-            <Phone className="h-3.5 w-3.5 shrink-0" />
+          <div className="flex items-center gap-1 text-[11px] text-muted-foreground">
+            <Phone className="h-3 w-3 shrink-0" />
             {lead.telefone && lead.telefonePublico ? (
               <span className="text-foreground font-medium">{lead.telefone}</span>
             ) : (
-              <span className="italic text-muted-foreground/60 text-[11px]">Ver no Maps</span>
+              <span className="italic text-muted-foreground/60 text-[10px]">Ver no Maps</span>
             )}
           </div>
-
           {(lead.temSite || lead.temInstagram || lead.linkPublico) && (
-            <div className="flex items-center gap-2 flex-wrap pt-0.5">
+            <div className="flex items-center gap-1.5 flex-wrap">
               {lead.temSite && (
-                <div className="flex items-center gap-1 text-[10px] text-emerald-600">
-                  <Globe className="h-3 w-3" />
-                  <span>Site</span>
-                </div>
+                <span className="flex items-center gap-0.5 text-[9px] text-emerald-600"><Globe className="h-2.5 w-2.5" />Site</span>
               )}
               {lead.temInstagram && (
-                <div className="flex items-center gap-1 text-[10px] text-pink-600">
-                  <Instagram className="h-3 w-3" />
-                  <span>Instagram</span>
-                </div>
+                <span className="flex items-center gap-0.5 text-[9px] text-pink-600"><Instagram className="h-2.5 w-2.5" />Insta</span>
               )}
               {lead.linkPublico && (
-                <a 
-                  href={lead.linkPublico} 
-                  target="_blank" 
-                  rel="noopener noreferrer"
-                  className="flex items-center gap-1 text-[10px] text-primary hover:underline"
-                >
-                  <ExternalLink className="h-3 w-3" />
-                  <span>Link</span>
+                <a href={lead.linkPublico} target="_blank" rel="noopener noreferrer" className="flex items-center gap-0.5 text-[9px] text-primary hover:underline">
+                  <ExternalLink className="h-2.5 w-2.5" />Link
                 </a>
               )}
             </div>
           )}
         </div>
 
-        {/* Mini Mapa do Google - Menor */}
-        <div className="relative w-full h-24 rounded-lg overflow-hidden border border-border/50 bg-muted/20">
+        {/* Mini Map */}
+        <div className="relative w-full h-20 rounded-md overflow-hidden border border-border/50 bg-muted/20">
           {!mapError ? (
             <iframe
               src={googleMapsEmbedUrl}
@@ -253,56 +233,29 @@ export function LeadCard({ lead, onGenerateMessage, onSaveLead }: LeadCardProps)
               referrerPolicy="no-referrer-when-downgrade"
               title={`Mapa de ${lead.nome}`}
               onError={() => setMapError(true)}
-              className="rounded-lg"
+              className="rounded-md"
             />
           ) : (
-            <div className="flex flex-col items-center justify-center h-full text-muted-foreground text-xs">
-              <Map className="h-6 w-6 mb-1 opacity-40" />
-              <span>Abrir no Google Maps</span>
+            <div className="flex flex-col items-center justify-center h-full text-muted-foreground text-[10px]">
+              <Map className="h-5 w-5 mb-0.5 opacity-40" />
+              <span>Abrir no Maps</span>
             </div>
           )}
         </div>
 
-        {/* Actions - Linha única compacta */}
-        <div className="flex gap-1.5 pt-1">
-          <Button
-            variant="default"
-            size="sm"
-            className="flex-1 gap-1.5 h-8 text-xs"
-            onClick={() => onGenerateMessage(lead)}
-          >
-            <MessageCircle className="h-3.5 w-3.5" />
-            Mensagem
+        {/* Actions */}
+        <div className="flex gap-1">
+          <Button variant="default" size="sm" className="flex-1 gap-1 h-7 text-[11px]" onClick={() => onGenerateMessage(lead)}>
+            <MessageCircle className="h-3 w-3" /> Mensagem
           </Button>
-          
-          <Button
-            variant="outline"
-            size="sm"
-            className="h-8 w-8 p-0"
-            onClick={() => window.open(googleMapsSearchUrl, '_blank')}
-            title="Ampliar mapa"
-          >
-            <Map className="h-3.5 w-3.5" />
+          <Button variant="outline" size="sm" className="h-7 w-7 p-0" onClick={() => window.open(googleMapsSearchUrl, '_blank')} title="Ampliar mapa">
+            <Map className="h-3 w-3" />
           </Button>
-          
-          <Button
-            variant="outline"
-            size="sm"
-            className="h-8 w-8 p-0"
-            onClick={copyData}
-            title="Copiar dados"
-          >
-            <Copy className="h-3.5 w-3.5" />
+          <Button variant="outline" size="sm" className="h-7 w-7 p-0" onClick={copyData} title="Copiar dados">
+            <Copy className="h-3 w-3" />
           </Button>
-          
-          <Button
-            variant="outline"
-            size="sm"
-            className="h-8 w-8 p-0"
-            onClick={() => onSaveLead(lead)}
-            title="Salvar lead"
-          >
-            <Bookmark className="h-3.5 w-3.5" />
+          <Button variant="outline" size="sm" className="h-7 w-7 p-0" onClick={() => onSaveLead(lead)} title="Salvar lead">
+            <Bookmark className="h-3 w-3" />
           </Button>
         </div>
       </CardContent>
