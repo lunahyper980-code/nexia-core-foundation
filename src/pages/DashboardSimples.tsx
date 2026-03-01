@@ -257,8 +257,8 @@ export default function DashboardSimples() {
                 <AreaChart data={chartData} margin={{ top: 10, right: 10, left: 0, bottom: 0 }}>
                   <defs>
                     <linearGradient id="colorValue" x1="0" y1="0" x2="0" y2="1">
-                      <stop offset="5%" stopColor="hsl(268, 65%, 58%)" stopOpacity={0.3}/>
-                      <stop offset="95%" stopColor="hsl(268, 65%, 58%)" stopOpacity={0}/>
+                     <stop offset="5%" stopColor="hsla(263, 80%, 25%, 0.95)" stopOpacity={0.4}/>
+                     <stop offset="95%" stopColor="hsla(263, 80%, 25%, 0.95)" stopOpacity={0}/>
                     </linearGradient>
                   </defs>
                   <CartesianGrid strokeDasharray="3 3" stroke="hsl(230, 12%, 18%)" />
