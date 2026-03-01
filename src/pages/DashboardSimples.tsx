@@ -290,8 +290,8 @@ export default function DashboardSimples() {
                   <Area 
                     type="monotone" 
                     dataKey="value" 
-                    stroke="hsl(268, 65%, 58%)" 
-                    strokeWidth={2}
+                    stroke="hsla(263, 80%, 25%, 0.95)" 
+                    strokeWidth={2.5}
                     fillOpacity={1}
                     fill="url(#colorValue)"
                   />
