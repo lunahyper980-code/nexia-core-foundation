@@ -27,7 +27,6 @@ interface ApproachModalProps {
   lead: Lead | null;
 }
 
-// Mensagens de Venda Consultiva - Foco em conexão e diagnóstico
 const getConsultiveMessages = (lead: Lead) => ({
   whatsapp: [
     `Oi, tudo bem? Vi o perfil da ${lead.nome} e achei interessante o trabalho de vocês com ${lead.segmento}. Como está o movimento por aí?`,
@@ -40,8 +39,8 @@ const getConsultiveMessages = (lead: Lead) => ({
     `Parabéns pelo trabalho com ${lead.segmento}! Como está sendo a experiência no digital?`
   ],
   email: [
-    `Assunto: Uma observação sobre ${lead.segmento} em ${lead.localizacao}\n\nOlá, equipe da ${lead.nome}!\n\nMeu nome é [seu nome] e trabalho ajudando negócios locais a crescerem no digital.\n\nPercebi que vocês atuam com ${lead.segmento} em ${lead.localizacao} e tenho algumas ideias que podem ser úteis para o momento de vocês.\n\nPosso compartilhar em uma conversa rápida?\n\nAbraço!`,
-    `Assunto: Dúvida rápida sobre a ${lead.nome}\n\nOi, tudo bem?\n\nEstava pesquisando sobre ${lead.segmento} em ${lead.localizacao} e encontrei vocês.\n\nFiquei curioso: como vocês lidam com a captação de clientes hoje? É mais boca a boca ou usam alguma estratégia digital?\n\nPergunto porque trabalho nessa área e gosto de entender como cada negócio funciona.\n\nAbs!`
+    `Assunto: Uma observação sobre ${lead.segmento} em ${lead.localizacao}\n\nOlá, equipe da ${lead.nome}!\n\nMeu nome é [seu nome] e trabalho ajudando negócios locais a crescerem no digital.\n\nPercebi que vocês atuam com ${lead.segmento} em ${lead.localizacao} e tenho algumas ideias que podem ser úteis.\n\nPosso compartilhar em uma conversa rápida?\n\nAbraço!`,
+    `Assunto: Dúvida rápida sobre a ${lead.nome}\n\nOi, tudo bem?\n\nEstava pesquisando sobre ${lead.segmento} em ${lead.localizacao} e encontrei vocês.\n\nFiquei curioso: como vocês lidam com a captação de clientes hoje?\n\nPergunto porque trabalho nessa área e gosto de entender como cada negócio funciona.\n\nAbs!`
   ],
   ligacao: [
     `"Oi, [nome do contato]? Tudo bem? Aqui é [seu nome], tô ligando rapidinho."`,
@@ -51,7 +50,6 @@ const getConsultiveMessages = (lead: Lead) => ({
   ]
 });
 
-// Mensagens de Venda Direta - Foco em oferta objetiva
 const getDirectMessages = (lead: Lead) => ({
   whatsapp: [
     `Olá! Sou especialista em presença digital para ${lead.segmento}. Tenho uma proposta especial para negócios de ${lead.localizacao}. Posso te enviar?`,
@@ -75,22 +73,23 @@ const getDirectMessages = (lead: Lead) => ({
   ]
 });
 
+const channelConfig = {
+  whatsapp: { title: 'WhatsApp', icon: MessageCircle, color: 'text-emerald-500', border: 'border-emerald-500/20', bg: 'bg-emerald-500/5' },
+  instagram: { title: 'Instagram DM', icon: Instagram, color: 'text-pink-500', border: 'border-pink-500/20', bg: 'bg-pink-500/5' },
+  email: { title: 'E-mail', icon: Mail, color: 'text-blue-500', border: 'border-blue-500/20', bg: 'bg-blue-500/5' },
+  ligacao: { title: 'Roteiro de Ligação', icon: Phone, color: 'text-orange-500', border: 'border-orange-500/20', bg: 'bg-orange-500/5' },
+} as const;
+
+type ChannelKey = keyof typeof channelConfig;
+
 export function ApproachModal({ open, onOpenChange, lead }: ApproachModalProps) {
   const [activeTab, setActiveTab] = useState<'consultiva' | 'direta'>('consultiva');
   const [translateModalOpen, setTranslateModalOpen] = useState(false);
   const [messageToTranslate, setMessageToTranslate] = useState('');
-  const [messageType, setMessageType] = useState<'whatsapp' | 'instagram' | 'email' | 'ligacao'>('whatsapp');
+  const [messageType, setMessageType] = useState<ChannelKey>('whatsapp');
 
-  const consultiveMessages = useMemo(() => {
-    if (!lead) return null;
-    return getConsultiveMessages(lead);
-  }, [lead]);
-
-  const directMessages = useMemo(() => {
-    if (!lead) return null;
-    return getDirectMessages(lead);
-  }, [lead]);
-
+  const consultiveMessages = useMemo(() => lead ? getConsultiveMessages(lead) : null, [lead]);
+  const directMessages = useMemo(() => lead ? getDirectMessages(lead) : null, [lead]);
   const currentMessages = activeTab === 'consultiva' ? consultiveMessages : directMessages;
 
   const copyToClipboard = (text: string) => {
@@ -98,36 +97,7 @@ export function ApproachModal({ open, onOpenChange, lead }: ApproachModalProps) 
     toast.success('Mensagem copiada!');
   };
 
-  const openWhatsApp = (message: string) => {
-    if (lead?.telefone) {
-      const phone = lead.telefone.replace(/\D/g, '');
-      const url = `https://wa.me/55${phone}?text=${encodeURIComponent(message)}`;
-      window.open(url, '_blank');
-    } else {
-      copyToClipboard(message);
-      toast.info('Telefone não disponível. Mensagem copiada!');
-    }
-  };
-
-  const openInstagram = (message: string) => {
-    copyToClipboard(message);
-    toast.success('Mensagem copiada! Cole no Instagram DM.');
-    window.open('https://instagram.com/direct/inbox', '_blank');
-  };
-
-  const openEmail = (message: string) => {
-    // Extrai o assunto da primeira linha se existir
-    const lines = message.split('\n');
-    const subjectMatch = lines[0].match(/^Assunto:\s*(.+)$/);
-    const subject = subjectMatch ? encodeURIComponent(subjectMatch[1]) : '';
-    const body = subjectMatch 
-      ? encodeURIComponent(lines.slice(1).join('\n').trim())
-      : encodeURIComponent(message);
-    
-    window.open(`mailto:?subject=${subject}&body=${body}`, '_blank');
-  };
-
-  const handleTranslate = (message: string, type: 'whatsapp' | 'instagram' | 'email' | 'ligacao') => {
+  const handleTranslate = (message: string, type: ChannelKey) => {
     setMessageToTranslate(message);
     setMessageType(type);
     setTranslateModalOpen(true);
@@ -136,236 +106,103 @@ export function ApproachModal({ open, onOpenChange, lead }: ApproachModalProps) 
   const openGoogleMaps = () => {
     if (!lead) return;
     const query = encodeURIComponent(`${lead.nome} ${lead.localizacao}`);
-    const url = `https://www.google.com/maps/search/${query}`;
-    window.open(url, '_blank');
-    toast.success('Abrindo no Google Maps...');
+    window.open(`https://www.google.com/maps/search/${query}`, '_blank');
   };
 
   if (!lead || !currentMessages) return null;
 
-  const MessageCard = ({ 
-    message, 
-    index, 
-    type 
-  }: { 
-    message: string; 
-    index: number; 
-    type: 'whatsapp' | 'instagram' | 'email' | 'ligacao';
-  }) => (
-    <div className="group relative bg-card/50 hover:bg-card border border-border/50 hover:border-primary/20 rounded-xl p-4 transition-all duration-200">
-      <p className="text-sm text-foreground leading-relaxed whitespace-pre-wrap pr-2 mb-4">
-        {message}
-      </p>
-      
-      {/* Action Buttons */}
-      <div className="flex flex-wrap gap-2">
-        <Button
-          variant="outline"
-          size="sm"
-          className="h-8 gap-1.5 text-xs"
-          onClick={() => copyToClipboard(message)}
-        >
-          <Copy className="h-3.5 w-3.5" />
-          Copiar
-        </Button>
-        
-        <Button
-          variant="outline"
-          size="sm"
-          className="h-8 gap-1.5 text-xs"
-          onClick={() => handleTranslate(message, type)}
-        >
-          <Languages className="h-3.5 w-3.5" />
-          Traduzir
-        </Button>
-
-        <Button
-          variant="outline"
-          size="sm"
-          className="h-8 gap-1.5 text-xs text-primary border-primary/30 hover:bg-primary/10"
-          onClick={openGoogleMaps}
-        >
-          <MapPin className="h-3.5 w-3.5" />
-          Ver no Maps
-        </Button>
-      </div>
-    </div>
-  );
-
-  const MessageSection = ({ 
-    title, 
-    icon: Icon, 
-    messages, 
-    type,
-    iconColor 
-  }: { 
-    title: string; 
-    icon: React.ElementType; 
-    messages: string[]; 
-    type: 'whatsapp' | 'instagram' | 'email' | 'ligacao';
-    iconColor: string;
-  }) => (
-    <div className="space-y-3">
-      <div className="flex items-center gap-2">
-        <Icon className={`h-4 w-4 ${iconColor}`} />
-        <h4 className="text-sm font-medium text-foreground">{title}</h4>
-        <Badge variant="outline" className="text-[10px] ml-auto">
-          {messages.length} opções
-        </Badge>
-      </div>
-      <div className="space-y-3">
-        {messages.map((msg, idx) => (
-          <MessageCard key={idx} message={msg} index={idx} type={type} />
-        ))}
-      </div>
-    </div>
-  );
+  const channels: ChannelKey[] = ['whatsapp', 'instagram', 'email', 'ligacao'];
 
   return (
     <>
       <Dialog open={open} onOpenChange={onOpenChange}>
-        <DialogContent 
-          className="max-w-[95vw] md:max-w-[85vw] lg:max-w-4xl h-[95vh] md:h-[90vh] p-0 gap-0 overflow-hidden bg-background/95 backdrop-blur-xl border-primary/10"
+        <DialogContent
+          className="max-w-[95vw] sm:max-w-lg md:max-w-2xl max-h-[85vh] p-0 gap-0 overflow-hidden"
           hideCloseButton
         >
-          {/* Header */}
-          <DialogHeader className="shrink-0 px-4 md:px-6 pt-4 md:pt-6 pb-4 border-b border-border/50 space-y-2">
-            <div className="flex items-start justify-between gap-4">
-              <div className="space-y-1">
-                <DialogTitle className="text-xl md:text-2xl font-bold text-foreground">
-                  Estratégias de Abordagem
-                </DialogTitle>
-                <DialogDescription className="text-sm md:text-base">
-                  <span className="bg-gradient-to-r from-primary to-accent bg-clip-text text-transparent font-medium">
-                    Escolha o estilo de abordagem ideal para este lead
-                  </span>
-                </DialogDescription>
+          {/* Compact Header */}
+          <div className="shrink-0 px-4 pt-4 pb-3 border-b border-border/50">
+            <div className="flex items-center justify-between gap-3">
+              <div className="min-w-0">
+                <DialogHeader className="space-y-0">
+                  <DialogTitle className="text-base font-bold truncate">
+                    Abordagem — {lead.nome}
+                  </DialogTitle>
+                  <DialogDescription className="text-xs text-muted-foreground truncate">
+                    {lead.segmento} · {lead.localizacao}
+                  </DialogDescription>
+                </DialogHeader>
               </div>
-              <Button
-                variant="ghost"
-                size="icon"
-                className="shrink-0 h-8 w-8 rounded-full"
-                onClick={() => onOpenChange(false)}
-              >
+              <Button variant="ghost" size="icon" className="shrink-0 h-7 w-7 rounded-full" onClick={() => onOpenChange(false)}>
                 <X className="h-4 w-4" />
               </Button>
             </div>
 
-            {/* Lead Info Badge */}
-            <div className="flex items-center gap-2 pt-1">
-              <Badge variant="secondary" className="gap-1.5 text-xs">
-                <Target className="h-3 w-3" />
-                {lead.nome}
-              </Badge>
-              <Badge variant="outline" className="text-xs text-muted-foreground">
-                {lead.segmento}
-              </Badge>
+            {/* Compact Tabs */}
+            <Tabs value={activeTab} onValueChange={(v) => setActiveTab(v as 'consultiva' | 'direta')} className="mt-3">
+              <TabsList className="grid grid-cols-2 h-9 p-0.5">
+                <TabsTrigger value="consultiva" className="gap-1.5 text-xs h-8 data-[state=active]:shadow-sm">
+                  <Sparkles className="h-3.5 w-3.5" />
+                  Consultiva
+                </TabsTrigger>
+                <TabsTrigger value="direta" className="gap-1.5 text-xs h-8 data-[state=active]:shadow-sm">
+                  <Handshake className="h-3.5 w-3.5" />
+                  Direta
+                </TabsTrigger>
+              </TabsList>
+            </Tabs>
+          </div>
+
+          {/* Scrollable Content */}
+          <ScrollArea className="flex-1 max-h-[calc(85vh-120px)]">
+            <div className="px-4 py-3 space-y-4">
+              {channels.map((channelKey) => {
+                const cfg = channelConfig[channelKey];
+                const Icon = cfg.icon;
+                const msgs = currentMessages[channelKey] || [];
+                if (msgs.length === 0) return null;
+
+                return (
+                  <div key={channelKey} className="space-y-2">
+                    {/* Channel Header */}
+                    <div className="flex items-center gap-2">
+                      <Icon className={`h-3.5 w-3.5 ${cfg.color}`} />
+                      <span className="text-xs font-semibold text-foreground">{cfg.title}</span>
+                      <Badge variant="outline" className="text-[9px] h-4 ml-auto">{msgs.length}</Badge>
+                    </div>
+
+                    {/* Messages */}
+                    <div className="space-y-2">
+                      {msgs.map((msg, idx) => (
+                        <div
+                          key={idx}
+                          className={`rounded-lg border ${cfg.border} ${cfg.bg} p-3 transition-colors hover:border-primary/30`}
+                        >
+                          <p className="text-xs text-foreground/90 leading-relaxed whitespace-pre-wrap line-clamp-4">
+                            {msg}
+                          </p>
+                          <div className="flex gap-1.5 mt-2">
+                            <Button variant="ghost" size="sm" className="h-6 px-2 text-[10px] gap-1" onClick={() => copyToClipboard(msg)}>
+                              <Copy className="h-3 w-3" /> Copiar
+                            </Button>
+                            <Button variant="ghost" size="sm" className="h-6 px-2 text-[10px] gap-1" onClick={() => handleTranslate(msg, channelKey)}>
+                              <Languages className="h-3 w-3" /> Traduzir
+                            </Button>
+                            <Button variant="ghost" size="sm" className="h-6 px-2 text-[10px] gap-1 text-primary ml-auto" onClick={openGoogleMaps}>
+                              <MapPin className="h-3 w-3" /> Maps
+                            </Button>
+                          </div>
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+                );
+              })}
             </div>
-          </DialogHeader>
-
-          {/* Tabs */}
-          <Tabs 
-            value={activeTab} 
-            onValueChange={(v) => setActiveTab(v as 'consultiva' | 'direta')}
-            className="flex flex-col flex-1 min-h-0"
-          >
-            <TabsList className="shrink-0 grid grid-cols-2 mx-4 md:mx-6 mt-4 h-12 p-1 bg-muted/50">
-              <TabsTrigger 
-                value="consultiva" 
-                className="gap-2 data-[state=active]:bg-background data-[state=active]:shadow-sm"
-              >
-                <Sparkles className="h-4 w-4" />
-                <span className="hidden sm:inline">Venda</span> Consultiva
-              </TabsTrigger>
-              <TabsTrigger 
-                value="direta"
-                className="gap-2 data-[state=active]:bg-background data-[state=active]:shadow-sm"
-              >
-                <Handshake className="h-4 w-4" />
-                <span className="hidden sm:inline">Venda</span> Direta
-              </TabsTrigger>
-            </TabsList>
-
-            {/* Tab Description */}
-            <div className="shrink-0 px-4 md:px-6 py-3 text-xs text-muted-foreground bg-muted/30 mx-4 md:mx-6 mt-3 rounded-lg">
-              {activeTab === 'consultiva' ? (
-                <p>💡 <strong>Foco em conexão, curiosidade e diagnóstico.</strong> Ideal para criar relacionamento antes de oferecer serviços.</p>
-              ) : (
-                <p>🎯 <strong>Foco em oferta objetiva e CTA direto.</strong> Ideal quando você quer ir direto ao ponto.</p>
-              )}
-            </div>
-
-            {/* Content */}
-            <ScrollArea className="flex-1 min-h-0">
-              <div className="px-4 md:px-6 py-4 space-y-6">
-                <TabsContent value="consultiva" className="mt-0 space-y-6">
-                  <MessageSection 
-                    title="WhatsApp" 
-                    icon={MessageCircle} 
-                    messages={consultiveMessages?.whatsapp || []} 
-                    type="whatsapp"
-                    iconColor="text-emerald-500"
-                  />
-                  <MessageSection 
-                    title="Instagram DM" 
-                    icon={Instagram} 
-                    messages={consultiveMessages?.instagram || []} 
-                    type="instagram"
-                    iconColor="text-pink-500"
-                  />
-                  <MessageSection 
-                    title="E-mail" 
-                    icon={Mail} 
-                    messages={consultiveMessages?.email || []} 
-                    type="email"
-                    iconColor="text-blue-500"
-                  />
-                  <MessageSection 
-                    title="Roteiro de Ligação" 
-                    icon={Phone} 
-                    messages={consultiveMessages?.ligacao || []} 
-                    type="ligacao"
-                    iconColor="text-orange-500"
-                  />
-                </TabsContent>
-
-                <TabsContent value="direta" className="mt-0 space-y-6">
-                  <MessageSection 
-                    title="WhatsApp" 
-                    icon={MessageCircle} 
-                    messages={directMessages?.whatsapp || []} 
-                    type="whatsapp"
-                    iconColor="text-emerald-500"
-                  />
-                  <MessageSection 
-                    title="Instagram DM" 
-                    icon={Instagram} 
-                    messages={directMessages?.instagram || []} 
-                    type="instagram"
-                    iconColor="text-pink-500"
-                  />
-                  <MessageSection 
-                    title="E-mail" 
-                    icon={Mail} 
-                    messages={directMessages?.email || []} 
-                    type="email"
-                    iconColor="text-blue-500"
-                  />
-                  <MessageSection 
-                    title="Roteiro de Ligação" 
-                    icon={Phone} 
-                    messages={directMessages?.ligacao || []} 
-                    type="ligacao"
-                    iconColor="text-orange-500"
-                  />
-                </TabsContent>
-              </div>
-            </ScrollArea>
-          </Tabs>
+          </ScrollArea>
         </DialogContent>
       </Dialog>
 
-      {/* Translate Modal */}
       <TranslateApproachModal
         open={translateModalOpen}
         onOpenChange={setTranslateModalOpen}
