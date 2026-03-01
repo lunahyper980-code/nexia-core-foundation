@@ -4,7 +4,7 @@ import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { toast } from 'sonner';
 import { useState } from 'react';
-import { GenerateMessageModal } from '@/components/encontrar-clientes/GenerateMessageModal';
+import { ApproachModal } from '@/components/encontrar-clientes/ApproachModal';
 import type { Lead as LeadCardLead } from '@/components/encontrar-clientes/LeadCard';
 
 interface Lead {
@@ -61,7 +61,7 @@ export function RadarResults({ leads, onNewSearch }: RadarResultsProps) {
         ))}
       </div>
 
-      <GenerateMessageModal
+      <ApproachModal
         open={messageModalOpen}
         onOpenChange={setMessageModalOpen}
         lead={modalLead}
