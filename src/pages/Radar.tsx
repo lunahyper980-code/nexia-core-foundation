@@ -97,20 +97,14 @@ export default function Radar() {
               <RadarIdleAnimation />
             </div>
 
-            {/* Form card - separate, below */}
-            <div className="max-w-md mx-auto w-full">
-              <Card className="p-4 sm:p-5 space-y-3">
-                <div className="text-center">
-                  <h2 className="text-sm font-semibold text-foreground">Onde você está?</h2>
-                  <p className="text-[11px] text-muted-foreground mt-0.5">
-                    Informe sua localidade para iniciar o escaneamento
-                  </p>
-                </div>
+            {/* Form card - compact & translucent */}
+            <div className="max-w-sm mx-auto w-full">
+              <Card className="p-3 space-y-2 bg-card/60 backdrop-blur-sm border-border/30">
+                <h2 className="text-xs font-semibold text-foreground text-center">Onde você está?</h2>
 
-                <div className="space-y-2.5">
-                  <div className="space-y-1.5 text-left">
-                    <Label htmlFor="localidade" className="flex items-center gap-1.5 text-[10px] font-medium uppercase tracking-wider text-muted-foreground/80">
-                      <MapPin className="h-3 w-3 text-primary" />
+                <div className="flex gap-2 items-end">
+                  <div className="flex-1 space-y-1 text-left">
+                    <Label htmlFor="localidade" className="text-[9px] font-medium uppercase tracking-wider text-muted-foreground/70">
                       Cidade / Bairro
                     </Label>
                     <Input
@@ -119,17 +113,16 @@ export default function Radar() {
                       value={localidade}
                       onChange={(e) => setLocalidade(e.target.value)}
                       onKeyDown={(e) => e.key === 'Enter' && handleScan()}
-                      className="h-10"
+                      className="h-9 text-sm"
                     />
                   </div>
-
                   <Button
-                    className="w-full gap-2"
-                    size="default"
+                    className="gap-1.5 h-9 px-4 shrink-0"
+                    size="sm"
                     onClick={handleScan}
                     disabled={!localidade.trim()}
                   >
-                    <Zap className="h-4 w-4" />
+                    <Zap className="h-3.5 w-3.5" />
                     Ativar Radar
                   </Button>
                 </div>
