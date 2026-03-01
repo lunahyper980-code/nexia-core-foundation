@@ -50,61 +50,16 @@ serve(async (req) => {
 
     console.log(`Generating leads for: ${nicho} in ${cidade}`);
 
-const prompt = `Você é um especialista em prospecção de negócios locais brasileiros. Gere uma lista EXTENSA de empresas PLAUSÍVEIS usando estratégia de expansão em camadas.
-
-REGRAS CRÍTICAS:
-- NUNCA INVENTE TELEFONE - sempre null
-- NUNCA INVENTE URLS - linkPublico sempre null
-- NUNCA INVENTE ENDEREÇOS ESPECÍFICOS - apenas bairros/regiões
-- GERE EXATAMENTE 18-22 leads para garantir volume
-
-NICHO PRINCIPAL: ${nicho}
-CIDADE: ${cidade}
-${possuiSite ? 'Preferência: empresas que provavelmente têm site' : ''}
-${possuiInstagram ? 'Preferência: empresas que provavelmente têm Instagram' : ''}
-
-ESTRATÉGIA DE EXPANSÃO (OBRIGATÓRIA):
-
-CAMADA 1 - LEADS DIRETOS (6-8 leads):
-- Empresas exatamente do nicho "${nicho}"
-- Nomes realistas e variados para ${cidade}
-- Diferentes bairros/regiões da cidade
-
-CAMADA 2 - LEADS SIMILARES (5-7 leads):
-- Negócios relacionados ou complementares ao nicho
-- Ex: Se nicho é "barbearia", incluir "salão masculino", "estúdio de barba", "barbearia premium"
-- Ex: Se nicho é "restaurante", incluir "bistrô", "lanchonete gourmet", "casa de massas"
-
-CAMADA 3 - OPORTUNIDADES DE DIGITALIZAÇÃO (5-7 leads):
-- Empresas com baixa presença digital (temSite: false, temInstagram: false)
-- Negócios tradicionais que se beneficiariam de site/app
-- Comércios locais estabelecidos mas sem presença online forte
-
-Gere exatamente 18-22 leads variados. Retorne JSON:
-{
-  "leads": [
-    {
-      "nome": "Nome plausível e criativo da empresa",
-      "segmento": "Segmento específico",
-      "localizacao": "${cidade}",
-      "endereco": "Bairro/Região plausível",
-      "telefone": null,
-      "telefonePublico": false,
-      "temSite": true/false,
-      "temInstagram": true/false,
-      "linkPublico": null,
-      "confiancaNome": "alta|media|baixa",
-      "camada": "direto|similar|oportunidade"
-    }
-  ]
-}`;
+const prompt = `Gere 12 empresas plausíveis do nicho "${nicho}" em ${cidade}. Telefone e linkPublico sempre null. Retorne JSON:
+{"leads":[{"nome":"...","segmento":"...","localizacao":"${cidade}","endereco":"Bairro","telefone":null,"telefonePublico":false,"temSite":true/false,"temInstagram":true/false,"linkPublico":null,"confiancaNome":"alta|media|baixa","camada":"direto|similar|oportunidade"}]}
+Inclua mix: 5 diretos do nicho, 4 similares, 3 sem presença digital.${possuiSite ? ' Priorize empresas com site.' : ''}${possuiInstagram ? ' Priorize empresas com Instagram.' : ''}`;
 
     const response = await fetch(`${GEMINI_API_URL}?key=${GEMINI_API_KEY}`, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({
         contents: [{ role: 'user', parts: [{ text: prompt }] }],
-        generationConfig: { maxOutputTokens: 4000, temperature: 0.8 },
+        generationConfig: { maxOutputTokens: 2000, temperature: 0.7 },
       }),
     });
 
