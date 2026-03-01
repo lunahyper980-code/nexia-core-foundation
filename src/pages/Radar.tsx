@@ -135,7 +135,7 @@ export default function Radar() {
                     </Label>
                     <Input
                       id="localidade"
-                      placeholder="Ex: Araruama, Iguabinha"
+                      placeholder="Ex: São Paulo, Pinheiros"
                       value={localidade}
                       onChange={(e) => setLocalidade(e.target.value)}
                       onKeyDown={(e) => e.key === 'Enter' && handleScan()}
