@@ -23,7 +23,7 @@ export function AppLayout({ children, title, hideBreadcrumb = false }: AppLayout
   const isTablet = breakpoint === 'tablet';
 
   return (
-    <div className="min-h-screen bg-background w-full max-w-full overflow-x-hidden">
+    <div className="min-h-screen bg-grid-pattern w-full max-w-full overflow-x-hidden">
       {/* Desktop/Tablet Sidebar */}
       {!isMobile && <AppSidebar forceCollapsed={isTablet} />}
 
