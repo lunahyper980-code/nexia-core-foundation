@@ -11,6 +11,7 @@ import {
   History,
   Menu,
   User,
+  Radar,
 } from 'lucide-react';
 import { LucideIcon } from 'lucide-react';
 
@@ -26,6 +27,7 @@ interface NavItem {
 const simpleNavItems: NavItem[] = [
   { label: 'Dashboard', path: '/dashboard', icon: LayoutDashboard, mode: 'simple' },
   { label: 'Buscar', path: '/encontrar-clientes', icon: Search, mode: 'simple' },
+  { label: 'Radar', path: '/radar', icon: Radar, mode: 'simple' },
   { label: 'Clientes', path: '/clientes', icon: Users, mode: 'simple' },
   { label: 'Histórico', path: '/historico', icon: History, mode: 'simple' },
 ];
@@ -34,6 +36,7 @@ const simpleNavItems: NavItem[] = [
 const advancedNavItems: NavItem[] = [
   { label: 'Dashboard', path: '/dashboard', icon: LayoutDashboard, mode: 'advanced' },
   { label: 'Buscar', path: '/encontrar-clientes', icon: Search, mode: 'advanced' },
+  { label: 'Radar', path: '/radar', icon: Radar, mode: 'advanced' },
   { label: 'Diagnóstico', path: '/nexia-ai', icon: Brain, mode: 'advanced' },
   { label: 'Clientes', path: '/clientes', icon: Users, mode: 'advanced' },
 ];
