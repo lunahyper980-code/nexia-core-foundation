@@ -96,6 +96,7 @@ import GerenciarUsuarios from "./pages/admin/GerenciarUsuarios";
 import InstalarApp from "./pages/InstalarApp";
 import RedefinirSenha from "./pages/RedefinirSenha";
 import Academy from "./pages/Academy";
+import Radar from "./pages/Radar";
 import GuiaIniciante from "./pages/academy/GuiaIniciante";
 import GuiaAgencia from "./pages/academy/GuiaAgencia";
 import AcademyFAQ from "./pages/academy/FAQ";
@@ -200,6 +201,7 @@ const App = () => (
                   <Route path="/entrega/:id" element={<ProtectedRoute><EntregaForm /></ProtectedRoute>} />
                   <Route path="/clientes" element={<ProtectedRoute><Clientes /></ProtectedRoute>} />
                   <Route path="/encontrar-clientes" element={<ProtectedRoute><EncontrarClientes /></ProtectedRoute>} />
+                  <Route path="/radar" element={<ProtectedRoute><Radar /></ProtectedRoute>} />
                   <Route path="/identidade" element={<ProtectedRoute><Identidade /></ProtectedRoute>} />
                   <Route path="/historico" element={<ProtectedRoute><Historico /></ProtectedRoute>} />
                   <Route path="/configuracoes" element={<ProtectedRoute><Configuracoes /></ProtectedRoute>} />
