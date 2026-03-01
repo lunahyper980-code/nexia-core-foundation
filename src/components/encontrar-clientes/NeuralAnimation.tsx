@@ -6,11 +6,9 @@ interface NeuralAnimationProps {
 }
 
 const PROGRESS_STEPS = [
-  { label: 'Buscando empresas na região...', duration: 500 },
-  { label: 'Analisando oportunidades de mercado...', duration: 600 },
-  { label: 'Identificando negócios similares...', duration: 500 },
-  { label: 'Expandindo alcance da busca...', duration: 600 },
-  { label: 'Organizando 15-20 leads...', duration: 400 },
+  { label: 'Buscando empresas na região...', duration: 400 },
+  { label: 'Analisando oportunidades...', duration: 400 },
+  { label: 'Organizando leads encontrados...', duration: 400 },
 ];
 
 export function NeuralAnimation({ open, message }: NeuralAnimationProps) {
@@ -306,8 +304,7 @@ export function NeuralAnimation({ open, message }: NeuralAnimationProps) {
         ))}
       </div>
 
-      {/* Main content */}
-      <div className="relative flex flex-col items-center justify-center px-6 py-8 max-w-md mx-auto animate-fade-in">
+      <div className="relative flex flex-col items-center justify-center px-6 max-w-md mx-auto animate-fade-in" style={{ marginTop: '-2rem' }}>
         {/* Canvas container with glow effects */}
         <div className="relative mb-8">
           {/* Outer glow ring */}

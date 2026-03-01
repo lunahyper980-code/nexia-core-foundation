@@ -68,7 +68,7 @@ export default function EncontrarClientes() {
     setLastSearchCidade(cidade);
 
     // Minimum display time for premium experience
-    const minLoadingTime = 1800;
+    const minLoadingTime = 800;
     const startTime = Date.now();
 
     try {
