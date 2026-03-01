@@ -26,7 +26,8 @@ export type ModuleKey =
   | 'entrega'
   | 'academy'
   | 'clientes'
-  | 'abordagem';
+  | 'abordagem'
+  | 'radar';
 
 interface ModuleState {
   currentStep?: number;
