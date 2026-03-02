@@ -19,6 +19,7 @@ import { GlobalLoaderOverlay } from "@/components/GlobalLoaderOverlay";
 import { RouteLoaderWrapper } from "@/components/RouteLoaderWrapper";
 import { ModeSelectionModal } from "@/components/ModeSelectionModal";
 import { ModeAwareContent } from "@/components/ModeAwareContent";
+import { ScrollToTop } from "@/components/ScrollToTop";
 import Login from "./pages/Login";
 import Cadastro from "./pages/Cadastro";
 import Dashboard from "./pages/Dashboard";
@@ -112,6 +113,7 @@ const App = () => (
       <Sonner />
       <BrowserRouter>
         <AuthProvider>
+          <ScrollToTop />
           <WorkspaceProvider>
             <UserRoleProvider>
               <UserModeProvider>
