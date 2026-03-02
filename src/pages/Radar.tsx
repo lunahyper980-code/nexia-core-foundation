@@ -1,11 +1,7 @@
 import { useState, useEffect, useRef } from 'react';
-import { Radar as RadarIcon, MapPin, Zap, ArrowLeft } from 'lucide-react';
+import { Radar as RadarIcon, MapPin, Zap, ArrowLeft, LocateFixed, Loader2 } from 'lucide-react';
 import { AppLayout } from '@/components/AppLayout';
-import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
-import { Label } from '@/components/ui/label';
-import { Card } from '@/components/ui/card';
-import { RadarScanAnimation } from '@/components/radar/RadarScanAnimation';
 import { RadarResults } from '@/components/radar/RadarResults';
 import { RadarIdleAnimation } from '@/components/radar/RadarIdleAnimation';
 import { supabase } from '@/integrations/supabase/client';
@@ -25,13 +21,28 @@ interface Lead {
   camada?: string;
 }
 
-type Screen = 'form' | 'scanning' | 'results';
+type Screen = 'form' | 'locating' | 'scanning' | 'results';
 
+async function reverseGeocode(lat: number, lng: number): Promise<string> {
+  const res = await fetch(
+    `https://nominatim.openstreetmap.org/reverse?lat=${lat}&lon=${lng}&format=json&accept-language=pt-BR`,
+    { headers: { 'User-Agent': 'NexiaApp/1.0' } }
+  );
+  const data = await res.json();
+  const addr = data.address || {};
+  const bairro = addr.suburb || addr.neighbourhood || addr.village || '';
+  const cidade = addr.city || addr.town || addr.municipality || addr.county || '';
+  const estado = addr.state || '';
+  
+  if (bairro && cidade) return `${cidade}, ${bairro}`;
+  if (cidade && estado) return `${cidade}, ${estado}`;
+  if (cidade) return cidade;
+  return data.display_name?.split(',').slice(0, 2).join(',') || `${lat},${lng}`;
+}
 
 export default function Radar() {
   const { getSavedState, saveSubScreen, saveFormData, saveExtras, clearState } = useModuleState('radar');
 
-  // Restore persisted state
   const saved = getSavedState();
   const [localidade, setLocalidade] = useState(saved?.formData?.localidade || '');
   const [screen, setScreen] = useState<Screen>(() => {
@@ -41,17 +52,14 @@ export default function Radar() {
   const [leads, setLeads] = useState<Lead[]>(saved?.extras?.leads || []);
   const navigate = useNavigate();
 
-  // Persist screen changes
   useEffect(() => {
     saveSubScreen(screen);
   }, [screen, saveSubScreen]);
 
-  // Persist localidade
   useEffect(() => {
     saveFormData({ localidade });
   }, [localidade, saveFormData]);
 
-  // Persist leads
   useEffect(() => {
     if (leads.length > 0) {
       saveExtras({ leads });
@@ -61,16 +69,10 @@ export default function Radar() {
   const [scanProgress, setScanProgress] = useState(0);
   const progressRef = useRef<NodeJS.Timeout | null>(null);
 
-  const handleScan = async () => {
-    if (!localidade.trim()) {
-      toast.error('Informe sua cidade ou bairro');
-      return;
-    }
-
+  const startScan = async (location: string) => {
     setScreen('scanning');
     setScanProgress(0);
 
-    // Fast progress simulation - reaches ~90% quickly
     let progress = 0;
     progressRef.current = setInterval(() => {
       progress += progress < 60 ? 5 : progress < 85 ? 3 : 1;
@@ -82,7 +84,7 @@ export default function Radar() {
       const { data, error } = await supabase.functions.invoke('generate-leads', {
         body: {
           nicho: 'todos os tipos de negócios locais',
-          cidade: localidade.trim(),
+          cidade: location,
           possuiSite: false,
           possuiInstagram: false,
           forceRegenerate: true,
@@ -107,6 +109,49 @@ export default function Radar() {
     }
   };
 
+  const handleActivateRadar = async () => {
+    if (!navigator.geolocation) {
+      toast.error('Seu navegador não suporta geolocalização.');
+      return;
+    }
+
+    setScreen('locating');
+
+    navigator.geolocation.getCurrentPosition(
+      async (position) => {
+        try {
+          const { latitude, longitude } = position.coords;
+          const location = await reverseGeocode(latitude, longitude);
+          setLocalidade(location);
+          toast.success(`Localização detectada: ${location}`);
+          startScan(location);
+        } catch (err) {
+          console.error('Reverse geocode error:', err);
+          toast.error('Erro ao identificar sua localização. Tente novamente.');
+          setScreen('form');
+        }
+      },
+      (error) => {
+        console.error('Geolocation error:', error);
+        switch (error.code) {
+          case error.PERMISSION_DENIED:
+            toast.error('Permissão de localização negada. Habilite nas configurações do navegador.');
+            break;
+          case error.POSITION_UNAVAILABLE:
+            toast.error('Localização indisponível. Tente novamente.');
+            break;
+          case error.TIMEOUT:
+            toast.error('Tempo esgotado ao buscar localização. Tente novamente.');
+            break;
+          default:
+            toast.error('Erro ao obter localização.');
+        }
+        setScreen('form');
+      },
+      { enableHighAccuracy: true, timeout: 15000, maximumAge: 60000 }
+    );
+  };
+
   const handleNewSearch = () => {
     setLeads([]);
     setLocalidade('');
@@ -116,8 +161,6 @@ export default function Radar() {
 
   return (
     <AppLayout title="Radar">
-      {/* Removed full-screen scan animation */}
-
       <div className="max-w-4xl mx-auto space-y-8 p-4 sm:p-6">
         {/* Header */}
         <div className="flex items-center gap-3">
@@ -137,48 +180,42 @@ export default function Radar() {
 
         {screen === 'form' && (
           <div className="animate-fade-in space-y-4">
-            {/* Robot scanner animation card */}
             <div className="relative rounded-2xl overflow-hidden border border-border/40 h-[420px] sm:h-[500px]">
               <RadarIdleAnimation isScanning={false} scanProgress={0} />
             </div>
 
-            {/* Form card - compact & translucent */}
-            <div className="max-w-sm mx-auto w-full">
-              <Card className="p-3 space-y-2 bg-card/60 backdrop-blur-sm border-border/30">
-                <h2 className="text-xs font-semibold text-foreground text-center">Onde você está?</h2>
+            <div className="max-w-xs mx-auto w-full flex flex-col items-center gap-3">
+              <Button
+                className="gap-2 h-12 px-6 text-sm font-semibold w-full"
+                onClick={handleActivateRadar}
+              >
+                <LocateFixed className="h-4.5 w-4.5" />
+                Ativar Radar
+              </Button>
+              <p className="text-[11px] text-muted-foreground/70 text-center">
+                Usamos sua localização para encontrar empresas perto de você
+              </p>
+            </div>
+          </div>
+        )}
 
-                <div className="flex gap-2 items-end">
-                  <div className="flex-1 space-y-1 text-left">
-                    <Label htmlFor="localidade" className="text-[9px] font-medium uppercase tracking-wider text-muted-foreground/70">
-                      Cidade / Bairro
-                    </Label>
-                    <Input
-                      id="localidade"
-                      placeholder="Ex: São Paulo, Pinheiros"
-                      value={localidade}
-                      onChange={(e) => setLocalidade(e.target.value)}
-                      onKeyDown={(e) => e.key === 'Enter' && handleScan()}
-                      className="h-9 text-sm"
-                    />
-                  </div>
-                  <Button
-                    className="gap-1.5 h-9 px-4 shrink-0"
-                    size="sm"
-                    onClick={handleScan}
-                    disabled={!localidade.trim()}
-                  >
-                    <Zap className="h-3.5 w-3.5" />
-                    Ativar Radar
-                  </Button>
-                </div>
-              </Card>
+        {screen === 'locating' && (
+          <div className="animate-fade-in space-y-4">
+            <div className="relative rounded-2xl overflow-hidden border border-border/40 h-[420px] sm:h-[500px]">
+              <RadarIdleAnimation isScanning={false} scanProgress={0} />
+            </div>
+            <div className="flex flex-col items-center gap-2">
+              <div className="flex items-center gap-2 text-sm text-muted-foreground animate-pulse">
+                <Loader2 className="h-4 w-4 animate-spin text-primary" />
+                <span>Obtendo sua localização...</span>
+              </div>
+              <p className="text-[11px] text-muted-foreground/50">Permita o acesso à localização quando solicitado</p>
             </div>
           </div>
         )}
 
         {screen === 'scanning' && (
           <div className="animate-fade-in">
-            {/* Drone animation focused on progress */}
             <div className="relative rounded-2xl overflow-hidden border border-border/40 h-[420px] sm:h-[500px]">
               <RadarIdleAnimation isScanning={true} scanProgress={scanProgress} />
             </div>
