@@ -64,6 +64,8 @@ const statusConfig: Record<AccessStatus, { label: string; color: string; icon: t
   blocked: { label: 'Bloqueado', color: 'bg-destructive/10 text-destructive border-destructive/20', icon: X },
 };
 
+const USERS_PER_PAGE = 15;
+
 export default function GerenciarUsuarios() {
   const { isAdminOrOwner, role, loading: roleLoading } = useUserRole();
   const { user } = useAuth();
@@ -73,6 +75,7 @@ export default function GerenciarUsuarios() {
   const [refreshing, setRefreshing] = useState(false);
   const [searchTerm, setSearchTerm] = useState('');
   const [statusFilter, setStatusFilter] = useState<string>('all');
+  const [currentPage, setCurrentPage] = useState(1);
   const [diagOpen, setDiagOpen] = useState(false);
   const [lastError, setLastError] = useState<string | null>(null);
   const [adminProfile, setAdminProfile] = useState<any>(null);
@@ -287,6 +290,18 @@ export default function GerenciarUsuarios() {
     return matchesSearch && matchesStatus;
   });
 
+  // Reset page when filters change
+  useEffect(() => {
+    setCurrentPage(1);
+  }, [searchTerm, statusFilter]);
+
+  // Pagination
+  const totalPages = Math.ceil(filteredUsers.length / USERS_PER_PAGE);
+  const paginatedUsers = filteredUsers.slice(
+    (currentPage - 1) * USERS_PER_PAGE,
+    currentPage * USERS_PER_PAGE
+  );
+
   // Stats
   const stats = {
     total: users.length,
@@ -441,8 +456,9 @@ export default function GerenciarUsuarios() {
         <Card>
           <CardHeader>
             <CardTitle className="text-lg">Lista de Usuários</CardTitle>
-            <CardDescription>
+          <CardDescription>
               {filteredUsers.length} usuário(s) encontrado(s)
+              {totalPages > 1 && ` · Página ${currentPage} de ${totalPages}`}
             </CardDescription>
           </CardHeader>
           <CardContent>
@@ -452,7 +468,7 @@ export default function GerenciarUsuarios() {
                   Nenhum usuário encontrado
                 </p>
               ) : (
-                filteredUsers.map((user) => {
+                paginatedUsers.map((user) => {
                   const config = statusConfig[user.access_status as AccessStatus] || statusConfig.pending;
                   const StatusIcon = config.icon;
 
@@ -556,6 +572,53 @@ export default function GerenciarUsuarios() {
                 })
               )}
             </div>
+
+            {/* Pagination */}
+            {totalPages > 1 && (
+              <div className="flex items-center justify-center gap-2 pt-4 border-t border-border/50 mt-4">
+                <Button
+                  variant="outline"
+                  size="sm"
+                  onClick={() => setCurrentPage(p => Math.max(1, p - 1))}
+                  disabled={currentPage === 1}
+                >
+                  Anterior
+                </Button>
+                <div className="flex items-center gap-1">
+                  {Array.from({ length: totalPages }, (_, i) => i + 1)
+                    .filter(page => {
+                      if (totalPages <= 7) return true;
+                      if (page === 1 || page === totalPages) return true;
+                      if (Math.abs(page - currentPage) <= 1) return true;
+                      return false;
+                    })
+                    .map((page, idx, arr) => {
+                      const showEllipsis = idx > 0 && page - arr[idx - 1] > 1;
+                      return (
+                        <span key={page} className="flex items-center">
+                          {showEllipsis && <span className="px-1 text-muted-foreground">…</span>}
+                          <Button
+                            variant={currentPage === page ? 'default' : 'ghost'}
+                            size="sm"
+                            className="h-8 w-8 p-0"
+                            onClick={() => setCurrentPage(page)}
+                          >
+                            {page}
+                          </Button>
+                        </span>
+                      );
+                    })}
+                </div>
+                <Button
+                  variant="outline"
+                  size="sm"
+                  onClick={() => setCurrentPage(p => Math.min(totalPages, p + 1))}
+                  disabled={currentPage === totalPages}
+                >
+                  Próxima
+                </Button>
+              </div>
+            )}
           </CardContent>
         </Card>
       </div>
