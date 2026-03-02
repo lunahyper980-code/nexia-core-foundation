@@ -184,16 +184,17 @@ export default function Radar() {
               <RadarIdleAnimation isScanning={false} scanProgress={0} />
             </div>
 
-            <div className="max-w-xs mx-auto w-full flex flex-col items-center gap-3">
+            <div className="max-w-[200px] mx-auto w-full flex flex-col items-center gap-2">
               <Button
-                className="gap-2 h-12 px-6 text-sm font-semibold w-full"
+                variant="ghost"
+                className="gap-2 h-10 px-5 text-xs font-medium bg-foreground/5 hover:bg-foreground/10 border border-border/30 rounded-full backdrop-blur-sm"
                 onClick={handleActivateRadar}
               >
-                <LocateFixed className="h-4.5 w-4.5" />
+                <LocateFixed className="h-3.5 w-3.5" />
                 Ativar Radar
               </Button>
-              <p className="text-[11px] text-muted-foreground/70 text-center">
-                Usamos sua localização para encontrar empresas perto de você
+              <p className="text-[10px] text-muted-foreground/50 text-center">
+                Localização automática
               </p>
             </div>
           </div>
