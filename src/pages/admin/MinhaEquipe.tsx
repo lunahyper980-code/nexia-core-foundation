@@ -21,7 +21,14 @@ export default function MinhaEquipe() {
   const { isAdminOrOwner, loading: roleLoading } = useUserRole();
   const { teamData, loading: metricsLoading } = useTeamMetrics();
   const navigate = useNavigate();
-  const [activeTab, setActiveTab] = useState<TabId>('performance');
+  const [activeTab, setActiveTab] = useState<TabId>(() => {
+    const saved = localStorage.getItem('equipe-active-tab');
+    return (saved as TabId) || 'performance';
+  });
+
+  useEffect(() => {
+    localStorage.setItem('equipe-active-tab', activeTab);
+  }, [activeTab]);
 
   const loading = roleLoading || metricsLoading;
 
