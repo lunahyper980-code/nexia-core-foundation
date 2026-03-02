@@ -221,7 +221,7 @@ export default function Radar() {
               <RadarIdleAnimation isScanning={true} scanProgress={scanProgress} />
             </div>
             <p className="text-center text-sm text-muted-foreground mt-3 animate-pulse">
-              Escaneando empresas em <span className="font-semibold text-foreground">{localidade}</span>...
+              Escaneando empresas na sua região...
             </p>
           </div>
         )}
