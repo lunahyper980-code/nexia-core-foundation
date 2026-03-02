@@ -398,11 +398,14 @@ export function RadarIdleAnimation({ isScanning = false, scanProgress = 0 }: { i
       frame++;
       const scanning = isScanningRef.current;
 
+      // Clear canvas completely each frame (fixes mobile rendering)
+      ctx.clearRect(0, 0, w, h);
+
       // Background
       const bg = ctx.createRadialGradient(w * 0.5, h * 0.45, 0, w * 0.5, h * 0.45, w * 0.7);
-      bg.addColorStop(0, scanning ? 'hsla(180, 30%, 10%, 0.6)' : 'hsla(260, 30%, 12%, 0.6)');
-      bg.addColorStop(0.5, scanning ? 'hsla(180, 25%, 6%, 0.5)' : 'hsla(260, 25%, 8%, 0.5)');
-      bg.addColorStop(1, scanning ? 'hsla(200, 20%, 3%, 0.4)' : 'hsla(240, 20%, 4%, 0.4)');
+      bg.addColorStop(0, scanning ? 'hsl(180, 30%, 10%)' : 'hsl(260, 30%, 12%)');
+      bg.addColorStop(0.5, scanning ? 'hsl(180, 25%, 6%)' : 'hsl(260, 25%, 8%)');
+      bg.addColorStop(1, scanning ? 'hsl(200, 20%, 3%)' : 'hsl(240, 20%, 4%)');
       ctx.fillStyle = bg;
       ctx.fillRect(0, 0, w, h);
 
