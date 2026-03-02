@@ -179,39 +179,37 @@ export default function Radar() {
         </div>
 
         {screen === 'form' && (
-          <div className="animate-fade-in">
+          <div className="animate-fade-in space-y-4">
             <div className="relative rounded-2xl overflow-hidden border border-border/40 h-[420px] sm:h-[500px]">
               <RadarIdleAnimation isScanning={false} scanProgress={0} />
-              
-              {/* Overlay CTA inside the drone card */}
-              <div className="absolute inset-x-0 bottom-0 flex flex-col items-center gap-2 pb-6 pt-12 bg-gradient-to-t from-background/90 via-background/50 to-transparent">
-                <Button
-                  className="gap-2 h-10 px-5 text-xs font-semibold rounded-full shadow-lg shadow-primary/20 backdrop-blur-sm"
-                  onClick={handleActivateRadar}
-                >
-                  <LocateFixed className="h-3.5 w-3.5" />
-                  Ativar Radar
-                </Button>
-                <p className="text-[10px] text-muted-foreground/60">
-                  Localização automática via GPS
-                </p>
-              </div>
+            </div>
+
+            <div className="max-w-xs mx-auto w-full flex flex-col items-center gap-3">
+              <Button
+                className="gap-2 h-12 px-6 text-sm font-semibold w-full"
+                onClick={handleActivateRadar}
+              >
+                <LocateFixed className="h-4.5 w-4.5" />
+                Ativar Radar
+              </Button>
+              <p className="text-[11px] text-muted-foreground/70 text-center">
+                Usamos sua localização para encontrar empresas perto de você
+              </p>
             </div>
           </div>
         )}
 
         {screen === 'locating' && (
-          <div className="animate-fade-in">
+          <div className="animate-fade-in space-y-4">
             <div className="relative rounded-2xl overflow-hidden border border-border/40 h-[420px] sm:h-[500px]">
               <RadarIdleAnimation isScanning={false} scanProgress={0} />
-              
-              <div className="absolute inset-x-0 bottom-0 flex flex-col items-center gap-2 pb-6 pt-12 bg-gradient-to-t from-background/90 via-background/50 to-transparent">
-                <div className="flex items-center gap-2 text-xs text-muted-foreground animate-pulse backdrop-blur-sm bg-card/40 border border-border/30 rounded-full px-4 py-2">
-                  <Loader2 className="h-3.5 w-3.5 animate-spin text-primary" />
-                  <span>Obtendo localização...</span>
-                </div>
-                <p className="text-[10px] text-muted-foreground/50">Permita o acesso quando solicitado</p>
+            </div>
+            <div className="flex flex-col items-center gap-2">
+              <div className="flex items-center gap-2 text-sm text-muted-foreground animate-pulse">
+                <Loader2 className="h-4 w-4 animate-spin text-primary" />
+                <span>Obtendo sua localização...</span>
               </div>
+              <p className="text-[11px] text-muted-foreground/50">Permita o acesso à localização quando solicitado</p>
             </div>
           </div>
         )}
