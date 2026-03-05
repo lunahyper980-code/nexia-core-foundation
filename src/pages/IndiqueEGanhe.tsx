@@ -1,4 +1,4 @@
-import { type ReactNode, useEffect, useMemo, useState } from 'react';
+import { type ReactNode, useMemo, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import {
   ArrowLeft,
@@ -147,11 +147,6 @@ export default function IndiqueEGanhe() {
   const isActive = profile?.status === 'active';
   const isBlocked = profile?.status === 'blocked';
 
-  useEffect(() => {
-    if (isActive) {
-      setShowSelection(false);
-    }
-  }, [isActive]);
 
   const topAction = useMemo(() => {
     if (isActive && !showSelection) {
@@ -240,13 +235,13 @@ export default function IndiqueEGanhe() {
                       key={card.key}
                       variant="glass"
                       className={cn(
-                        'relative overflow-hidden rounded-[2rem] border px-0 pt-6',
+                        'relative overflow-visible rounded-[2rem] border px-0 pt-10',
                         card.available ? 'border-primary/25 shadow-xl shadow-primary/10' : 'border-border/80'
                       )}
                     >
                       <Badge
                         variant={card.available ? 'premium' : 'secondary'}
-                        className="absolute left-6 top-0 -translate-y-1/2 rounded-full px-3 py-1"
+                        className="absolute left-6 top-5 rounded-full px-3 py-1"
                       >
                         {card.badge}
                       </Badge>
