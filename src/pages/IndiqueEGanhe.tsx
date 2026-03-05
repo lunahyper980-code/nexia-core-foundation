@@ -21,7 +21,7 @@ import { Card, CardContent } from '@/components/ui/card';
 import { AFFILIATE_PROGRAM_OPTIONS, useAffiliateProgram } from '@/hooks/useAffiliateProgram';
 import { cn } from '@/lib/utils';
 
-const EXTERNAL_AFFILIATE_URL = '';
+
 
 const selectionCards = [
   {
@@ -79,12 +79,14 @@ const offerCards = [
     title: 'Plano Mensal',
     price: 'R$ 147/mês',
     commission: 'R$ 26,25',
+    url: 'https://dashboard.kiwify.com/join/affiliate/3GYM4lw2',
     highlight: false,
   },
   {
     title: 'Plano Vitalício',
     price: 'R$ 247 único',
     commission: 'R$ 44,46',
+    url: 'https://dashboard.kiwify.com/join/affiliate/0lLidBnF',
     highlight: true,
   },
 ] as const;
@@ -175,14 +177,6 @@ export default function IndiqueEGanhe() {
     }
   };
 
-  const handleOpenAffiliateLink = () => {
-    if (!EXTERNAL_AFFILIATE_URL) {
-      toast.info('Me envie o link oficial de afiliado que eu conecto estes botões agora.');
-      return;
-    }
-
-    window.open(EXTERNAL_AFFILIATE_URL, '_blank', 'noopener,noreferrer');
-  };
 
   return (
     <AppLayout title="Indique e Ganhe">
@@ -386,7 +380,7 @@ export default function IndiqueEGanhe() {
                           variant="premium"
                           size="lg"
                           className="h-14 w-full rounded-2xl text-lg font-semibold"
-                          onClick={handleOpenAffiliateLink}
+                          onClick={() => window.open(offer.url, '_blank', 'noopener,noreferrer')}
                         >
                           <ExternalLink className="h-5 w-5" />
                           Tornar-se Afiliado →
