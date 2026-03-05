@@ -20,7 +20,6 @@ import {
   UsersRound,
   Smartphone,
   FolderOpen,
-  Coins,
   FileSignature,
   Radar,
   Gift,
@@ -50,7 +49,7 @@ const simpleNavItems: NavItem[] = [
   { label: 'Clientes', path: '/clientes', icon: Users, mode: 'simple' },
   { label: 'Histórico / Atividade', path: '/historico', icon: History, mode: 'simple' },
   { label: 'Academy', path: '/academy', icon: GraduationCap, mode: 'simple' },
-  { label: 'Créditos', path: '/creditos', icon: Coins, mode: 'simple' },
+  
   { label: 'Minha Equipe', path: '/admin/equipe', icon: UsersRound, adminOnly: true, mode: 'simple' },
   { label: 'Configurações', path: '/configuracoes', icon: Settings, mode: 'simple' },
 ];
