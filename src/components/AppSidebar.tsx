@@ -23,6 +23,7 @@ import {
   FileSignature,
   Coins,
   Radar,
+  Gift,
 } from 'lucide-react';
 import logoNexia from '@/assets/logo-nexia.png';
 import { Tooltip, TooltipContent, TooltipTrigger } from '@/components/ui/tooltip';
@@ -45,6 +46,7 @@ const simpleNavItems: NavItem[] = [
   { label: 'Dashboard', path: '/dashboard', icon: LayoutDashboard, mode: 'simple' },
   { label: 'Encontrar Clientes', path: '/encontrar-clientes', icon: Search, mode: 'simple' },
   { label: 'Radar', path: '/radar', icon: Radar, mode: 'simple' },
+  { label: 'Indique e Ganhe', path: '/indique-e-ganhe', icon: Gift, mode: 'simple' },
   { label: 'Criar App / Site', path: '/solucoes', icon: Smartphone, mode: 'simple' },
   { label: 'Meus Projetos', path: '/hyperbuild/projetos-lista', icon: FolderOpen, mode: 'simple' },
   { label: 'Contratos', path: '/contratos', icon: FileSignature, mode: 'simple' },
@@ -62,6 +64,7 @@ const advancedNavItems: NavItem[] = [
   { label: 'Dashboard', path: '/dashboard', icon: LayoutDashboard, mode: 'advanced' },
   { label: 'Encontrar Clientes', path: '/encontrar-clientes', icon: Search, mode: 'advanced' },
   { label: 'Radar', path: '/radar', icon: Radar, mode: 'advanced' },
+  { label: 'Indique e Ganhe', path: '/indique-e-ganhe', icon: Gift, mode: 'advanced' },
   { label: 'Diagnóstico', path: '/nexia-ai', icon: Brain, badge: 'avançado', mode: 'advanced' },
   { label: 'Vendas', path: '/vendas', icon: Briefcase, mode: 'advanced' },
   { label: 'Clientes', path: '/clientes', icon: Users, mode: 'advanced' },

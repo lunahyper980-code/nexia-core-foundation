@@ -4,11 +4,12 @@ import { useAuth } from '@/contexts/AuthContext';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { toast } from 'sonner';
-import { Eye, EyeOff, ArrowRight, Sparkles } from 'lucide-react';
+import { Eye, EyeOff, ArrowRight, Gift, Sparkles } from 'lucide-react';
 import { NexiaLoaderInline } from '@/components/ui/nexia-loader';
 import logoNexia from '@/assets/logo-nexia.png';
 import { z } from 'zod';
 import { ForgotPasswordModal } from '@/components/auth/ForgotPasswordModal';
+import { buildSignupLinkWithReferral, captureReferralCodeFromSearch, getStoredReferralCode } from '@/lib/referral';
 
 const loginSchema = z.object({
   email: z.string().email('E-mail inválido'),
@@ -22,6 +23,7 @@ export default function Login() {
   const [loading, setLoading] = useState(false);
   const [showPassword, setShowPassword] = useState(false);
   const [showForgotPassword, setShowForgotPassword] = useState(false);
+  const [referralCode, setReferralCode] = useState<string | null>(null);
   const [formData, setFormData] = useState({
     email: '',
     password: '',
@@ -35,6 +37,9 @@ export default function Login() {
   }, [user, navigate]);
 
   useEffect(() => {
+    const capturedCode = captureReferralCodeFromSearch(location.search);
+    setReferralCode(capturedCode || getStoredReferralCode());
+
     const state = location.state as { message?: string } | null;
     if (state?.message) {
       toast.success(state.message);
@@ -166,6 +171,22 @@ export default function Login() {
                 </p>
               </div>
 
+              {referralCode && (
+                <div className="mb-6 rounded-2xl border border-primary/20 bg-primary/10 p-4">
+                  <div className="flex items-start gap-3">
+                    <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-primary/15">
+                      <Gift className="h-5 w-5 text-primary" />
+                    </div>
+                    <div>
+                      <p className="font-medium text-foreground">Convite de afiliado detectado</p>
+                      <p className="mt-1 text-sm text-muted-foreground">
+                        Ao entrar, vamos tentar vincular sua conta ao código <span className="font-semibold text-foreground">{referralCode}</span>.
+                      </p>
+                    </div>
+                  </div>
+                </div>
+              )}
+
               {/* Form */}
               <form onSubmit={handleSubmit} className="space-y-5">
                 <div className="space-y-2">
@@ -240,7 +261,7 @@ export default function Login() {
               <div className="mt-6 space-y-4">
                 <p className="text-center text-sm text-muted-foreground">
                   Não tem uma conta?{' '}
-                  <Link to="/cadastro" className="text-primary hover:text-primary/80 font-medium transition-colors">
+                  <Link to={buildSignupLinkWithReferral(referralCode)} className="text-primary hover:text-primary/80 font-medium transition-colors">
                     Criar conta
                   </Link>
                 </p>
