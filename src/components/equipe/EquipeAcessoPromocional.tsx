@@ -6,7 +6,6 @@ import {
   Copy,
   Sparkles,
   Check,
-  Users,
   Gift,
   CalendarDays,
   Megaphone,
@@ -89,49 +88,42 @@ export function EquipeAcessoPromocional() {
       </div>
 
       <Card className="border-border/60">
-        <CardContent className="space-y-4 pt-6">
-          <div className="space-y-1 text-center">
-            <p className="text-sm font-medium text-foreground">Pessoas Indicadas</p>
-            <div className="text-3xl font-bold text-foreground">
-              {membersJoined} <span className="text-muted-foreground">/ {MAX_SLOTS}</span>
-            </div>
-            <p className="text-sm text-muted-foreground">Você pode convidar até 10 pessoas neste programa.</p>
-          </div>
+        <CardContent className="pt-6">
+          <Popover open={popoverOpen} onOpenChange={setPopoverOpen}>
+            <PopoverTrigger asChild>
+              <button type="button" className="w-full space-y-3 text-center">
+                <p className="text-sm font-medium text-foreground">Pessoas Indicadas</p>
+                <div className="text-3xl font-bold text-foreground">
+                  {membersJoined} <span className="text-muted-foreground">/ {MAX_SLOTS}</span>
+                </div>
+                <p className="text-sm text-muted-foreground">Você pode convidar até 10 pessoas neste programa.</p>
+              </button>
+            </PopoverTrigger>
+            <PopoverContent className="w-56 p-2" align="center">
+              <p className="px-2 pb-2 text-xs text-muted-foreground">Selecione quantas pessoas já entraram:</p>
+              <div className="grid grid-cols-4 gap-1">
+                {Array.from({ length: MAX_SLOTS + 1 }, (_, i) => (
+                  <button
+                    key={i}
+                    type="button"
+                    onClick={() => handleSelect(i)}
+                    className={`rounded-md px-2 py-1.5 text-sm font-medium transition-colors ${
+                      membersJoined === i ? 'bg-primary text-primary-foreground' : 'text-foreground hover:bg-muted'
+                    }`}
+                  >
+                    {i}
+                  </button>
+                ))}
+              </div>
+            </PopoverContent>
+          </Popover>
 
-          <div className="flex items-center justify-between gap-4 text-sm text-muted-foreground">
-            <div className="flex items-center gap-2">
-              <Users className="h-4 w-4" />
-              <Popover open={popoverOpen} onOpenChange={setPopoverOpen}>
-                <PopoverTrigger asChild>
-                  <span className="cursor-default select-none">Pessoas vinculadas à equipe</span>
-                </PopoverTrigger>
-                <PopoverContent className="w-56 p-2" align="start">
-                  <p className="px-2 pb-2 text-xs text-muted-foreground">Selecione quantas pessoas já entraram:</p>
-                  <div className="grid grid-cols-4 gap-1">
-                    {Array.from({ length: MAX_SLOTS + 1 }, (_, i) => (
-                      <button
-                        key={i}
-                        onClick={() => handleSelect(i)}
-                        className={`rounded-md px-2 py-1.5 text-sm font-medium transition-colors ${
-                          membersJoined === i ? 'bg-primary text-primary-foreground' : 'text-foreground hover:bg-muted'
-                        }`}
-                      >
-                        {i}
-                      </button>
-                    ))}
-                  </div>
-                </PopoverContent>
-              </Popover>
-            </div>
-            <span className="font-medium text-foreground">
-              {membersJoined} de {MAX_SLOTS}
-            </span>
+          <div className="mt-4 space-y-2">
+            <Progress value={progressPercent} className="h-2.5" />
+            {membersJoined >= MAX_SLOTS && (
+              <p className="text-center text-xs font-medium text-primary">Todas as vagas deste programa foram preenchidas.</p>
+            )}
           </div>
-
-          <Progress value={progressPercent} className="h-2.5" />
-          {membersJoined >= MAX_SLOTS && (
-            <p className="text-center text-xs font-medium text-primary">Todas as vagas deste programa foram preenchidas.</p>
-          )}
         </CardContent>
       </Card>
 
@@ -171,7 +163,7 @@ export function EquipeAcessoPromocional() {
           </p>
         </div>
 
-        <div className="grid gap-6 md:grid-cols-2">
+        <div className="grid gap-6 2xl:grid-cols-2">
           <Card className="relative overflow-hidden border-border/60">
             <CardHeader className="pb-4">
               <Badge variant="outline" className="w-fit rounded-full">
@@ -252,7 +244,7 @@ export function EquipeAcessoPromocional() {
             </h3>
           </div>
           <p className="text-sm text-muted-foreground">
-            Escolha o plano ideal e copie seu link de parceiro exclusivo para divulgar.
+            Além do link direto, você também poderá divulgar sua página de vendas com os planos promocionais de R$ 147/mês e R$ 247 vitalício já prontos para conversão.
           </p>
           <div className="flex flex-col gap-3 sm:flex-row">
             <Button onClick={() => copyLink('mensal')} variant="outline" className="sm:flex-1">
