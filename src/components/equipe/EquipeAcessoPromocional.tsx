@@ -23,6 +23,8 @@ const promoLinks = {
   vitalicio: 'https://go.perfectpay.com.br/PPU38CQ5JOM',
 };
 
+const salesPageLink = '';
+
 const howItWorksItems = [
   {
     icon: Wallet,
@@ -70,6 +72,16 @@ export function EquipeAcessoPromocional() {
   };
 
   const progressPercent = (membersJoined / MAX_SLOTS) * 100;
+
+  const copySalesPageLink = () => {
+    if (!salesPageLink) {
+      toast.info('Quando sua página de vendas estiver pronta, eu posso ligar este botão ao link final.');
+      return;
+    }
+
+    navigator.clipboard.writeText(salesPageLink);
+    toast.success('Link da página de vendas copiado!');
+  };
 
   return (
     <div className="space-y-8">
@@ -163,7 +175,7 @@ export function EquipeAcessoPromocional() {
           </p>
         </div>
 
-        <div className="grid gap-6 2xl:grid-cols-2">
+        <div className="grid gap-6 md:grid-cols-2">
           <Card className="relative overflow-hidden border-border/60">
             <CardHeader className="pb-4">
               <Badge variant="outline" className="w-fit rounded-full">
@@ -244,18 +256,12 @@ export function EquipeAcessoPromocional() {
             </h3>
           </div>
           <p className="text-sm text-muted-foreground">
-            Além do link direto, você também poderá divulgar sua página de vendas com os planos promocionais de R$ 147/mês e R$ 247 vitalício já prontos para conversão.
+            Você também poderá divulgar sua página de vendas com os preços promocionais já aplicados para aumentar a conversão.
           </p>
-          <div className="flex flex-col gap-3 sm:flex-row">
-            <Button onClick={() => copyLink('mensal')} variant="outline" className="sm:flex-1">
-              <Copy className="mr-2 h-4 w-4" />
-              Copiar link mensal
-            </Button>
-            <Button onClick={() => copyLink('vitalicio')} className="sm:flex-1">
-              <Copy className="mr-2 h-4 w-4" />
-              Copiar link vitalício
-            </Button>
-          </div>
+          <Button onClick={copySalesPageLink} className="w-full sm:w-auto">
+            <Copy className="mr-2 h-4 w-4" />
+            Copiar página de vendas
+          </Button>
         </CardContent>
       </Card>
 
