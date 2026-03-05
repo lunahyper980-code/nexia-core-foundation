@@ -176,7 +176,7 @@ export function EquipeAcessoPromocional() {
         </div>
 
         <div className="grid gap-6 md:grid-cols-2">
-          <Card className="relative overflow-hidden border-border/60">
+          <Card className="relative flex h-full flex-col overflow-hidden border-border/60">
             <CardHeader className="pb-4">
               <Badge variant="outline" className="w-fit rounded-full">
                 -40% OFF
@@ -187,9 +187,10 @@ export function EquipeAcessoPromocional() {
                 <span className="text-4xl font-bold text-foreground">R$ 147</span>
                 <span className="pb-1 text-sm text-muted-foreground">por mês</span>
               </div>
+              <p className="text-sm text-muted-foreground">Ideal para começar com baixo custo e validar a operação.</p>
             </CardHeader>
-            <CardContent className="space-y-6">
-              <ul className="space-y-3">
+            <CardContent className="flex flex-1 flex-col space-y-6">
+              <ul className="flex-1 space-y-3">
                 {[
                   'Acesso completo ao Nexxa Suite',
                   'Ideal para quem quer começar com baixo custo',
@@ -201,14 +202,14 @@ export function EquipeAcessoPromocional() {
                   </li>
                 ))}
               </ul>
-              <Button onClick={() => copyLink('mensal')} variant="outline" className="w-full">
+              <Button onClick={() => copyLink('mensal')} variant="outline" className="mt-auto w-full">
                 <Copy className="mr-2 h-4 w-4" />
                 Copiar link do plano mensal
               </Button>
             </CardContent>
           </Card>
 
-          <Card className="relative overflow-hidden border-primary/40 bg-gradient-to-b from-primary/5 to-transparent">
+          <Card className="relative flex h-full flex-col overflow-hidden border-primary/40 bg-gradient-to-b from-primary/5 to-transparent">
             <div className="absolute right-4 top-4">
               <Badge className="text-xs">🔥 MAIS POPULAR</Badge>
             </div>
@@ -221,8 +222,8 @@ export function EquipeAcessoPromocional() {
               </div>
               <p className="text-sm text-muted-foreground">ou parcele em até 12x</p>
             </CardHeader>
-            <CardContent className="space-y-6">
-              <ul className="space-y-3">
+            <CardContent className="flex flex-1 flex-col space-y-6">
+              <ul className="flex-1 space-y-3">
                 {[
                   'Pagamento único com acesso prolongado',
                   'Melhor custo-benefício para quem quer escalar',
@@ -234,7 +235,7 @@ export function EquipeAcessoPromocional() {
                   </li>
                 ))}
               </ul>
-              <Button onClick={() => copyLink('vitalicio')} className="w-full">
+              <Button onClick={() => copyLink('vitalicio')} className="mt-auto w-full">
                 <Copy className="mr-2 h-4 w-4" />
                 Copiar link do plano vitalício
               </Button>
