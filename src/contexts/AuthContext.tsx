@@ -1,6 +1,7 @@
 import { createContext, useContext, useEffect, useState, ReactNode, useCallback } from 'react';
 import { User, Session } from '@supabase/supabase-js';
 import { supabase } from '@/integrations/supabase/client';
+import { clearStoredReferralCode, getStoredReferralCode } from '@/lib/referral';
 import { toast } from 'sonner';
 
 interface AuthContextType {
@@ -74,6 +75,24 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const [session, setSession] = useState<Session | null>(null);
   const [loading, setLoading] = useState(true);
 
+  const syncAffiliateReferral = useCallback(async () => {
+    const referralCode = getStoredReferralCode();
+
+    const { data, error } = await supabase.rpc('sync_affiliate_referral', {
+      _referral_code: referralCode,
+    });
+
+    if (error) {
+      console.error('[Auth] Error syncing affiliate referral:', error);
+      return;
+    }
+
+    const status = (data as { status?: string } | null)?.status;
+    if (status && ['claimed', 'converted', 'invalid_code', 'self_referral'].includes(status)) {
+      clearStoredReferralCode();
+    }
+  }, []);
+
   useEffect(() => {
     const { data: { subscription } } = supabase.auth.onAuthStateChange(
       async (event, session) => {
@@ -82,11 +101,10 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         setUser(session?.user ?? null);
         setLoading(false);
 
-        // Ensure profile exists on sign in or token refresh
-        if ((event === 'SIGNED_IN' || event === 'TOKEN_REFRESHED') && session?.user) {
-          // Use setTimeout to avoid blocking the auth flow
+        if (event === 'SIGNED_IN' && session?.user) {
           setTimeout(() => {
             ensureProfile(session.user);
+            syncAffiliateReferral();
           }, 100);
         }
       }
@@ -97,16 +115,16 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       setUser(session?.user ?? null);
       setLoading(false);
 
-      // Ensure profile exists on initial load
       if (session?.user) {
         setTimeout(() => {
           ensureProfile(session.user);
+          syncAffiliateReferral();
         }, 100);
       }
     });
 
     return () => subscription.unsubscribe();
-  }, []);
+  }, [syncAffiliateReferral]);
 
   const signUp = async (email: string, password: string, fullName: string) => {
     const redirectUrl = `${window.location.origin}/`;

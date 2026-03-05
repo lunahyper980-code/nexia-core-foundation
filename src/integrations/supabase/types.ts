@@ -64,6 +64,133 @@ export type Database = {
           },
         ]
       }
+      affiliate_profiles: {
+        Row: {
+          activated_at: string | null
+          commission_label: string | null
+          commission_rate: number | null
+          created_at: string
+          id: string
+          locked_at: string | null
+          program_type:
+            | Database["public"]["Enums"]["affiliate_program_type"]
+            | null
+          referral_code: string
+          status: Database["public"]["Enums"]["affiliate_profile_status"]
+          updated_at: string
+          user_id: string
+          workspace_id: string
+        }
+        Insert: {
+          activated_at?: string | null
+          commission_label?: string | null
+          commission_rate?: number | null
+          created_at?: string
+          id?: string
+          locked_at?: string | null
+          program_type?:
+            | Database["public"]["Enums"]["affiliate_program_type"]
+            | null
+          referral_code: string
+          status?: Database["public"]["Enums"]["affiliate_profile_status"]
+          updated_at?: string
+          user_id: string
+          workspace_id: string
+        }
+        Update: {
+          activated_at?: string | null
+          commission_label?: string | null
+          commission_rate?: number | null
+          created_at?: string
+          id?: string
+          locked_at?: string | null
+          program_type?:
+            | Database["public"]["Enums"]["affiliate_program_type"]
+            | null
+          referral_code?: string
+          status?: Database["public"]["Enums"]["affiliate_profile_status"]
+          updated_at?: string
+          user_id?: string
+          workspace_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "affiliate_profiles_workspace_id_fkey"
+            columns: ["workspace_id"]
+            isOneToOne: false
+            referencedRelation: "workspaces"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      affiliate_referrals: {
+        Row: {
+          affiliate_user_id: string
+          billing_cycle: string | null
+          commission_amount: number
+          commission_rate: number
+          commission_status: Database["public"]["Enums"]["affiliate_commission_status"]
+          converted_at: string | null
+          created_at: string
+          currency: string
+          id: string
+          referral_code: string
+          referred_email: string | null
+          referred_user_id: string
+          referred_workspace_id: string | null
+          status: Database["public"]["Enums"]["affiliate_referral_status"]
+          subscribed_amount: number | null
+          subscribed_plan_name: string | null
+          updated_at: string
+        }
+        Insert: {
+          affiliate_user_id: string
+          billing_cycle?: string | null
+          commission_amount?: number
+          commission_rate?: number
+          commission_status?: Database["public"]["Enums"]["affiliate_commission_status"]
+          converted_at?: string | null
+          created_at?: string
+          currency?: string
+          id?: string
+          referral_code: string
+          referred_email?: string | null
+          referred_user_id: string
+          referred_workspace_id?: string | null
+          status?: Database["public"]["Enums"]["affiliate_referral_status"]
+          subscribed_amount?: number | null
+          subscribed_plan_name?: string | null
+          updated_at?: string
+        }
+        Update: {
+          affiliate_user_id?: string
+          billing_cycle?: string | null
+          commission_amount?: number
+          commission_rate?: number
+          commission_status?: Database["public"]["Enums"]["affiliate_commission_status"]
+          converted_at?: string | null
+          created_at?: string
+          currency?: string
+          id?: string
+          referral_code?: string
+          referred_email?: string | null
+          referred_user_id?: string
+          referred_workspace_id?: string | null
+          status?: Database["public"]["Enums"]["affiliate_referral_status"]
+          subscribed_amount?: number | null
+          subscribed_plan_name?: string | null
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "affiliate_referrals_referred_workspace_id_fkey"
+            columns: ["referred_workspace_id"]
+            isOneToOne: false
+            referencedRelation: "workspaces"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       authority_strategies: {
         Row: {
           business_name: string
@@ -1812,7 +1939,10 @@ export type Database = {
       }
       subscriptions: {
         Row: {
+          amount: number | null
+          billing_cycle: string | null
           created_at: string
+          currency: string | null
           id: string
           plan_name: string | null
           status: string | null
@@ -1820,7 +1950,10 @@ export type Database = {
           user_id: string
         }
         Insert: {
+          amount?: number | null
+          billing_cycle?: string | null
           created_at?: string
+          currency?: string | null
           id?: string
           plan_name?: string | null
           status?: string | null
@@ -1828,7 +1961,10 @@ export type Database = {
           user_id: string
         }
         Update: {
+          amount?: number | null
+          billing_cycle?: string | null
           created_at?: string
+          currency?: string | null
           id?: string
           plan_name?: string | null
           status?: string | null
@@ -1952,9 +2088,21 @@ export type Database = {
       }
       is_admin_or_owner: { Args: { _user_id: string }; Returns: boolean }
       is_device_blocked: { Args: { _device_id: string }; Returns: boolean }
+      sync_affiliate_referral: {
+        Args: { _referral_code?: string }
+        Returns: Json
+      }
       user_owns_workspace: { Args: { _workspace_id: string }; Returns: boolean }
     }
     Enums: {
+      affiliate_commission_status: "pending" | "available" | "paid" | "void"
+      affiliate_profile_status: "inactive" | "active" | "blocked"
+      affiliate_program_type: "sale_20" | "recurring_10"
+      affiliate_referral_status:
+        | "signed_up"
+        | "converted"
+        | "paid"
+        | "cancelled"
       app_role: "user" | "admin" | "owner"
     }
     CompositeTypes: {
@@ -2083,6 +2231,15 @@ export type CompositeTypes<
 export const Constants = {
   public: {
     Enums: {
+      affiliate_commission_status: ["pending", "available", "paid", "void"],
+      affiliate_profile_status: ["inactive", "active", "blocked"],
+      affiliate_program_type: ["sale_20", "recurring_10"],
+      affiliate_referral_status: [
+        "signed_up",
+        "converted",
+        "paid",
+        "cancelled",
+      ],
       app_role: ["user", "admin", "owner"],
     },
   },

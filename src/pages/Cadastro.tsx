@@ -1,13 +1,14 @@
-import { useState } from 'react';
-import { useNavigate, Link } from 'react-router-dom';
+import { useEffect, useState } from 'react';
+import { useNavigate, Link, useLocation } from 'react-router-dom';
 import { useAuth } from '@/contexts/AuthContext';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Checkbox } from '@/components/ui/checkbox';
 import { toast } from 'sonner';
-import { Loader2, Sparkles, Eye, EyeOff } from 'lucide-react';
+import { Gift, Loader2, Sparkles, Eye, EyeOff } from 'lucide-react';
 import { z } from 'zod';
+import { buildLoginLinkWithReferral, captureReferralCodeFromSearch, getStoredReferralCode } from '@/lib/referral';
 
 const signupSchema = z.object({
   fullName: z.string().min(2, 'Nome deve ter pelo menos 2 caracteres').max(100),
@@ -22,10 +23,12 @@ const signupSchema = z.object({
 
 export default function Cadastro() {
   const navigate = useNavigate();
+  const location = useLocation();
   const { signUp } = useAuth();
   const [loading, setLoading] = useState(false);
   const [showPassword, setShowPassword] = useState(false);
   const [showConfirmPassword, setShowConfirmPassword] = useState(false);
+  const [referralCode, setReferralCode] = useState<string | null>(null);
   const [formData, setFormData] = useState({
     fullName: '',
     email: '',
@@ -34,6 +37,11 @@ export default function Cadastro() {
     acceptTerms: false,
   });
   const [errors, setErrors] = useState<Record<string, string>>({});
+
+  useEffect(() => {
+    const capturedCode = captureReferralCodeFromSearch(location.search);
+    setReferralCode(capturedCode || getStoredReferralCode());
+  }, [location.search]);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -106,9 +114,25 @@ export default function Cadastro() {
           </div>
 
           <h2 className="text-2xl font-bold mb-2 text-foreground">Criar conta</h2>
-          <p className="text-muted-foreground mb-8">
+          <p className="text-muted-foreground mb-6">
             Preencha os dados abaixo para começar
           </p>
+
+          {referralCode && (
+            <div className="mb-6 rounded-2xl border border-primary/20 bg-primary/10 p-4">
+              <div className="flex items-start gap-3">
+                <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-primary/15">
+                  <Gift className="h-5 w-5 text-primary" />
+                </div>
+                <div>
+                  <p className="font-medium text-foreground">Você chegou por um link de afiliado</p>
+                  <p className="mt-1 text-sm text-muted-foreground">
+                    Seu cadastro será vinculado automaticamente ao código <span className="font-semibold text-foreground">{referralCode}</span> após o primeiro login.
+                  </p>
+                </div>
+              </div>
+            </div>
+          )}
 
           <form onSubmit={handleSubmit} className="space-y-5">
             <div className="space-y-2">
@@ -208,7 +232,7 @@ export default function Cadastro() {
 
           <p className="text-center mt-6 text-muted-foreground">
             Já tem uma conta?{' '}
-            <Link to="/login" className="text-primary hover:underline font-medium">
+            <Link to={buildLoginLinkWithReferral(referralCode)} className="text-primary hover:underline font-medium">
               Fazer login
             </Link>
           </p>
