@@ -360,8 +360,8 @@ export default function IndiqueEGanhe() {
                         offer.highlight ? 'border-primary/30 shadow-lg shadow-primary/10' : 'border-border/80'
                       )}
                     >
-                      <CardContent className="space-y-5 p-6 sm:p-7">
-                        <div className="flex items-start justify-between gap-4">
+                      <CardContent className="flex h-full flex-col space-y-5 p-6 sm:p-7">
+                        <div className="flex flex-1 items-start justify-between gap-4">
                           <div>
                             <h3 className="text-3xl font-bold text-foreground">{offer.title}</h3>
                             <p className="mt-4 text-5xl font-bold tracking-tight text-foreground">{offer.price}</p>
@@ -379,7 +379,7 @@ export default function IndiqueEGanhe() {
                         <Button
                           variant="premium"
                           size="lg"
-                          className="h-14 w-full rounded-2xl text-lg font-semibold"
+                          className="mt-auto h-14 w-full rounded-2xl text-lg font-semibold"
                           onClick={() => window.open(offer.url, '_blank', 'noopener,noreferrer')}
                         >
                           <ExternalLink className="h-5 w-5" />
