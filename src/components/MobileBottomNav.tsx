@@ -8,9 +8,8 @@ import {
   Search,
   Brain,
   Users,
-  History,
+  Gift,
   Menu,
-  User,
   Radar,
 } from 'lucide-react';
 import { LucideIcon } from 'lucide-react';
@@ -23,13 +22,13 @@ interface NavItem {
   adminOnly?: boolean;
 }
 
-// SIMPLE mode: Dashboard, Buscar, Clientes, Histórico, Perfil
+// SIMPLE mode: Dashboard, Buscar, Radar, Clientes, Indique
 const simpleNavItems: NavItem[] = [
   { label: 'Dashboard', path: '/dashboard', icon: LayoutDashboard, mode: 'simple' },
   { label: 'Buscar', path: '/encontrar-clientes', icon: Search, mode: 'simple' },
   { label: 'Radar', path: '/radar', icon: Radar, mode: 'simple' },
   { label: 'Clientes', path: '/clientes', icon: Users, mode: 'simple' },
-  { label: 'Histórico', path: '/historico', icon: History, mode: 'simple' },
+  { label: 'Indique', path: '/indique-e-ganhe', icon: Gift, mode: 'simple' },
 ];
 
 // ADVANCED mode: Dashboard, Buscar, Diagnóstico, Clientes, Perfil
