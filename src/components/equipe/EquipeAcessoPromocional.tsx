@@ -23,7 +23,7 @@ const promoLinks = {
   vitalicio: 'https://go.perfectpay.com.br/PPU38CQ5JOM',
 };
 
-const salesPageLink = '';
+const salesPageLink = 'https://usenexia.site/';
 
 const howItWorksItems = [
   {
