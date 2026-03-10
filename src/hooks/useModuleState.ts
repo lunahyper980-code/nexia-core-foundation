@@ -49,7 +49,7 @@ export function useModuleState(
   const { autoRestore = false, saveDelay = 300 } = options;
   const { getModuleState, updateModuleState, clearModuleState } = useNavigationStateContext();
   
-  const saveTimeoutRef = useRef<NodeJS.Timeout>();
+  const saveTimeoutRef = useRef<ReturnType<typeof setTimeout>>();
   const pendingFormDataRef = useRef<Record<string, any>>({});
 
   const flushPendingFormData = useCallback(() => {
