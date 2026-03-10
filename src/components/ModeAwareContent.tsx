@@ -1,5 +1,6 @@
 import { useUserMode } from '@/contexts/UserModeContext';
 import { ModeSelectionModal } from '@/components/ModeSelectionModal';
+import { WelcomeModal } from '@/components/WelcomeModal';
 import { NexiaLoader } from '@/components/ui/nexia-loader';
 
 interface ModeAwareContentProps {
@@ -20,6 +21,7 @@ export function ModeAwareContent({ children }: ModeAwareContentProps) {
   return (
     <>
       <ModeSelectionModal open={needsModeSelection} />
+      {!needsModeSelection && <WelcomeModal />}
       {children}
     </>
   );

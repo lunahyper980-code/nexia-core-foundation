@@ -67,7 +67,7 @@ export default function Radar() {
   }, [leads, saveExtras]);
 
   const [scanProgress, setScanProgress] = useState(0);
-  const progressRef = useRef<NodeJS.Timeout | null>(null);
+  const progressRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
   const startScan = async (location: string) => {
     setScreen('scanning');
