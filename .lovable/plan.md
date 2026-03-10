@@ -1,58 +1,37 @@
 
-# Radar - Localizador de Empresas Local
+
+# Modal de Boas-vindas — Plano de Implementação
 
 ## Resumo
-Nova funcionalidade "Radar" que funciona como um localizador de empresas na localidade do usuario. O usuario informa sua cidade/bairro e o Radar usa IA para encontrar ~20 empresas locais. Inclui uma animacao premium estilo "robo scanner" durante a busca.
 
-## O que sera criado
+Criar um modal de boas-vindas que aparece apenas na primeira vez que o usuário acessa a plataforma após login. Usa `localStorage` para controlar se já foi exibido.
 
-### 1. Nova pagina: Radar (`src/pages/Radar.tsx`)
-- Campo para o usuario informar sua cidade/bairro (ex: "Araruama, Iguabinha")
-- Botao "Ativar Radar" para iniciar a busca
-- Exibe resultados em cards com as empresas encontradas
-- Opcao de salvar leads em Clientes
-- Reutiliza a edge function `generate-leads` ja existente (mesma logica de IA com Gemini)
+## Abordagem
 
-### 2. Animacao premium: RadarScanAnimation (`src/components/radar/RadarScanAnimation.tsx`)
-- Animacao fullscreen em Canvas com estetica de "radar/scanner"
-- Circulo de radar girando com "sweep" verde/ciano
-- Pontos aparecendo como empresas sendo detectadas
-- Steps progressivos: "Escaneando regiao...", "Detectando empresas...", "Analisando oportunidades...", etc.
-- Visual diferente da NeuralAnimation (globo) - aqui sera um radar de verdade
+1. **Novo componente `WelcomeModal.tsx`**
+   - Dialog com o conteúdo especificado (título, passos, lembrete, botão)
+   - Controle via `localStorage` key `nexia_welcome_shown`
+   - Exibido apenas quando o usuário está autenticado e nunca viu o modal
+   - Botão "Criar meu primeiro projeto" navega para `/solucoes` e fecha o modal
+   - Design limpo seguindo o padrão visual existente (Dialog do projeto, gradients, etc.)
 
-### 3. Componente de resultados: RadarResults (`src/components/radar/RadarResults.tsx`)
-- Lista de empresas encontradas com nome, segmento, localizacao
-- Reutiliza o tipo `Lead` ja existente
-- Botoes para salvar lead e gerar abordagem
+2. **Integração no `ModeAwareContent.tsx`**
+   - Renderizar `<WelcomeModal />` dentro do componente que já envolve todo o conteúdo protegido
+   - O modal aparece após o modo ser selecionado (não conflita com `ModeSelectionModal`)
 
-### 4. Navegacao
-- Novo icone "Radar" na sidebar (ambos os modos: simples e avancado)
-- Icone: `Radar` do lucide-react
-- Posicao: abaixo de "Encontrar Clientes" em ambos os modos
-- Adicionado tambem na barra mobile
-- Nova rota `/radar` em `App.tsx`
+## Estrutura do Modal
 
-## Detalhes Tecnicos
+- Título: 🚀 Bem-vindo ao Nexia
+- Texto introdutório sobre criar primeiro projeto
+- Duas formas de começar (template pronto / do zero)
+- 3 passos recomendados numerados
+- Lembrete sobre garantia de 7 dias (com destaque visual sutil)
+- Botão principal: "Criar meu primeiro projeto" → navega para `/solucoes`
 
-### Arquivos a criar:
-- `src/pages/Radar.tsx` - Pagina principal
-- `src/components/radar/RadarScanAnimation.tsx` - Animacao do radar scanner
-- `src/components/radar/RadarResults.tsx` - Tela de resultados
+## Arquivos
 
-### Arquivos a modificar:
-- `src/components/AppSidebar.tsx` - Adicionar item "Radar" nos dois arrays (simple e advanced)
-- `src/components/MobileBottomNav.tsx` - Adicionar item "Radar" nos dois arrays
-- `src/App.tsx` - Adicionar rota `/radar`
+| Arquivo | Ação |
+|---|---|
+| `src/components/WelcomeModal.tsx` | Criar |
+| `src/components/ModeAwareContent.tsx` | Adicionar `<WelcomeModal />` |
 
-### Fluxo:
-1. Usuario acessa Radar
-2. Informa cidade e bairro
-3. Clica em "Ativar Radar"
-4. Animacao de radar scanner aparece (canvas com sweep circular)
-5. Edge function `generate-leads` e chamada com a localidade como "cidade" e sem nicho especifico (busca geral)
-6. Resultados exibidos em cards
-7. Usuario pode salvar leads ou iniciar nova busca
-
-### Diferencial visual do Radar vs Encontrar Clientes:
-- Encontrar Clientes: globo 3D, busca por nicho + cidade
-- Radar: scanner circular local, busca apenas por localidade (todos os nichos), visual de "deteccao proxima"
