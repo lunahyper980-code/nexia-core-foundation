@@ -21,6 +21,7 @@ export function ModeAwareContent({ children }: ModeAwareContentProps) {
   return (
     <>
       <ModeSelectionModal open={needsModeSelection} />
+      {!needsModeSelection && <WelcomeModal />}
       {children}
     </>
   );

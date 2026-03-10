@@ -29,8 +29,8 @@ export function GlobalLoaderProvider({ children }: { children: ReactNode }) {
   // Track when loader became visible
   const visibleSinceRef = useRef<number | null>(null);
   // Timers
-  const delayTimerRef = useRef<NodeJS.Timeout | null>(null);
-  const minDurationTimerRef = useRef<NodeJS.Timeout | null>(null);
+  const delayTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const minDurationTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
   const clearTimers = useCallback(() => {
     if (delayTimerRef.current) {
