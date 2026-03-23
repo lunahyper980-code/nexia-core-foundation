@@ -794,4 +794,194 @@
   .scrollbar-hide::-webkit-scrollbar {
     display: none;
   }
+
+  /* ============================================
+     LIGHT MODE OVERRIDES — Clean, Corporate SaaS
+     No glow, no blur, no glassmorphism, no grid
+     ============================================ */
+
+  /* Glass → solid white in light mode */
+  .light .glass,
+  .light .glass-strong,
+  .light .glass-subtle {
+    background: hsl(0 0% 100%);
+    backdrop-filter: none;
+    -webkit-backdrop-filter: none;
+    border: 1px solid hsl(214 32% 91%);
+    box-shadow: 0 1px 3px 0 rgb(0 0 0 / 0.06);
+  }
+
+  /* Glow effects → none */
+  .light .glow,
+  .light .glow-sm,
+  .light .glow-subtle,
+  .light .glow-border {
+    box-shadow: none;
+    border-color: hsl(214 32% 91%);
+  }
+
+  /* Card premium → white solid */
+  .light .card-premium,
+  .light .card-premium-glow,
+  .light .card-elevated {
+    background: hsl(0 0% 100%);
+    border: 1px solid hsl(214 32% 91%);
+    box-shadow: 0 1px 3px 0 rgb(0 0 0 / 0.06);
+  }
+
+  /* Card hover → subtle lift, no glow */
+  .light .card-hover:hover {
+    border-color: hsl(263 70% 50% / 0.2);
+    box-shadow: 0 4px 12px -2px rgb(0 0 0 / 0.08);
+    transform: translateY(-2px);
+  }
+
+  .light .card-hover::before {
+    background: linear-gradient(
+      90deg,
+      transparent,
+      hsl(263 70% 50% / 0.03),
+      hsl(263 70% 50% / 0.06),
+      hsl(263 70% 50% / 0.03),
+      transparent
+    );
+  }
+
+  /* Card hover glow → no glow */
+  .light .card-hover-glow:hover {
+    box-shadow: 0 8px 20px -4px rgb(0 0 0 / 0.1);
+    transform: translateY(-2px);
+  }
+
+  .light .card-hover-glow::before {
+    display: none;
+  }
+
+  .light .card-hover-glow::after {
+    background: hsl(0 0% 100%);
+  }
+
+  /* Shimmer → lighter */
+  .light .card-shimmer::before {
+    background: linear-gradient(
+      90deg,
+      transparent,
+      hsl(0 0% 0% / 0.02),
+      hsl(263 70% 50% / 0.04),
+      hsl(0 0% 0% / 0.02),
+      transparent
+    );
+  }
+
+  .light .card-shimmer:hover {
+    border-color: hsl(263 70% 50% / 0.15);
+    box-shadow: 0 4px 12px -2px rgb(0 0 0 / 0.08);
+    transform: translateY(-1px);
+  }
+
+  /* Pulse border → no glow */
+  .light .card-pulse-border:hover {
+    box-shadow: 0 4px 12px -2px rgb(0 0 0 / 0.08);
+    transform: translateY(-1px);
+  }
+
+  .light .card-pulse-border::before {
+    display: none;
+  }
+
+  /* Dividers */
+  .light .divider-premium {
+    background: linear-gradient(90deg, transparent, hsl(214 32% 91%), transparent);
+  }
+
+  .light .divider-subtle {
+    background: hsl(214 32% 91%);
+  }
+
+  /* Header */
+  .light .header-premium {
+    background: hsl(0 0% 100%);
+    border-bottom: 1px solid hsl(214 32% 91%);
+  }
+
+  /* Surface elevated */
+  .light .surface-elevated {
+    background: hsl(0 0% 100%);
+    border: 1px solid hsl(214 32% 91%);
+  }
+
+  /* Premium Frame */
+  .light .premium-frame {
+    background: hsl(0 0% 100%);
+    border: 1px solid hsl(214 32% 91%);
+    box-shadow: 0 1px 3px 0 rgb(0 0 0 / 0.06);
+  }
+
+  .light .premium-frame-default {
+    background: hsl(0 0% 100%);
+  }
+
+  .light .premium-frame-subtle {
+    background: hsl(0 0% 100%);
+    backdrop-filter: none;
+  }
+
+  .light .premium-frame-glass {
+    background: hsl(0 0% 100%);
+    backdrop-filter: none;
+    border: 1px solid hsl(214 32% 91%);
+  }
+
+  .light .premium-frame-header {
+    background: hsl(210 40% 98%);
+  }
+
+  /* Metric Card */
+  .light .metric-card-premium {
+    background: hsl(0 0% 100%);
+    border: 1px solid hsl(214 32% 91%);
+    box-shadow: 0 1px 3px 0 rgb(0 0 0 / 0.06);
+  }
+
+  .light .metric-card-premium::before {
+    display: none;
+  }
+
+  /* Icon glow → none */
+  .light .icon-glow,
+  .light .icon-glow-subtle {
+    filter: none;
+  }
+
+  /* Line decorative */
+  .light .line-decorative {
+    background: linear-gradient(90deg, transparent, hsl(214 32% 91%), transparent);
+  }
+
+  /* Badge premium in light */
+  .light .badge-premium {
+    background: hsl(210 40% 96%);
+    color: hsl(215 25% 27%);
+    border: 1px solid hsl(214 32% 91%);
+  }
+
+  /* Input premium in light */
+  .light .input-premium {
+    background: hsl(0 0% 100%);
+    border: 1px solid hsl(214 32% 91%);
+  }
+
+  .light .input-premium:focus {
+    border-color: hsl(263 70% 50%);
+    box-shadow: 0 0 0 2px hsl(263 70% 50% / 0.1);
+  }
+
+  .light .input-premium::placeholder {
+    color: hsl(215 16% 57%);
+  }
+
+  /* Button glow → subtle shadow */
+  .light .btn-glow:hover {
+    box-shadow: 0 2px 8px -2px rgb(0 0 0 / 0.1);
+  }
 }
