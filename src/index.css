@@ -101,28 +101,27 @@
   }
 
   .light {
-    /* NEXA SUITE Light Theme - Clean & Professional */
-    --background: 0 0% 98%;
-    --foreground: 240 10% 10%;
+    /* NEXA SUITE Light Theme - Clean, Corporate, Premium SaaS */
+    --background: 240 11% 98%;
+    --foreground: 222 47% 11%;
     
-    /* Cards on light background */
     --card: 0 0% 100%;
-    --card-foreground: 240 10% 10%;
+    --card-foreground: 222 47% 11%;
     
     --popover: 0 0% 100%;
-    --popover-foreground: 240 10% 10%;
+    --popover-foreground: 222 47% 11%;
     
-    /* Primary - Nexa Purple (slightly adjusted for light) */
+    /* Primary - Nexa Purple */
     --primary: 263 70% 50%;
     --primary-foreground: 0 0% 100%;
     
     /* Secondary - Light gray surface */
-    --secondary: 240 5% 94%;
-    --secondary-foreground: 240 10% 10%;
+    --secondary: 210 40% 96%;
+    --secondary-foreground: 222 47% 11%;
     
-    /* Muted - Subtle light gray */
-    --muted: 240 5% 96%;
-    --muted-foreground: 240 5% 45%;
+    /* Muted */
+    --muted: 210 40% 96%;
+    --muted-foreground: 215 16% 47%;
     
     /* Accent - Nexa Blue */
     --accent: 217 91% 55%;
@@ -137,61 +136,61 @@
     --warning: 38 92% 45%;
     --warning-foreground: 0 0% 0%;
     
-    /* Borders - Subtle on light */
-    --border: 240 5% 88%;
-    --input: 240 5% 94%;
+    /* Borders - #E2E8F0 = hsl(214 32% 91%) */
+    --border: 214 32% 91%;
+    --input: 0 0% 100%;
     --ring: 263 70% 50%;
     
     --radius: 0.625rem;
     
-    /* Sidebar - Light surface */
+    /* Sidebar */
     --sidebar-background: 0 0% 100%;
-    --sidebar-foreground: 240 10% 10%;
+    --sidebar-foreground: 222 47% 11%;
     --sidebar-primary: 263 70% 50%;
     --sidebar-primary-foreground: 0 0% 100%;
-    --sidebar-accent: 240 5% 96%;
-    --sidebar-accent-foreground: 240 10% 10%;
-    --sidebar-border: 240 5% 90%;
+    --sidebar-accent: 210 40% 96%;
+    --sidebar-accent-foreground: 222 47% 11%;
+    --sidebar-border: 214 32% 91%;
     --sidebar-ring: 263 70% 50%;
     
-    /* Premium Tokens - Light */
+    /* Premium Tokens */
     --surface: 0 0% 100%;
-    --surface-hover: 240 5% 97%;
+    --surface-hover: 210 40% 98%;
     --surface-elevated: 0 0% 100%;
-    --text-primary: 240 10% 10%;
-    --text-secondary: 240 5% 35%;
-    --text-tertiary: 240 5% 55%;
-    --border-subtle: 240 5% 90%;
+    --text-primary: 222 47% 11%;
+    --text-secondary: 215 16% 47%;
+    --text-tertiary: 215 20% 65%;
+    --border-subtle: 214 32% 91%;
     --border-glow: 263 70% 50%;
     
-    /* Light Gradients */
+    /* Light Gradients - subtle depth */
     --gradient-primary: linear-gradient(135deg, hsl(263 70% 50%), hsl(217 91% 55%));
-    --gradient-surface: linear-gradient(180deg, hsl(0 0% 100%), hsl(0 0% 98%));
-    --gradient-card: linear-gradient(145deg, hsl(0 0% 100%), hsl(240 5% 98%));
-    --gradient-subtle: radial-gradient(ellipse at top, hsl(263 70% 50% / 0.03), transparent 50%);
+    --gradient-surface: linear-gradient(180deg, hsl(0 0% 100%), hsl(240 11% 98%));
+    --gradient-card: linear-gradient(145deg, hsl(0 0% 100%), hsl(210 40% 98%));
+    --gradient-subtle: linear-gradient(180deg, hsl(240 11% 98%) 0%, hsl(240 14% 96%) 100%);
     
-    /* Light Shadows */
-    --shadow-xs: 0 1px 2px 0 rgb(0 0 0 / 0.05);
-    --shadow-sm: 0 2px 4px 0 rgb(0 0 0 / 0.06), 0 1px 2px -1px rgb(0 0 0 / 0.04);
-    --shadow-md: 0 4px 12px -2px rgb(0 0 0 / 0.08), 0 2px 4px -2px rgb(0 0 0 / 0.04);
-    --shadow-lg: 0 8px 24px -4px rgb(0 0 0 / 0.1), 0 4px 8px -4px rgb(0 0 0 / 0.06);
-    --shadow-xl: 0 20px 40px -8px rgb(0 0 0 / 0.12);
-    --shadow-inner: inset 0 1px 2px 0 rgb(0 0 0 / 0.05);
-    --shadow-glow: 0 0 20px hsl(263 70% 50% / 0.1), 0 0 40px hsl(263 70% 50% / 0.05);
-    --shadow-glow-sm: 0 0 10px hsl(263 70% 50% / 0.08);
-    --shadow-glow-subtle: 0 0 16px hsl(263 70% 50% / 0.05);
+    /* Light Shadows - no glow */
+    --shadow-xs: 0 1px 2px 0 rgb(0 0 0 / 0.04);
+    --shadow-sm: 0 1px 3px 0 rgb(0 0 0 / 0.06), 0 1px 2px -1px rgb(0 0 0 / 0.03);
+    --shadow-md: 0 4px 6px -1px rgb(0 0 0 / 0.07), 0 2px 4px -2px rgb(0 0 0 / 0.04);
+    --shadow-lg: 0 10px 15px -3px rgb(0 0 0 / 0.08), 0 4px 6px -4px rgb(0 0 0 / 0.04);
+    --shadow-xl: 0 20px 25px -5px rgb(0 0 0 / 0.08), 0 8px 10px -6px rgb(0 0 0 / 0.04);
+    --shadow-inner: inset 0 1px 2px 0 rgb(0 0 0 / 0.04);
+    --shadow-glow: none;
+    --shadow-glow-sm: none;
+    --shadow-glow-subtle: none;
     
-    /* Frame - Light */
+    /* Frame - Light solid */
     --frame-bg: 0 0% 100%;
-    --frame-border: 263 60% 50%;
+    --frame-border: 214 32% 91%;
     --frame-glow: 263 70% 50%;
     
-    /* Glassmorphism - Light version */
-    --glass-bg: hsl(0 0% 100% / 0.8);
-    --glass-bg-light: hsl(0 0% 100% / 0.9);
-    --glass-border: hsl(0 0% 0% / 0.06);
-    --glass-blur: 20px;
-    --glass-blur-heavy: 32px;
+    /* No glassmorphism in light mode */
+    --glass-bg: hsl(0 0% 100%);
+    --glass-bg-light: hsl(0 0% 100%);
+    --glass-border: hsl(214 32% 91%);
+    --glass-blur: 0px;
+    --glass-blur-heavy: 0px;
   }
 }
 
@@ -220,6 +219,12 @@
       repeating-linear-gradient(0deg, transparent, transparent 23px, hsla(263, 70%, 40%, 0.12) 23px, hsla(263, 70%, 40%, 0.12) 24px),
       repeating-linear-gradient(90deg, transparent, transparent 23px, hsla(263, 70%, 40%, 0.12) 23px, hsla(263, 70%, 40%, 0.12) 24px);
     background-color: hsl(var(--background));
+  }
+
+  /* Light mode: remove grid, use solid background with subtle gradient */
+  .light .bg-grid-pattern {
+    background-image: linear-gradient(180deg, hsl(240 11% 98%) 0%, hsl(240 14% 96.5%) 100%);
+    background-color: hsl(240 11% 98%);
   }
   
   /* Prevent horizontal scroll from any element */
@@ -788,5 +793,195 @@
   
   .scrollbar-hide::-webkit-scrollbar {
     display: none;
+  }
+
+  /* ============================================
+     LIGHT MODE OVERRIDES — Clean, Corporate SaaS
+     No glow, no blur, no glassmorphism, no grid
+     ============================================ */
+
+  /* Glass → solid white in light mode */
+  .light .glass,
+  .light .glass-strong,
+  .light .glass-subtle {
+    background: hsl(0 0% 100%);
+    backdrop-filter: none;
+    -webkit-backdrop-filter: none;
+    border: 1px solid hsl(214 32% 91%);
+    box-shadow: 0 1px 3px 0 rgb(0 0 0 / 0.06);
+  }
+
+  /* Glow effects → none */
+  .light .glow,
+  .light .glow-sm,
+  .light .glow-subtle,
+  .light .glow-border {
+    box-shadow: none;
+    border-color: hsl(214 32% 91%);
+  }
+
+  /* Card premium → white solid */
+  .light .card-premium,
+  .light .card-premium-glow,
+  .light .card-elevated {
+    background: hsl(0 0% 100%);
+    border: 1px solid hsl(214 32% 91%);
+    box-shadow: 0 1px 3px 0 rgb(0 0 0 / 0.06);
+  }
+
+  /* Card hover → subtle lift, no glow */
+  .light .card-hover:hover {
+    border-color: hsl(263 70% 50% / 0.2);
+    box-shadow: 0 4px 12px -2px rgb(0 0 0 / 0.08);
+    transform: translateY(-2px);
+  }
+
+  .light .card-hover::before {
+    background: linear-gradient(
+      90deg,
+      transparent,
+      hsl(263 70% 50% / 0.03),
+      hsl(263 70% 50% / 0.06),
+      hsl(263 70% 50% / 0.03),
+      transparent
+    );
+  }
+
+  /* Card hover glow → no glow */
+  .light .card-hover-glow:hover {
+    box-shadow: 0 8px 20px -4px rgb(0 0 0 / 0.1);
+    transform: translateY(-2px);
+  }
+
+  .light .card-hover-glow::before {
+    display: none;
+  }
+
+  .light .card-hover-glow::after {
+    background: hsl(0 0% 100%);
+  }
+
+  /* Shimmer → lighter */
+  .light .card-shimmer::before {
+    background: linear-gradient(
+      90deg,
+      transparent,
+      hsl(0 0% 0% / 0.02),
+      hsl(263 70% 50% / 0.04),
+      hsl(0 0% 0% / 0.02),
+      transparent
+    );
+  }
+
+  .light .card-shimmer:hover {
+    border-color: hsl(263 70% 50% / 0.15);
+    box-shadow: 0 4px 12px -2px rgb(0 0 0 / 0.08);
+    transform: translateY(-1px);
+  }
+
+  /* Pulse border → no glow */
+  .light .card-pulse-border:hover {
+    box-shadow: 0 4px 12px -2px rgb(0 0 0 / 0.08);
+    transform: translateY(-1px);
+  }
+
+  .light .card-pulse-border::before {
+    display: none;
+  }
+
+  /* Dividers */
+  .light .divider-premium {
+    background: linear-gradient(90deg, transparent, hsl(214 32% 91%), transparent);
+  }
+
+  .light .divider-subtle {
+    background: hsl(214 32% 91%);
+  }
+
+  /* Header */
+  .light .header-premium {
+    background: hsl(0 0% 100%);
+    border-bottom: 1px solid hsl(214 32% 91%);
+  }
+
+  /* Surface elevated */
+  .light .surface-elevated {
+    background: hsl(0 0% 100%);
+    border: 1px solid hsl(214 32% 91%);
+  }
+
+  /* Premium Frame */
+  .light .premium-frame {
+    background: hsl(0 0% 100%);
+    border: 1px solid hsl(214 32% 91%);
+    box-shadow: 0 1px 3px 0 rgb(0 0 0 / 0.06);
+  }
+
+  .light .premium-frame-default {
+    background: hsl(0 0% 100%);
+  }
+
+  .light .premium-frame-subtle {
+    background: hsl(0 0% 100%);
+    backdrop-filter: none;
+  }
+
+  .light .premium-frame-glass {
+    background: hsl(0 0% 100%);
+    backdrop-filter: none;
+    border: 1px solid hsl(214 32% 91%);
+  }
+
+  .light .premium-frame-header {
+    background: hsl(210 40% 98%);
+  }
+
+  /* Metric Card */
+  .light .metric-card-premium {
+    background: hsl(0 0% 100%);
+    border: 1px solid hsl(214 32% 91%);
+    box-shadow: 0 1px 3px 0 rgb(0 0 0 / 0.06);
+  }
+
+  .light .metric-card-premium::before {
+    display: none;
+  }
+
+  /* Icon glow → none */
+  .light .icon-glow,
+  .light .icon-glow-subtle {
+    filter: none;
+  }
+
+  /* Line decorative */
+  .light .line-decorative {
+    background: linear-gradient(90deg, transparent, hsl(214 32% 91%), transparent);
+  }
+
+  /* Badge premium in light */
+  .light .badge-premium {
+    background: hsl(210 40% 96%);
+    color: hsl(215 25% 27%);
+    border: 1px solid hsl(214 32% 91%);
+  }
+
+  /* Input premium in light */
+  .light .input-premium {
+    background: hsl(0 0% 100%);
+    border: 1px solid hsl(214 32% 91%);
+  }
+
+  .light .input-premium:focus {
+    border-color: hsl(263 70% 50%);
+    box-shadow: 0 0 0 2px hsl(263 70% 50% / 0.1);
+  }
+
+  .light .input-premium::placeholder {
+    color: hsl(215 16% 57%);
+  }
+
+  /* Button glow → subtle shadow */
+  .light .btn-glow:hover {
+    box-shadow: 0 2px 8px -2px rgb(0 0 0 / 0.1);
   }
 }
