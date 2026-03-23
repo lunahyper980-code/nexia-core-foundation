@@ -180,7 +180,8 @@ export function useContractsMetrics() {
   const { user } = useAuth();
   const [contracts, setContracts] = useState<DemoContract[]>([]);
   const [ownerRecurrence, setOwnerRecurrence] = useState<number | null>(null);
-  const [loading, setLoading] = useState(true);
+  const [ownerPipelineValue, setOwnerPipelineValue] = useState<number | null>(null);
+  const [ownerProjects, setOwnerProjects] = useState<number | null>(null);
 
   // Fetch contracts and owner_metrics from database
   const fetchContracts = useCallback(async () => {
