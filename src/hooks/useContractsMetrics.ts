@@ -182,6 +182,7 @@ export function useContractsMetrics() {
   const [ownerRecurrence, setOwnerRecurrence] = useState<number | null>(null);
   const [ownerPipelineValue, setOwnerPipelineValue] = useState<number | null>(null);
   const [ownerProjects, setOwnerProjects] = useState<number | null>(null);
+  const [loading, setLoading] = useState(true);
 
   // Fetch contracts and owner_metrics from database
   const fetchContracts = useCallback(async () => {
