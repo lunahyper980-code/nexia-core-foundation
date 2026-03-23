@@ -179,9 +179,10 @@ export function useContractsMetrics() {
   const { isAdminOrOwner } = useUserRole();
   const { user } = useAuth();
   const [contracts, setContracts] = useState<DemoContract[]>([]);
+  const [ownerRecurrence, setOwnerRecurrence] = useState<number | null>(null);
   const [loading, setLoading] = useState(true);
 
-  // Fetch contracts from database
+  // Fetch contracts and owner_metrics from database
   const fetchContracts = useCallback(async () => {
     if (!workspace?.id || !user?.id) {
       setLoading(false);
@@ -189,17 +190,30 @@ export function useContractsMetrics() {
     }
 
     try {
-      const { data, error } = await supabase
-        .from('demo_contracts')
-        .select('*')
-        .eq('workspace_id', workspace.id)
-        .order('created_at', { ascending: false });
+      const [contractsRes, ownerRes] = await Promise.all([
+        supabase
+          .from('demo_contracts')
+          .select('*')
+          .eq('workspace_id', workspace.id)
+          .order('created_at', { ascending: false }),
+        isAdminOrOwner
+          ? supabase
+              .from('owner_metrics')
+              .select('recurrence_monthly')
+              .eq('workspace_id', workspace.id)
+              .maybeSingle()
+          : Promise.resolve({ data: null, error: null }),
+      ]);
 
-      if (error) {
-        console.error('Error fetching contracts:', error);
+      if (contractsRes.error) {
+        console.error('Error fetching contracts:', contractsRes.error);
         setContracts([]);
       } else {
-        setContracts(data || []);
+        setContracts(contractsRes.data || []);
+      }
+
+      if (ownerRes.data && typeof ownerRes.data.recurrence_monthly === 'number') {
+        setOwnerRecurrence(ownerRes.data.recurrence_monthly);
       }
     } catch (error) {
       console.error('Error in fetchContracts:', error);
@@ -207,7 +221,7 @@ export function useContractsMetrics() {
     } finally {
       setLoading(false);
     }
-  }, [workspace?.id, user?.id]);
+  }, [workspace?.id, user?.id, isAdminOrOwner]);
 
   // Initialize - just fetch contracts
   useEffect(() => {
