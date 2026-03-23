@@ -201,7 +201,7 @@ export function useContractsMetrics() {
         isAdminOrOwner
           ? supabase
               .from('owner_metrics')
-              .select('recurrence_monthly')
+              .select('recurrence_monthly, total_pipeline_value, projects')
               .eq('workspace_id', workspace.id)
               .maybeSingle()
           : Promise.resolve({ data: null, error: null }),
