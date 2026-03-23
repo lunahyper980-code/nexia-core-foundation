@@ -101,28 +101,27 @@
   }
 
   .light {
-    /* NEXA SUITE Light Theme - Clean & Professional */
-    --background: 0 0% 98%;
-    --foreground: 240 10% 10%;
+    /* NEXA SUITE Light Theme - Clean, Corporate, Premium SaaS */
+    --background: 240 11% 98%;
+    --foreground: 222 47% 11%;
     
-    /* Cards on light background */
     --card: 0 0% 100%;
-    --card-foreground: 240 10% 10%;
+    --card-foreground: 222 47% 11%;
     
     --popover: 0 0% 100%;
-    --popover-foreground: 240 10% 10%;
+    --popover-foreground: 222 47% 11%;
     
-    /* Primary - Nexa Purple (slightly adjusted for light) */
+    /* Primary - Nexa Purple */
     --primary: 263 70% 50%;
     --primary-foreground: 0 0% 100%;
     
     /* Secondary - Light gray surface */
-    --secondary: 240 5% 94%;
-    --secondary-foreground: 240 10% 10%;
+    --secondary: 210 40% 96%;
+    --secondary-foreground: 222 47% 11%;
     
-    /* Muted - Subtle light gray */
-    --muted: 240 5% 96%;
-    --muted-foreground: 240 5% 45%;
+    /* Muted */
+    --muted: 210 40% 96%;
+    --muted-foreground: 215 16% 47%;
     
     /* Accent - Nexa Blue */
     --accent: 217 91% 55%;
@@ -137,61 +136,61 @@
     --warning: 38 92% 45%;
     --warning-foreground: 0 0% 0%;
     
-    /* Borders - Subtle on light */
-    --border: 240 5% 88%;
-    --input: 240 5% 94%;
+    /* Borders - #E2E8F0 = hsl(214 32% 91%) */
+    --border: 214 32% 91%;
+    --input: 0 0% 100%;
     --ring: 263 70% 50%;
     
     --radius: 0.625rem;
     
-    /* Sidebar - Light surface */
+    /* Sidebar */
     --sidebar-background: 0 0% 100%;
-    --sidebar-foreground: 240 10% 10%;
+    --sidebar-foreground: 222 47% 11%;
     --sidebar-primary: 263 70% 50%;
     --sidebar-primary-foreground: 0 0% 100%;
-    --sidebar-accent: 240 5% 96%;
-    --sidebar-accent-foreground: 240 10% 10%;
-    --sidebar-border: 240 5% 90%;
+    --sidebar-accent: 210 40% 96%;
+    --sidebar-accent-foreground: 222 47% 11%;
+    --sidebar-border: 214 32% 91%;
     --sidebar-ring: 263 70% 50%;
     
-    /* Premium Tokens - Light */
+    /* Premium Tokens */
     --surface: 0 0% 100%;
-    --surface-hover: 240 5% 97%;
+    --surface-hover: 210 40% 98%;
     --surface-elevated: 0 0% 100%;
-    --text-primary: 240 10% 10%;
-    --text-secondary: 240 5% 35%;
-    --text-tertiary: 240 5% 55%;
-    --border-subtle: 240 5% 90%;
+    --text-primary: 222 47% 11%;
+    --text-secondary: 215 16% 47%;
+    --text-tertiary: 215 20% 65%;
+    --border-subtle: 214 32% 91%;
     --border-glow: 263 70% 50%;
     
-    /* Light Gradients */
+    /* Light Gradients - subtle depth */
     --gradient-primary: linear-gradient(135deg, hsl(263 70% 50%), hsl(217 91% 55%));
-    --gradient-surface: linear-gradient(180deg, hsl(0 0% 100%), hsl(0 0% 98%));
-    --gradient-card: linear-gradient(145deg, hsl(0 0% 100%), hsl(240 5% 98%));
-    --gradient-subtle: radial-gradient(ellipse at top, hsl(263 70% 50% / 0.03), transparent 50%);
+    --gradient-surface: linear-gradient(180deg, hsl(0 0% 100%), hsl(240 11% 98%));
+    --gradient-card: linear-gradient(145deg, hsl(0 0% 100%), hsl(210 40% 98%));
+    --gradient-subtle: linear-gradient(180deg, hsl(240 11% 98%) 0%, hsl(240 14% 96%) 100%);
     
-    /* Light Shadows */
-    --shadow-xs: 0 1px 2px 0 rgb(0 0 0 / 0.05);
-    --shadow-sm: 0 2px 4px 0 rgb(0 0 0 / 0.06), 0 1px 2px -1px rgb(0 0 0 / 0.04);
-    --shadow-md: 0 4px 12px -2px rgb(0 0 0 / 0.08), 0 2px 4px -2px rgb(0 0 0 / 0.04);
-    --shadow-lg: 0 8px 24px -4px rgb(0 0 0 / 0.1), 0 4px 8px -4px rgb(0 0 0 / 0.06);
-    --shadow-xl: 0 20px 40px -8px rgb(0 0 0 / 0.12);
-    --shadow-inner: inset 0 1px 2px 0 rgb(0 0 0 / 0.05);
-    --shadow-glow: 0 0 20px hsl(263 70% 50% / 0.1), 0 0 40px hsl(263 70% 50% / 0.05);
-    --shadow-glow-sm: 0 0 10px hsl(263 70% 50% / 0.08);
-    --shadow-glow-subtle: 0 0 16px hsl(263 70% 50% / 0.05);
+    /* Light Shadows - no glow */
+    --shadow-xs: 0 1px 2px 0 rgb(0 0 0 / 0.04);
+    --shadow-sm: 0 1px 3px 0 rgb(0 0 0 / 0.06), 0 1px 2px -1px rgb(0 0 0 / 0.03);
+    --shadow-md: 0 4px 6px -1px rgb(0 0 0 / 0.07), 0 2px 4px -2px rgb(0 0 0 / 0.04);
+    --shadow-lg: 0 10px 15px -3px rgb(0 0 0 / 0.08), 0 4px 6px -4px rgb(0 0 0 / 0.04);
+    --shadow-xl: 0 20px 25px -5px rgb(0 0 0 / 0.08), 0 8px 10px -6px rgb(0 0 0 / 0.04);
+    --shadow-inner: inset 0 1px 2px 0 rgb(0 0 0 / 0.04);
+    --shadow-glow: none;
+    --shadow-glow-sm: none;
+    --shadow-glow-subtle: none;
     
-    /* Frame - Light */
+    /* Frame - Light solid */
     --frame-bg: 0 0% 100%;
-    --frame-border: 263 60% 50%;
+    --frame-border: 214 32% 91%;
     --frame-glow: 263 70% 50%;
     
-    /* Glassmorphism - Light version */
-    --glass-bg: hsl(0 0% 100% / 0.8);
-    --glass-bg-light: hsl(0 0% 100% / 0.9);
-    --glass-border: hsl(0 0% 0% / 0.06);
-    --glass-blur: 20px;
-    --glass-blur-heavy: 32px;
+    /* No glassmorphism in light mode */
+    --glass-bg: hsl(0 0% 100%);
+    --glass-bg-light: hsl(0 0% 100%);
+    --glass-border: hsl(214 32% 91%);
+    --glass-blur: 0px;
+    --glass-blur-heavy: 0px;
   }
 }
 
