@@ -288,10 +288,13 @@ export function useContractsMetrics() {
   const metrics = useMemo((): ContractMetrics => {
     const activeContracts = effectiveContracts.filter(c => isActiveStatus(c.status));
     
-    const totalRecurrence = activeContracts.reduce(
-      (sum, c) => sum + Number(c.recurrence_value_monthly || 0),
-      0
-    );
+    // Admin: usa recorrência do owner_metrics se disponível (editável no painel)
+    const totalRecurrence = isAdminOrOwner && ownerRecurrence !== null
+      ? ownerRecurrence
+      : activeContracts.reduce(
+          (sum, c) => sum + Number(c.recurrence_value_monthly || 0),
+          0
+        );
     
     const totalValue = activeContracts.reduce(
       (sum, c) => sum + Number(c.value || 0),
@@ -308,7 +311,7 @@ export function useContractsMetrics() {
       averageTicket,
       totalValue,
     };
-  }, [effectiveContracts]);
+  }, [effectiveContracts, isAdminOrOwner, ownerRecurrence]);
 
   // displayMetrics agora é o mesmo que metrics (ambos usam effectiveContracts)
   // Mantido por compatibilidade com componentes existentes
