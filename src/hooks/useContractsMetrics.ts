@@ -214,8 +214,16 @@ export function useContractsMetrics() {
         setContracts(contractsRes.data || []);
       }
 
-      if (ownerRes.data && typeof ownerRes.data.recurrence_monthly === 'number') {
-        setOwnerRecurrence(ownerRes.data.recurrence_monthly);
+      if (ownerRes.data) {
+        if (typeof ownerRes.data.recurrence_monthly === 'number') {
+          setOwnerRecurrence(ownerRes.data.recurrence_monthly);
+        }
+        if (typeof ownerRes.data.total_pipeline_value === 'number') {
+          setOwnerPipelineValue(ownerRes.data.total_pipeline_value);
+        }
+        if (typeof ownerRes.data.projects === 'number') {
+          setOwnerProjects(ownerRes.data.projects);
+        }
       }
     } catch (error) {
       console.error('Error in fetchContracts:', error);
