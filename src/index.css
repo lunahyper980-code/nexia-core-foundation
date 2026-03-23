@@ -220,6 +220,12 @@
       repeating-linear-gradient(90deg, transparent, transparent 23px, hsla(263, 70%, 40%, 0.12) 23px, hsla(263, 70%, 40%, 0.12) 24px);
     background-color: hsl(var(--background));
   }
+
+  /* Light mode: remove grid, use solid background with subtle gradient */
+  .light .bg-grid-pattern {
+    background-image: linear-gradient(180deg, hsl(240 11% 98%) 0%, hsl(240 14% 96.5%) 100%);
+    background-color: hsl(240 11% 98%);
+  }
   
   /* Prevent horizontal scroll from any element */
   #root {
