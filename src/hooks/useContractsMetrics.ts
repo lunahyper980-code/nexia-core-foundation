@@ -311,17 +311,20 @@ export function useContractsMetrics() {
       0
     );
     
-    const averageTicket = activeContracts.length > 0
-      ? Math.round(totalValue / activeContracts.length)
-      : 0;
+    // Admin: usa ticket médio do owner_metrics (pipeline_value / projects)
+    const averageTicket = isAdminOrOwner && ownerPipelineValue !== null && ownerProjects !== null && ownerProjects > 0
+      ? Math.round(ownerPipelineValue / ownerProjects)
+      : activeContracts.length > 0
+        ? Math.round(totalValue / activeContracts.length)
+        : 0;
 
     return {
       totalRecurrence,
       activeContracts: activeContracts.length,
       averageTicket,
-      totalValue,
+      totalValue: isAdminOrOwner && ownerPipelineValue !== null ? ownerPipelineValue : totalValue,
     };
-  }, [effectiveContracts, isAdminOrOwner, ownerRecurrence]);
+  }, [effectiveContracts, isAdminOrOwner, ownerRecurrence, ownerPipelineValue, ownerProjects]);
 
   // displayMetrics agora é o mesmo que metrics (ambos usam effectiveContracts)
   // Mantido por compatibilidade com componentes existentes
