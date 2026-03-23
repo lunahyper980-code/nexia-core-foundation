@@ -180,6 +180,8 @@ export function useContractsMetrics() {
   const { user } = useAuth();
   const [contracts, setContracts] = useState<DemoContract[]>([]);
   const [ownerRecurrence, setOwnerRecurrence] = useState<number | null>(null);
+  const [ownerPipelineValue, setOwnerPipelineValue] = useState<number | null>(null);
+  const [ownerProjects, setOwnerProjects] = useState<number | null>(null);
   const [loading, setLoading] = useState(true);
 
   // Fetch contracts and owner_metrics from database
@@ -199,7 +201,7 @@ export function useContractsMetrics() {
         isAdminOrOwner
           ? supabase
               .from('owner_metrics')
-              .select('recurrence_monthly')
+              .select('recurrence_monthly, total_pipeline_value, projects')
               .eq('workspace_id', workspace.id)
               .maybeSingle()
           : Promise.resolve({ data: null, error: null }),
@@ -212,8 +214,16 @@ export function useContractsMetrics() {
         setContracts(contractsRes.data || []);
       }
 
-      if (ownerRes.data && typeof ownerRes.data.recurrence_monthly === 'number') {
-        setOwnerRecurrence(ownerRes.data.recurrence_monthly);
+      if (ownerRes.data) {
+        if (typeof ownerRes.data.recurrence_monthly === 'number') {
+          setOwnerRecurrence(ownerRes.data.recurrence_monthly);
+        }
+        if (typeof ownerRes.data.total_pipeline_value === 'number') {
+          setOwnerPipelineValue(ownerRes.data.total_pipeline_value);
+        }
+        if (typeof ownerRes.data.projects === 'number') {
+          setOwnerProjects(ownerRes.data.projects);
+        }
       }
     } catch (error) {
       console.error('Error in fetchContracts:', error);
@@ -301,17 +311,20 @@ export function useContractsMetrics() {
       0
     );
     
-    const averageTicket = activeContracts.length > 0
-      ? Math.round(totalValue / activeContracts.length)
-      : 0;
+    // Admin: usa ticket médio do owner_metrics (pipeline_value / projects)
+    const averageTicket = isAdminOrOwner && ownerPipelineValue !== null && ownerProjects !== null && ownerProjects > 0
+      ? Math.round(ownerPipelineValue / ownerProjects)
+      : activeContracts.length > 0
+        ? Math.round(totalValue / activeContracts.length)
+        : 0;
 
     return {
       totalRecurrence,
       activeContracts: activeContracts.length,
       averageTicket,
-      totalValue,
+      totalValue: isAdminOrOwner && ownerPipelineValue !== null ? ownerPipelineValue : totalValue,
     };
-  }, [effectiveContracts, isAdminOrOwner, ownerRecurrence]);
+  }, [effectiveContracts, isAdminOrOwner, ownerRecurrence, ownerPipelineValue, ownerProjects]);
 
   // displayMetrics agora é o mesmo que metrics (ambos usam effectiveContracts)
   // Mantido por compatibilidade com componentes existentes
